@@ -1,4 +1,4 @@
 {% extends "base.html" %}
 {% block title %}Beranda Siswa — TeFa Presensi{% endblock %}
-{% block nav %}<a href="/dashboard/siswa/" aria-current="page">Beranda</a><a href="/absen/riwayat/">Riwayat</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
+{% block nav %}<a href="/dashboard/siswa/" aria-current="page">Beranda</a><a href="/attendance/absen/riwayat/">Riwayat</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
 {% block content %}{% include "attendance/_student_home_content.html" %}{% endblock %}

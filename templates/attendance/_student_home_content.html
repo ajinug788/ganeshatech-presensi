@@ -7,20 +7,20 @@
       <h1>Kamu sudah absen masuk.</h1>
       <p id="status-detail">Masuk pukul {{ today_day.check_in_at|localtime_wib }}{% if today_day.check_out_at %} · Pulang pukul {{ today_day.check_out_at|localtime_wib }}{% endif %}. Status: {{ today_status_label }}.</p>
       {% if not today_day.check_out_at %}
-        <div class="hero-actions"><a class="btn" href="/absen/capture/?type=checkout">◉ &nbsp; Absen pulang</a></div>
+        <div class="hero-actions"><a class="btn" href="/attendance/absen/capture/?type=checkout">◉ &nbsp; Absen pulang</a></div>
       {% else %}
         <div class="hero-actions"><span class="badge badge--hadir" id="complete-badge">✓ Kehadiran hari ini lengkap</span></div>
       {% endif %}
     {% else %}
       <h1 id="status-title">Siap untuk hari ini?</h1>
       <p id="status-detail">Kehadiranmu belum tercatat. Pastikan kamu sudah berada di area absensi.</p>
-      <div class="hero-actions"><a id="btn-checkin" href="/absen/capture/" class="btn">◉ &nbsp; Mulai absen masuk</a></div>
+      <div class="hero-actions"><a id="btn-checkin" href="/attendance/absen/capture/" class="btn">◉ &nbsp; Mulai absen masuk</a></div>
     {% endif %}
   </div>
   <div class="hero-ornament" aria-hidden="true">✓</div>
 </section>
 <div class="content-grid">
-  <section class="card"><div class="section-head"><div><p class="eyebrow">Perjalananmu</p><h2>Rekap {{ month_label }}</h2></div><a class="panel-link" href="/absen/riwayat/">Lihat riwayat →</a></div>
+  <section class="card"><div class="section-head"><div><p class="eyebrow">Perjalananmu</p><h2>Rekap {{ month_label }}</h2></div><a class="panel-link" href="/attendance/absen/riwayat/">Lihat riwayat →</a></div>
     <div class="summary-grid">
       <div class="summary-card summary-card--ok"><span class="summary-card__num">{{ month_present }}</span>Hari hadir<span class="summary-card__hint">Tepat waktu</span></div>
       <div class="summary-card summary-card--warn"><span class="summary-card__num">{{ month_late }}</span>Terlambat<span class="summary-card__hint">{{ month_late_minutes }} menit total</span></div>

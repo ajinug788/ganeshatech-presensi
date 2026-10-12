@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Dashboard {{ role_label }} — TeFa Presensi{% endblock %}
 {% block nav %}
-  {% if role_label == "Siswa" %}<a href="/dashboard/siswa/" aria-current="page">Beranda</a><a href="/absen/riwayat/">Riwayat</a>
+  {% if role_label == "Siswa" %}<a href="/dashboard/siswa/" aria-current="page">Beranda</a><a href="/attendance/absen/riwayat/">Riwayat</a>
   {% elif role_label == "Pembina" %}<a href="/dashboard/pembina/" aria-current="page">Ringkasan</a><a href="#daftar-siswa">Daftar siswa</a>
   {% else %}<a href="/dashboard/admin/" aria-current="page">Ringkasan</a>{% endif %}
   <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary">Keluar</button></form>
