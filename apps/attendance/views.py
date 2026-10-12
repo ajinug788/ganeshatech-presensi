@@ -6,17 +6,41 @@ Semua queryset ter-scope organization dari membership aktif
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    FormView,
+    ListView,
+    UpdateView,
+)
 
 from apps.audit.services import catat_audit
 from apps.tenants.context import RoleRequiredMixin
 
-from .forms import AttendanceLocationForm, AttendancePolicyForm, StudentForm
-from .models import AttendanceLocation, AttendancePolicy, StudentProfile
-from .services import provision_student
+from .forms import (
+    AttendanceLocationForm,
+    AttendancePolicyForm,
+    ShiftForm,
+    StudentEmailForm,
+    StudentForm,
+    StudentGroupShiftForm,
+    StudentSelfShiftForm,
+)
+from .models import AttendanceLocation, AttendancePolicy, Shift, StudentProfile
+from .services import (
+    assign_student_shift,
+    bulk_assign_shift,
+    change_student_email,
+    provision_student,
+    reset_student_password,
+    self_assign_shift,
+    set_student_account_active,
+)
 
 
 class AdminRequiredMixin(RoleRequiredMixin):
@@ -291,7 +315,318 @@ class PolicyView(AdminRequiredMixin, UpdateView):
         return response
 
 
+# ---------------------------------------------------------------- Shift
+
+
+class ShiftListView(AdminRequiredMixin, ListView):
+    model = Shift
+    template_name = "attendance/shift_list.html"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return self.organization.shifts.all()
+
+
+class ShiftCreateView(AdminRequiredMixin, CreateView):
+    model = Shift
+    form_class = ShiftForm
+    template_name = "attendance/shift_form.html"
+    success_url = reverse_lazy("attendance:shift_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["organization"] = self.organization
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.organization = self.organization
+        response = super().form_valid(form)
+        catat_audit(
+            action="shift_created",
+            object_type="attendance.Shift",
+            object_id=self.object.pk,
+            organization=self.organization,
+            actor=self.request.user,
+            metadata={"name": self.object.name},
+        )
+        messages.success(self.request, "Shift berhasil ditambahkan.")
+        return response
+
+
+class ShiftUpdateView(AdminRequiredMixin, UpdateView):
+    model = Shift
+    form_class = ShiftForm
+    template_name = "attendance/shift_form.html"
+    success_url = reverse_lazy("attendance:shift_list")
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            Shift, pk=self.kwargs["pk"], organization=self.organization
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["organization"] = self.organization
+        return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        catat_audit(
+            action="shift_updated",
+            object_type="attendance.Shift",
+            object_id=self.object.pk,
+            organization=self.organization,
+            actor=self.request.user,
+            metadata={"name": self.object.name},
+        )
+        messages.success(self.request, "Shift diperbarui.")
+        return response
+
+
+class ShiftDeleteView(AdminRequiredMixin, DeleteView):
+    model = Shift
+    template_name = "attendance/shift_confirm_delete.html"
+    success_url = reverse_lazy("attendance:shift_list")
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(
+            Shift, pk=self.kwargs["pk"], organization=self.organization
+        )
+
+    def form_valid(self, form):
+        obj = self.get_object()
+        catat_audit(
+            action="shift_deleted",
+            object_type="attendance.Shift",
+            object_id=obj.pk,
+            organization=self.organization,
+            actor=self.request.user,
+            metadata={"name": obj.name},
+        )
+        # Soft-delete: nonaktifkan; siswa tetap fallback ke policy org via _get_rule.
+        obj.is_active = False
+        obj.save(update_fields=["is_active", "updated_at"])
+        messages.success(self.request, "Shift dinonaktifkan.")
+        return redirect(self.success_url)
+
+
+class StudentGroupShiftView(AdminRequiredMixin, FormView):
+    """Penetapan shift bulk: pilih grup/kelas → set shift."""
+
+    form_class = StudentGroupShiftForm
+    template_name = "attendance/student_group_shift.html"
+    success_url = reverse_lazy("attendance:shift_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["organization"] = self.organization
+        return kwargs
+
+    def form_valid(self, form):
+        group = form.cleaned_data["group"]
+        shift = form.cleaned_data["shift"]
+        students = self.organization.students.filter(group=group)
+        count = bulk_assign_shift(
+            organization=self.organization,
+            queryset=students,
+            shift=shift,
+            actor=self.request.user,
+        )
+        messages.success(
+            self.request,
+            f"Shift {count} siswa di kelas {group} diperbarui.",
+        )
+        return super().form_valid(form)
+
+
+# ---------------------------------------------------------------- Akun siswa (AUTH-02)
+
+
+def _get_student_or_404(self, pk):
+    return get_object_or_404(
+        StudentProfile, pk=pk, organization=self.organization
+    )
+
+
+class StudentAccountActiveView(AdminRequiredMixin, UpdateView):
+    """Nonaktifkan/aktifkan akun siswa via POST {active: 'on'}. 404 lintas tenant."""
+
+    model = StudentProfile
+    fields = []
+    template_name = "attendance/student_account_confirm.html"
+    success_url = reverse_lazy("attendance:student_list")
+
+    def get_object(self, queryset=None):
+        return _get_student_or_404(self, self.kwargs["pk"])
+
+    def form_valid(self, form):
+        student = self.get_object()
+        active = self.request.POST.get("active") == "on"
+        try:
+            set_student_account_active(
+                student=student, active=active, actor=self.request.user
+            )
+        except ValueError as exc:
+            messages.error(self.request, str(exc))
+            return redirect("attendance:student_detail", pk=student.pk)
+        messages.success(
+            self.request,
+            "Akun siswa diaktifkan." if active else "Akun siswa dinonaktifkan.",
+        )
+        return redirect(self.success_url)
+
+
+class StudentResetPasswordView(AdminRequiredMixin, UpdateView):
+    """Reset password: password acak ditampilkan SEKALI di halaman konfirmasi."""
+
+    model = StudentProfile
+    fields = []
+    template_name = "attendance/student_password_reset.html"
+    success_url = reverse_lazy("attendance:student_list")
+
+    def get_object(self, queryset=None):
+        return _get_student_or_404(self, self.kwargs["pk"])
+
+    def get(self, request, *args, **kwargs):
+        # Halaman konfirmasi (tanpa generate). Password hanya muncul setelah POST.
+        self.object = self.get_object()
+        return self.render_to_response(self.get_context_data())
+
+    def form_valid(self, form):
+        student = self.get_object()
+        try:
+            new_password = reset_student_password(
+                student=student, actor=self.request.user
+            )
+        except ValueError as exc:
+            messages.error(self.request, str(exc))
+            return redirect("attendance:student_detail", pk=student.pk)
+        return self.render_to_response(
+            self.get_context_data(
+                one_time_password=new_password, show_password=True
+            )
+        )
+
+
+class StudentChangeEmailView(AdminRequiredMixin, UpdateView):
+    """Ubah email akun siswa; duplikat platform-wide ditolak."""
+
+    model = StudentProfile
+    fields = []
+    template_name = "attendance/student_email_form.html"
+    success_url = reverse_lazy("attendance:student_list")
+
+    def get_object(self, queryset=None):
+        return _get_student_or_404(self, self.kwargs["pk"])
+
+    def post(self, request, *args, **kwargs):
+        self.object = student = self.get_object()
+        form = StudentEmailForm(request.POST)
+        if form.is_valid():
+            try:
+                change_student_email(
+                    student=student,
+                    new_email=form.cleaned_data["email"],
+                    actor=request.user,
+                )
+            except ValueError as exc:
+                form.add_error("email", str(exc))
+            else:
+                messages.success(self.request, "Email akun siswa diperbarui.")
+                return redirect(self.success_url)
+        return self.render_to_response(
+            self.get_context_data(form=form, email_form=form)
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault("email_form", StudentEmailForm())
+        return ctx
+
+
+class StudentShiftView(AdminRequiredMixin, UpdateView):
+    """Penetapan shift per siswa (form siswa)."""
+
+    model = StudentProfile
+    fields = []
+    template_name = "attendance/student_shift_form.html"
+    success_url = reverse_lazy("attendance:student_detail")
+
+    def get_object(self, queryset=None):
+        return _get_student_or_404(self, self.kwargs["pk"])
+
+    def get_success_url(self):
+        if not getattr(self, "object", None):
+            self.object = self.get_object()
+        return reverse_lazy("attendance:student_detail", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "shift_form",
+            StudentSelfShiftForm(organization=self.organization),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        student = self.get_object()
+        form = StudentSelfShiftForm(
+            request.POST, organization=self.organization
+        )
+        if form.is_valid():
+            shift = form.cleaned_data["shift"]
+            try:
+                assign_student_shift(student=student, shift=shift, actor=request.user)
+            except ValueError as exc:
+                form.add_error("shift", str(exc))
+            else:
+                messages.success(request, "Shift siswa diperbarui.")
+                return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(object=student, shift_form=form)
+        )
+
+
 # ---------------------------------------------------------------- Halaman siswa
+
+@login_required
+def shift_self_select(request):
+    """Siswa pilih sendiri shift aktif (bila org.settings['allow_self_shift'])."""
+    from apps.tenants.context import get_active_membership
+
+    membership = get_active_membership(request.user)
+    if membership is None:
+        return render(request, "tenants/no_membership.html", status=403)
+    org = membership.organization
+    if not org.settings.get("allow_self_shift", False):
+        raise PermissionDenied(
+            "Organisasi tidak mengizinkan pemilihan shift mandiri."
+        )
+    student = org.students.filter(user=request.user).first()
+    if student is None:
+        raise PermissionDenied("Anda bukan siswa di organisasi ini.")
+    if request.method == "POST":
+        form = StudentSelfShiftForm(request.POST, organization=org)
+        if form.is_valid():
+            try:
+                self_assign_shift(
+                    student=student,
+                    shift=form.cleaned_data["shift"],
+                    actor=request.user,
+                )
+            except ValueError as exc:
+                form.add_error("shift", str(exc))
+            else:
+                messages.success(request, "Shift berhasil dipilih.")
+                return redirect("attendance:shift_self_select")
+    else:
+        form = StudentSelfShiftForm(organization=org)
+    return render(
+        request,
+        "attendance/shift_self_select.html",
+        {"form": form, "student": student},
+    )
+
 
 @login_required
 def capture_page(request):

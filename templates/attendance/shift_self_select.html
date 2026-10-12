@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Pilih Shift{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Absensi</p><h1>Pilih Shift</h1></div></div>
+<section class="card" style="max-width:640px">
+  {% if student.shift %}
+  <p>Shift Anda sekarang: <strong>{{ student.shift.name }}</strong>. Untuk mengubahnya, hubungi admin.</p>
+  {% else %}
+  <p>Pilih shift absensi Anda. Jika belum memilih, kebijakan umum organisasi yang berlaku.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Simpan</button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

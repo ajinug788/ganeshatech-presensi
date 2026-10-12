@@ -8,6 +8,21 @@
     <div class="timeline-row"><span class="timeline-icon">K</span><div><div class="timeline-label">Kelompok</div><div class="timeline-sub">{{ object.group|default:"—" }}</div></div></div>
     <div class="timeline-row"><span class="timeline-icon">@</span><div><div class="timeline-label">Akun</div><div class="timeline-sub">{{ object.user.email|default:"(tanpa akun)" }}</div></div></div>
     <div class="timeline-row"><span class="timeline-icon">S</span><div><div class="timeline-label">Status</div><div class="timeline-sub">{% if object.is_active %}<span class="badge badge--hadir">Aktif</span>{% else %}<span class="badge badge--tidak">Nonaktif</span>{% endif %}</div></div></div>
+    <div class="timeline-row"><span class="timeline-icon">⏱</span><div><div class="timeline-label">Shift</div><div class="timeline-sub">{{ object.shift.name|default:"(kebijakan organisasi)" }}</div></div></div>
   </div>
+</section>
+<section class="card" style="max-width:640px">
+  <h2 style="font-size:1rem;margin-bottom:.5rem">Aksi Akun</h2>
+  {% if object.user %}
+  <div class="toolbar" style="margin:0">
+    <a class="btn btn--secondary" href="{% url 'attendance:student_account_active' object.pk %}">{% if object.user.is_active %}Nonaktifkan Akun{% else %}Aktifkan Akun{% endif %}</a>
+    <a class="btn btn--secondary" href="{% url 'attendance:student_reset_password' object.pk %}">Reset Password</a>
+    <a class="btn btn--secondary" href="{% url 'attendance:student_change_email' object.pk %}">Ubah Email</a>
+  </div>
+  {% else %}
+  <p class="timeline-sub">Siswa ini belum punya akun.</p>
+  {% endif %}
+  <h2 style="font-size:1rem;margin:1rem 0 .5rem">Shift</h2>
+  <a class="btn btn--secondary" href="{% url 'attendance:student_shift' object.pk %}">Tetapkan Shift</a>
 </section>
 {% endblock %}

@@ -48,6 +48,18 @@ class StudentProfile(models.Model):
     full_name = models.CharField(_("nama lengkap"), max_length=200)
     group = models.CharField(_("kelas/kelompok"), max_length=100, null=True, blank=True)
     is_active = models.BooleanField(_("aktif"), default=True)
+    shift = models.ForeignKey(
+        "Shift",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
+        verbose_name=_("shift"),
+        help_text=_(
+            "Null = pakai kebijakan absensi organisasi sebagai fallback. "
+            "Satu siswa satu shift untuk pilot (PRD §17)."
+        ),
+    )
     created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
     updated_at = models.DateTimeField(_("diubah"), auto_now=True)
 
@@ -140,6 +152,82 @@ class AttendanceLocation(models.Model):
             raise ValidationError(
                 {"max_accuracy_m": _("Akurasi maksimum harus lebih dari 0 meter.")}
             )
+
+
+def _validate_time_order(field_start, field_end, err_field, message):
+    if field_start and field_end and field_start >= field_end:
+        raise ValidationError({err_field: message})
+
+
+class Shift(models.Model):
+    """Shift absensi per organisasi (multi-shift, PRD §17).
+
+    Bila siswa punya shift, window/toleransi/hari/lokasi divalidasi terhadap
+    shift ini; selain itu fallback ke AttendancePolicy organisasi.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="shifts",
+        verbose_name=_("organisasi"),
+    )
+    name = models.CharField(_("nama shift"), max_length=200)
+    check_in_start = models.TimeField(_("mulai check-in"))
+    check_in_end = models.TimeField(_("akhir check-in"))
+    check_out_start = models.TimeField(_("mulai check-out"))
+    check_out_end = models.TimeField(_("akhir check-out"))
+    late_tolerance_min = models.PositiveIntegerField(
+        _("toleransi terlambat (menit)"), default=15
+    )
+    days_active = models.JSONField(
+        _("hari aktif"), default=list, validators=[validate_days_active]
+    )
+    # Kosong = semua lokasi aktif organisasi berlaku.
+    locations = models.ManyToManyField(
+        AttendanceLocation,
+        blank=True,
+        related_name="shifts",
+        verbose_name=_("lokasi yang berlaku"),
+        help_text=_("Kosong = semua lokasi aktif organisasi berlaku."),
+    )
+    is_active = models.BooleanField(_("aktif"), default=True)
+    created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("diubah"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("shift")
+        verbose_name_plural = _("shift")
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "name"],
+                name="uniq_shift_name_per_org",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["organization", "is_active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.organization})"
+
+    def clean(self):
+        super().clean()
+        validate_days_active(self.days_active)
+        _validate_time_order(
+            self.check_in_start,
+            self.check_in_end,
+            "check_in_end",
+            _("Akhir check-in harus setelah mulai check-in."),
+        )
+        _validate_time_order(
+            self.check_out_start,
+            self.check_out_end,
+            "check_out_end",
+            _("Akhir check-out harus setelah mulai check-out."),
+        )
 
 
 class AttendancePolicy(models.Model):

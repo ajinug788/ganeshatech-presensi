@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Penetapan Shift per Kelas{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Multi-shift</p><h1>Penetapan Shift per Kelas</h1></div><a class="btn btn--secondary" href="{% url 'attendance:shift_list' %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  <p>Pilih kelas/kelompok lalu shift yang diberlakukan untuk semua siswa di kelas itu.</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Terapkan</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
