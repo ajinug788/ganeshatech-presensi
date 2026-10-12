@@ -187,6 +187,7 @@ def build_admin_context(membership, organization):
     base = build_pembina_context(membership, organization)
     org = organization
     today = base["today"]
+    students = org.students.filter(is_active=True).select_related("shift")
 
     total = base["total_siswa"]
     hadir = base["hadir"]
