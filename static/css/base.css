@@ -170,6 +170,13 @@ a:focus-visible, button:focus-visible { outline: 3px solid #83bd98; outline-offs
   .brand { gap: 7px; font-size: .9rem; }
   .brand__mark { width: 33px; height: 33px; }
   .site-nav a { padding: 7px 6px; font-size: .76rem; }
+  .header-right { gap: 4px; }
+  .user-chip { display: none; }
+  .site-header { gap: 8px; flex-wrap: wrap; }
   .stepper__step { flex-direction: column; gap: 3px; font-size: .66rem; }
+  .table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table { min-width: 560px; }
+  .pagination__actions { flex-wrap: wrap; max-width: 100%; }
+  .pagination__actions .btn { white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }

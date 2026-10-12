@@ -91,6 +91,30 @@ function closeModal(id) {
   returnFocus?.focus();
 }
 
+// Foto bukti via endpoint terotorisasi /photos/{id}/ — bukan file publik.
+async function openPhotoModal(photoId) {
+  const content = $('#foto-content');
+  content.className = 'empty-state';
+  content.innerHTML = '<strong>Memuat foto…</strong>';
+  openModal('#modal-foto');
+  try {
+    const res = await fetch(`/api/v1/photos/${encodeURIComponent(photoId)}/`, { credentials: 'same-origin' });
+    if (!res.ok) throw new Error(res.status === 404 ? 'Foto tidak ditemukan.' : 'Foto belum tersedia di server.');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Foto selfie absensi';
+    img.style.cssText = 'width:100%;max-height:60vh;object-fit:contain;border-radius:12px;';
+    img.onload = () => URL.revokeObjectURL(url);
+    content.className = '';
+    content.replaceChildren(img);
+  } catch (error) {
+    content.className = 'empty-state';
+    content.innerHTML = `<strong>Foto tidak tersedia.</strong>${error.message || 'Coba lagi nanti.'}`;
+  }
+}
+
 async function load() {
   $('#pembina-status').textContent = 'Memuat data kehadiran…';
   try {
@@ -128,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('#tbl-siswa').addEventListener('click', (event) => {
     const photoButton = event.target.closest('[data-foto]');
-    if (photoButton) { openModal('#modal-foto'); return; }
+    if (photoButton) { openPhotoModal(photoButton.dataset.foto); return; }
     const correctionButton = event.target.closest('[data-koreksi]');
     if (!correctionButton) return;
     $('#modal-nama').textContent = correctionButton.dataset.nama;
