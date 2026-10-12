@@ -1,38 +1,77 @@
 {% extends "base.html" %}
-{% block title %}Masuk — TeFa Presensi{% endblock %}
+{% load static %}
+{% block title %}Masuk — Presensi TeFa{% endblock %}
+{% block body_class %}login-body{% endblock %}
+{% block extra_head %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
 {% block content %}
-<section class="login-layout" aria-labelledby="login-title">
-  <div class="login-story">
-    <a class="brand" href="#"><span class="brand__mark" aria-hidden="true">T</span>TeFa Presensi</a>
-    <div class="login-copy">
-      <p class="eyebrow" style="color:#b9e5c6">Teaching Factory</p>
-      <h1>Hari produktif dimulai dengan hadir.</h1>
-      <p>Catat kehadiran dengan mudah, langsung dari ponselmu.</p>
-    </div>
-    <p class="login-note">Ruang belajar, berkarya, dan bertumbuh.</p>
-  </div>
-  <div class="login-panel">
-    <div class="login-form">
-      <div class="login-form__top">
-        <p class="eyebrow">Selamat datang</p>
-        <h2 id="login-title">Masuk ke akunmu</h2>
-        <p class="text-muted">Gunakan email dan password yang diberikan pembina.</p>
+<section class="login-page" aria-labelledby="login-title">
+  <div class="login-page__backdrop" aria-hidden="true"></div>
+  <div class="login-card">
+    <header class="login-card__header">
+      <span class="login-card__mark material-symbols-outlined" aria-hidden="true">precision_manufacturing</span>
+      <h1 id="login-title">Presensi TeFa</h1>
+      <p>Platform Absensi &amp; Operasional Teaching Factory</p>
+    </header>
+
+    {% if form.errors or rate_limited %}
+      <div class="login-error" role="alert">
+        {% if rate_limited %}{{ rate_limited }}{% else %}Email atau kata sandi salah. Periksa kembali lalu coba lagi.{% endif %}
       </div>
-      {% if form.errors or rate_limited %}
-        <div class="message message--error" role="alert">
-          {% if rate_limited %}{{ rate_limited }}{% else %}Email atau password salah. Periksa kembali lalu coba lagi.{% endif %}
-        </div>
-      {% endif %}
-      <form method="post" action="{% url 'accounts:login' %}">
-        {% csrf_token %}
+    {% endif %}
+
+    <form class="login-form" method="post" action="{% url 'accounts:login' %}">
+      {% csrf_token %}
+      <div class="login-field">
         <label for="id_username">Email</label>
-        <input type="email" name="username" id="id_username" autocomplete="username" placeholder="nama@sekolah.sch.id" required autofocus value="{{ form.username.value|default:'' }}">
-        <div class="password-row"><label for="id_password">Password</label><span class="text-muted" style="font-size:.8rem">Jaga kerahasiaannya</span></div>
-        <input type="password" name="password" id="id_password" autocomplete="current-password" placeholder="Masukkan password" required>
-        <button type="submit" class="btn btn--big">Masuk <span aria-hidden="true">→</span></button>
-      </form>
-      <p class="login-foot">Tidak bisa masuk? Hubungi pembina atau admin sekolah.</p>
-    </div>
+        <div class="login-input-wrap">
+          <span class="material-symbols-outlined" aria-hidden="true">person</span>
+          <input type="email" name="username" id="id_username" autocomplete="username" placeholder="contoh: nama@sekolah.sch.id" required autofocus value="{{ form.username.value|default:'' }}">
+        </div>
+      </div>
+
+      <div class="login-field">
+        <label for="id_password">Kata Sandi</label>
+        <div class="login-input-wrap">
+          <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+          <input type="password" name="password" id="id_password" autocomplete="current-password" placeholder="Masukkan kata sandi" required>
+          <button class="login-password-toggle" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false">
+            <span class="material-symbols-outlined" id="password-eye" aria-hidden="true">visibility</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="login-help">Lupa kata sandi? Hubungi admin IT sekolah.</p>
+      <button class="login-submit" type="submit">
+        <span class="material-symbols-outlined" aria-hidden="true">login</span>
+        Masuk
+      </button>
+    </form>
+
+    <footer class="login-card__footer">
+      <p>Butuh bantuan akun? Hubungi pembina atau admin sekolah.</p>
+      <p class="login-copyright">© 2026 Presensi TeFa. Hak cipta dilindungi.</p>
+    </footer>
   </div>
 </section>
+<script>
+  (() => {
+    const toggle = document.querySelector('.login-password-toggle');
+    const password = document.getElementById('id_password');
+    const icon = document.getElementById('password-eye');
+    if (!toggle || !password || !icon) return;
+
+    toggle.addEventListener('click', () => {
+      const showPassword = password.type === 'password';
+      password.type = showPassword ? 'text' : 'password';
+      icon.textContent = showPassword ? 'visibility_off' : 'visibility';
+      toggle.setAttribute('aria-label', showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+      toggle.setAttribute('aria-pressed', String(showPassword));
+    });
+  })();
+</script>
 {% endblock %}
