@@ -9,15 +9,18 @@
 </head>
 <body>
   <header class="site-header">
-    <span class="brand">TeFa Presensi</span>
+    <a class="brand" href="{% if membership.role == 'siswa' %}/dashboard/siswa/{% elif membership.role == 'pembina' %}/dashboard/pembina/{% elif membership %}/dashboard/admin/{% else %}{{ request.path }}{% endif %}"><span class="brand__mark" aria-hidden="true">T</span>TeFa <span class="text-muted">Presensi</span></a>
     {% if user.is_authenticated %}
-      <nav>{% block nav %}{% endblock %}</nav>
+      <div class="header-right">
+        <nav class="site-nav" aria-label="Navigasi utama">{% block nav %}{% endblock %}</nav>
+        <div class="user-chip"><span class="avatar" aria-hidden="true">{{ user.email|first|upper }}</span><span class="user-chip__name">{{ user.email }}</span></div>
+      </div>
     {% endif %}
   </header>
   <main class="site-main">
     {% if messages %}
       {% for message in messages %}
-        <div class="message message--{{ message.tags }}">{{ message }}</div>
+        <div class="message message--{{ message.tags }}" role="status">{{ message }}</div>
       {% endfor %}
     {% endif %}
     {% block content %}{% endblock %}

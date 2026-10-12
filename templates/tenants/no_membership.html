@@ -1,6 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Tanpa Keanggotaan — Platform Absensi TeFa{% endblock %}
+{% block title %}Akun belum terhubung — TeFa Presensi{% endblock %}
 {% block content %}
-<h1>Tidak ada keanggotaan aktif</h1>
-<p>Akun Anda belum terhubung ke organisasi mana pun. Hubungi admin organisasi.</p>
+<section class="card" style="max-width:620px;margin:8vh auto;text-align:center;padding:clamp(28px,7vw,60px)">
+  <span class="avatar" style="width:62px;height:62px;margin:0 auto 18px;font-size:1.4rem" aria-hidden="true">i</span>
+  <p class="eyebrow">Satu langkah lagi</p><h1>Akun belum terhubung</h1>
+  <p class="text-muted" style="margin:14px auto 24px;max-width:420px">Akunmu belum memiliki keanggotaan aktif di organisasi mana pun. Hubungi admin sekolah agar akses dapat diaktifkan.</p>
+  <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" type="submit">Keluar dari akun</button></form>
+</section>
 {% endblock %}

@@ -1,9 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — Platform Absensi TeFa{% endblock %}
+{% block title %}Dashboard {{ role_label }} — TeFa Presensi{% endblock %}
+{% block nav %}
+  {% if role_label == "Siswa" %}<a href="/dashboard/siswa/" aria-current="page">Beranda</a><a href="/absen/riwayat/">Riwayat</a>
+  {% elif role_label == "Pembina" %}<a href="/dashboard/pembina/" aria-current="page">Ringkasan</a><a href="#daftar-siswa">Daftar siswa</a>
+  {% else %}<a href="/dashboard/admin/" aria-current="page">Ringkasan</a>{% endif %}
+  <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>
+{% endblock %}
 {% block content %}
-<h1>Dashboard {{ role_label }}</h1>
-{% if membership %}
-  <p>Organisasi: <strong>{{ membership.organization.name }}</strong></p>
-  <p>Role: <strong>{{ membership.get_role_display }}</strong></p>
-{% endif %}
+  {% if membership %}<p class="eyebrow">{{ membership.organization.name }} · {{ role_label }}</p>{% endif %}
+  {% if role_label == "Siswa" %}
+    {% include "attendance/_student_home_content.html" %}
+  {% elif role_label == "Pembina" %}
+    {% include "dashboard/_pembina_content.html" %}
+  {% else %}
+    <section class="hero-card"><div><p class="eyebrow" style="color:#b9e5c6">{{ role_label }}</p><h1>Selamat datang di TeFa Presensi.</h1><p>Kelola kebutuhan Teaching Factory dari satu tempat.</p><div class="hero-actions"><a class="btn" href="/admin/">Buka panel administrasi →</a></div></div><div class="hero-ornament" aria-hidden="true">T</div></section>
+  {% endif %}
 {% endblock %}
