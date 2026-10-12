@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Platform Absensi TeFa{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   <header class="site-header">
     <a class="brand" href="{% if membership.role == 'siswa' %}/dashboard/siswa/{% elif membership.role == 'pembina' %}/dashboard/pembina/{% elif membership %}/dashboard/admin/{% else %}{{ request.path }}{% endif %}"><span class="brand__mark" aria-hidden="true">T</span>TeFa <span class="text-muted">Presensi</span></a>
     {% if user.is_authenticated %}
