@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import AuditLog
+
+# AuditLog bersifat append-only: tidak ada aksi tambah/ubah/hapus di admin.
+admin.site.register(AuditLog)

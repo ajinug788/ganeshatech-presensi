@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Platform Absensi TeFa{% endblock %}
+{% block content %}
+<h1>Dashboard {{ role_label }}</h1>
+{% if membership %}
+  <p>Organisasi: <strong>{{ membership.organization.name }}</strong></p>
+  <p>Role: <strong>{{ membership.get_role_display }}</strong></p>
+{% endif %}
+{% endblock %}
