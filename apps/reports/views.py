@@ -22,6 +22,8 @@ from apps.attendance.models import AttendanceDay
 from apps.tenants.context import RoleRequiredMixin
 
 _WIB_TZ = ZoneInfo("Asia/Jakarta")
+_BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
 
 def _local_time(value):
@@ -118,7 +120,7 @@ def build_student_home_context(membership):
     ctx = {
         "membership": membership,
         "today": today,
-        "month_label": now.strftime("%B %Y"),
+        "month_label": f"{_BULAN_ID[now.month - 1]} {now.year}",
         "today_day": None,
         "today_status_label": "",
         "month_present": 0,
@@ -404,3 +406,71 @@ class RekapCsvView(RoleRequiredMixin, View):
             f'{end.isoformat()}.csv"'
         )
         return response
+
+
+def _recent_days(org, student, limit=3):
+    return list(
+        AttendanceDay.objects.filter(
+            organization=org, student=student, check_in_at__isnull=False
+        ).order_by("-work_date")[:limit]
+    )
+
+
+def _policy_context(org, ctx):
+    """Info shift & toleransi dari AttendancePolicy (None-safe)."""
+    try:
+        policy = org.attendance_policy
+    except Exception:
+        policy = None
+    if policy:
+        ctx["policy_check_in"] = policy.check_in_start.strftime("%H:%M")
+        ctx["policy_check_out"] = policy.check_out_start.strftime("%H:%M")
+        ctx["policy_tolerance"] = policy.late_tolerance_min
+        import datetime as _dt
+        base = now_wib().replace(
+            hour=policy.check_in_start.hour,
+            minute=policy.check_in_start.minute,
+            second=0,
+            microsecond=0,
+        )
+        ctx["policy_tolerance_at"] = (base + _dt.timedelta(minutes=policy.late_tolerance_min)).strftime("%H:%M")
+    else:
+        ctx["policy_check_in"] = None
+    return ctx
+
+
+def now_wib():
+    return dj_timezone.localtime(dj_timezone.now(), _WIB_TZ)
+
+
+def build_student_dashboard_context(membership):
+    """Context dashboard siswa v2 (UI baru): greeting, status, shift, rekap, riwayat 3 sesi."""
+    ctx = build_student_home_context(membership)
+    org = membership.organization
+    now = now_wib()
+    ctx["now_time"] = now.strftime("%H:%M")
+    ctx["greeting"] = (
+        "Selamat Pagi" if now.hour < 11
+        else "Selamat Siang" if now.hour < 15
+        else "Selamat Sore" if now.hour < 19
+        else "Selamat Malam"
+    )
+    student = org.students.filter(user=membership.user, is_active=True).first()
+    if student:
+        ctx["student_name"] = student.full_name
+        ctx["student_group"] = student.group or ""
+    else:
+        ctx["student_name"] = membership.user.get_short_name() or membership.user.email
+        ctx["student_group"] = ""
+    ctx = _policy_context(org, ctx)
+    if student:
+        recent = _recent_days(org, student)
+        ctx["recent_days"] = recent
+        ctx["recent_count"] = len(recent)
+    else:
+        ctx["recent_days"] = []
+        ctx["recent_count"] = 0
+    total = ctx["month_present"] + ctx["month_late"] + ctx["month_absent"] + ctx["month_excused"]
+    ctx["month_total"] = total
+    ctx["discipline_pct"] = round(100 * ctx["month_present"] / total) if total else 100
+    return ctx
