@@ -15,7 +15,7 @@ from . import ratelimit
 # View dashboard per role (placeholder Tahap 2).
 DASHBOARD_BY_ROLE = {
     "siswa": reverse_lazy("tenants:dashboard_siswa"),
-    "pembina": reverse_lazy("tenants:dashboard_pembina"),
+    "pembina": reverse_lazy("reports:dashboard_pembina"),
     "admin": reverse_lazy("tenants:dashboard_admin"),
     "billing": reverse_lazy("tenants:dashboard_admin"),
 }

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Koreksi Absensi — TeFa Presensi{% endblock %}
+{% block nav %}<a href="/reports/dashboard/pembina/">Ringkasan</a><a href="/reports/rekap/">Rekap &amp; Laporan</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Koreksi tercatat dalam audit log</p><h1>Koreksi absensi</h1></div></div>
+
+<section class="card">
+  {% if errors %}
+    <div class="message message--error" role="alert">
+      <ul style="margin:0;padding-left:18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+  <p class="text-muted">{{ day.student.full_name }} ({{ day.student.student_number }}) · {{ day.work_date }}</p>
+  <form method="post">
+    {% csrf_token %}
+    <label for="k-status">Status baru</label>
+    <select id="k-status" name="status" required>
+      <option value="">— Pilih status —</option>
+      {% for value, label in statuses %}
+        <option value="{{ value }}" {% if value == selected_status or value == day.status %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label for="k-alasan">Alasan koreksi <span aria-hidden="true">*</span></label>
+    <textarea id="k-alasan" name="reason" rows="3" required placeholder="Jelaskan alasan perubahan status">{{ reason|default:'' }}</textarea>
+    <p class="form-help">Alasan wajib diisi dan disimpan permanen pada audit log.</p>
+    <div class="hero-actions">
+      <button class="btn" type="submit">Simpan koreksi</button>
+      <a class="btn btn--secondary" href="/reports/rekap/">Batal</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

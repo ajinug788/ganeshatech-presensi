@@ -1,4 +1,54 @@
 {% extends "base.html" %}
 {% block title %}Dashboard Pembina — TeFa Presensi{% endblock %}
-{% block nav %}<a href="/dashboard/pembina/" aria-current="page">Ringkasan</a><a href="#daftar-siswa">Daftar siswa</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
-{% block content %}{% include "dashboard/_pembina_content.html" %}{% endblock %}
+{% block nav %}<a href="/reports/dashboard/pembina/" aria-current="page">Ringkasan</a><a href="/reports/rekap/">Rekap &amp; Laporan</a><a href="/attendance/students/">Daftar siswa</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">{{ membership.organization.name }} · Panel pembina</p><h1>Ringkasan kehadiran</h1><p class="text-muted">Pantau kehadiran siswa hari ini dan tindak lanjuti yang belum absen.</p></div><span class="badge badge--hadir">Hari ini</span></div>
+
+<div class="summary-grid">
+  <div class="summary-card"><span class="summary-card__num">{{ total_siswa }}</span>Siswa aktif<span class="summary-card__hint">Total terdaftar</span></div>
+  <div class="summary-card"><span class="summary-card__num">{{ hadir }}</span>Hadir<span class="summary-card__hint">Check-in tepat waktu</span></div>
+  <div class="summary-card"><span class="summary-card__num">{{ terlambat }}</span>Terlambat<span class="summary-card__hint">Melewati jam masuk</span></div>
+  <div class="summary-card"><span class="summary-card__num">{{ belum_absen }}</span>Belum absen<span class="summary-card__hint">Perlu ditindaklanjuti</span></div>
+  <div class="summary-card"><span class="summary-card__num">{{ sedang_berjalan }}</span>Sedang berjalan<span class="summary-card__hint">Masuk, belum pulang</span></div>
+</div>
+
+<section class="card" style="margin-top:22px">
+  <div class="section-head"><div><p class="eyebrow">Tindak lanjut</p><h2>Siswa belum absen hari ini</h2></div><span class="text-muted" style="font-size:.85rem">{{ belum_list|length }} siswa</span></div>
+  {% if belum_list %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Nama siswa</th><th>Nomor induk</th><th>Kelompok</th></tr></thead>
+      <tbody>
+        {% for s in belum_list %}<tr><td>{{ s.full_name }}</td><td>{{ s.student_number }}</td><td>{{ s.group|default:"—" }}</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <div class="empty-state"><strong>Semua siswa sudah tercatat</strong>Tidak ada siswa yang belum absen hari ini.</div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="section-head"><div><p class="eyebrow">Pemantauan</p><h2>Aktivitas absen terakhir</h2></div><a class="panel-link" href="/reports/rekap/">Lihat rekap →</a></div>
+  {% if aktivitas %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Nama siswa</th><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Lokasi</th></tr></thead>
+      <tbody>
+        {% for item in aktivitas %}<tr>
+          <td>{{ item.day.student.full_name }}</td>
+          <td>{{ item.day.work_date }}</td>
+          <td>{{ item.masuk }}</td>
+          <td>{{ item.pulang }}</td>
+          <td>
+            {% if item.day.status == "present" %}<span class="badge badge--hadir">Hadir</span>
+            {% elif item.day.status == "late" %}<span class="badge badge--belum">Terlambat {{ item.day.late_minutes }} mnt</span>
+            {% elif item.day.status == "absent" %}<span class="badge badge--tinjau">Tidak hadir</span>
+            {% else %}<span class="badge badge--tidak">Izin</span>{% endif %}
+          </td>
+          <td>{{ item.lokasi|default:"—" }}</td>
+        </tr>{% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <div class="empty-state"><strong>Belum ada aktivitas</strong>Aktivitas absen siswa akan muncul di sini.</div>
+  {% endif %}
+</section>
+{% endblock %}

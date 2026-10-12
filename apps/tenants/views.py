@@ -2,6 +2,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
+from apps.attendance.models import AttendanceDay
+from apps.reports.views import build_pembina_context, build_student_home_context
 from .context import TenantRequiredMixin, get_active_membership, role_required
 
 
@@ -10,13 +12,18 @@ def dashboard_siswa(request):
     membership = get_active_membership(request.user)
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
-    return render(request, "tenants/dashboard.html", {"membership": membership, "role_label": "Siswa"})
+    ctx = build_student_home_context(membership)
+    ctx["role_label"] = "Siswa"
+    return render(request, "tenants/dashboard.html", ctx)
 
 
 @login_required
 @role_required("pembina")
 def dashboard_pembina(request):
-    return render(request, "tenants/dashboard.html", {"membership": request.membership, "role_label": "Pembina"})
+    """Dashboard pembina nyata (Tahap 6) di endpoint lama /dashboard/pembina/."""
+    ctx = build_pembina_context(request.membership, request.organization)
+    ctx["role_label"] = "Pembina"
+    return render(request, "dashboard/pembina.html", ctx)
 
 
 @login_required

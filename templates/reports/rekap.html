@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load reports_extras %}
+{% block title %}Rekap Kehadiran — TeFa Presensi{% endblock %}
+{% block nav %}<a href="/reports/dashboard/pembina/">Ringkasan</a><a href="/reports/rekap/" aria-current="page">Rekap &amp; Laporan</a><a href="/attendance/students/">Daftar siswa</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">{{ membership.organization.name }} · Laporan</p><h1>Rekap kehadiran</h1><p class="text-muted">Rekap per siswa dalam rentang tanggal yang dipilih.</p></div>
+  <a class="btn btn--secondary" href="/reports/rekap/csv/?{{ csv_query }}">Unduh CSV</a>
+</div>
+
+<section class="card">
+  <form method="get" class="filters" role="search" aria-label="Filter rekap">
+    <div><label for="f-start">Dari tanggal</label><input type="date" id="f-start" name="start" value="{{ start|date:'Y-m-d' }}"></div>
+    <div><label for="f-end">Sampai tanggal</label><input type="date" id="f-end" name="end" value="{{ end|date:'Y-m-d' }}"></div>
+    <div><label for="f-group">Kelompok</label>
+      <select id="f-group" name="group">
+        <option value="">Semua kelompok</option>
+        {% for g in groups %}<option value="{{ g }}" {% if g == group %}selected{% endif %}>{{ g }}</option>{% endfor %}
+      </select></div>
+    <div><label for="f-status">Status</label>
+      <select id="f-status" name="status">
+        <option value="">Semua status</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div style="grid-column:1/-1"><button class="btn" type="submit">Terapkan filter</button></div>
+  </form>
+
+  {% if rows %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Nama siswa</th><th>Nomor induk</th><th>Kelompok</th><th>Hadir</th><th>Terlambat</th><th>Tidak hadir</th><th>Izin</th><th>Total menit terlambat</th><th>Kehadiran</th><th>Aksi</th></tr></thead>
+      <tbody>
+        {% for row in rows %}<tr>
+          <td>{{ row.student.full_name }}</td>
+          <td>{{ row.student.student_number }}</td>
+          <td>{{ row.student.group|default:"—" }}</td>
+          <td>{{ row.agg.present }}</td>
+          <td>{{ row.agg.late }}</td>
+          <td>{{ row.agg.absent }}</td>
+          <td>{{ row.agg.excused }}</td>
+          <td>{{ row.agg.late_minutes }}</td>
+          <td>{% if row.pct is not None %}{{ row.pct }}%{% else %}—{% endif %}</td>
+          <td><a class="panel-link" href="/reports/rekap/?start={{ start|date:'Y-m-d' }}&amp;end={{ end|date:'Y-m-d' }}&amp;group={{ group }}&amp;status={{ status }}&amp;student={{ row.student.id }}">Detail →</a></td>
+        </tr>{% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <div class="empty-state"><strong>Tidak ada data</strong>Tidak ada siswa atau catatan pada filter ini.</div>
+  {% endif %}
+</section>
+
+{% if detail_student %}
+<section class="card">
+  <div class="section-head"><div><p class="eyebrow">Detail siswa</p><h2>{{ detail_student.full_name }} <span class="text-muted">({{ detail_student.student_number }})</span></h2></div></div>
+  {% if detail_days %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Tanggal</th><th>Status</th><th>Menit terlambat</th><th>Masuk</th><th>Pulang</th>{% if can_correct %}<th>Koreksi</th>{% endif %}</tr></thead>
+      <tbody>
+        {% for d in detail_days %}<tr>
+          <td>{{ d.work_date }}</td>
+          <td>
+            {% if d.status == "present" %}<span class="badge badge--hadir">Hadir</span>
+            {% elif d.status == "late" %}<span class="badge badge--belum">Terlambat</span>
+            {% elif d.status == "absent" %}<span class="badge badge--tinjau">Tidak hadir</span>
+            {% else %}<span class="badge badge--tidak">Izin</span>{% endif %}
+          </td>
+          <td>{{ d.late_minutes }}</td>
+          <td>{{ d.check_in_at|localtime_wib }}</td>
+          <td>{{ d.check_out_at|localtime_wib }}</td>
+          {% if can_correct %}<td><a class="panel-link" href="/reports/koreksi/{{ d.id }}/">Koreksi →</a></td>{% endif %}
+        </tr>{% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <div class="empty-state"><strong>Tidak ada catatan</strong>Siswa ini tidak punya catatan absensi pada rentang ini.</div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
