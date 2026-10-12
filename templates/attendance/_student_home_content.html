@@ -1,33 +1,200 @@
 {% load reports_extras %}
-<section class="hero-card">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+<style>
+/* === Dashboard siswa v2 — gaya aplikasi mobile, data nyata Django === */
+.sdv2 { --p:#00236f; --p-c:#fff; --surf:#fff; --bg:#faf8ff; --txt:#131b2e; --muted:#444651;
+        --ok:#059669; --ok-s:#ECFDF5; --warn:#D97706; --warn-s:#FFFBEB; --err:#ba1a1a; --err-s:#ffdad6;
+        --info:#0284C7; --info-s:#F0F9FF; --line:#E2E8F0; --cont:#f2f3ff; }
+.sdv2 .msym { font-family:'Material Symbols Outlined'; font-weight:normal; font-style:normal;
+  font-size:20px; line-height:1; letter-spacing:normal; text-transform:none; display:inline-block;
+  white-space:nowrap; word-wrap:normal; direction:ltr; -webkit-font-feature-settings:'liga';
+  -webkit-font-smoothing:antialiased; user-select:none; }
+.sdv2 { display:flex; flex-direction:column; gap:14px; }
+.sdv2 .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px;
+  background:var(--cont); color:var(--p); font-size:.78rem; font-weight:600; }
+.sdv2 .chip .dot { width:8px; height:8px; border-radius:50%; background:var(--ok); animation:pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity:.4; } }
+.sdv2 h2.hello { margin:6px 0 2px; font-size:1.45rem; letter-spacing:-.03em; color:var(--txt); }
+.sdv2 .subline { color:var(--muted); font-size:.86rem; display:flex; align-items:center; gap:6px; }
+.sdv2 .dateline { color:var(--muted); font-size:.78rem; display:flex; align-items:center; gap:6px; margin-top:2px; }
+
+.sdv2 .main-card { background:var(--surf); border-radius:16px; padding:18px; box-shadow:0 8px 28px rgba(20,30,60,.06);
+  display:flex; flex-direction:column; gap:14px; border:1px solid var(--line); }
+.sdv2 .card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.sdv2 .card-head .label { font-size:.72rem; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+.sdv2 .badge { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px;
+  font-size:.8rem; font-weight:700; margin-top:6px; }
+.sdv2 .badge .dot { width:8px; height:8px; border-radius:50%; }
+.sdv2 .badge--belum { background:var(--warn-s); color:var(--warn); } .sdv2 .badge--belum .dot { background:var(--warn); }
+.sdv2 .badge--masuk { background:var(--ok-s); color:var(--ok); } .sdv2 .badge--masuk .dot { background:var(--ok); }
+.sdv2 .badge--lengkap { background:var(--info-s); color:var(--info); } .sdv2 .badge--lengkap .dot { background:var(--info); }
+.sdv2 .icon-box { width:42px; height:42px; border-radius:12px; background:var(--cont); display:grid; place-items:center; color:var(--p); flex-shrink:0; }
+.sdv2 .shift-box { background:var(--cont); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+.sdv2 .shift-row { display:flex; justify-content:space-between; align-items:center; font-size:.85rem; }
+.sdv2 .shift-row .k { color:var(--muted); display:flex; align-items:center; gap:6px; }
+.sdv2 .shift-row .v { font-weight:700; color:var(--p); }
+.sdv2 .shift-row .v.warn { color:var(--warn); font-weight:600; font-size:.8rem; }
+.sdv2 .k3 { display:flex; gap:10px; background:var(--warn-s); border-radius:12px; padding:12px 14px; font-size:.82rem; color:var(--txt); line-height:1.45; }
+.sdv2 .k3 .msym { color:var(--warn); flex-shrink:0; }
+.sdv2 .btn-main { display:flex; width:100%; min-height:52px; align-items:center; justify-content:center; gap:8px;
+  background:var(--p); color:var(--p-c); font-weight:700; font-size:.95rem; border:0; border-radius:12px;
+  cursor:pointer; text-decoration:none; transition:transform .12s, background .12s; }
+.sdv2 .btn-main:hover { background:#001a55; } .sdv2 .btn-main:active { transform:scale(.99); }
+.sdv2 .btn-ghost { display:flex; width:100%; min-height:44px; align-items:center; justify-content:center; gap:8px;
+  background:var(--cont); color:var(--muted); font-weight:600; font-size:.88rem; border:0; border-radius:12px;
+  cursor:not-allowed; opacity:.6; }
+.sdv2 .btn-ghost.enabled { background:var(--p); color:var(--p-c); cursor:pointer; opacity:1; }
+
+.sdv2 .rekap-head { display:flex; justify-content:space-between; align-items:center; }
+.sdv2 .rekap-head h3 { margin:0; font-size:1.02rem; color:var(--txt); }
+.sdv2 .pct { font-size:.75rem; font-weight:800; color:var(--ok); background:var(--ok-s); padding:3px 10px; border-radius:999px; }
+.sdv2 .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.sdv2 .metric { background:var(--surf); border:1px solid var(--line); border-radius:14px; padding:14px; box-shadow:0 3px 12px rgba(20,30,60,.04); }
+.sdv2 .metric .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.sdv2 .metric .top span:first-child { font-size:.78rem; color:var(--muted); font-weight:600; }
+.sdv2 .metric .num { font-size:1.5rem; font-weight:800; color:var(--txt); }
+.sdv2 .metric .num small { font-size:.8rem; font-weight:400; color:var(--muted); }
+.sdv2 .metric .bar { height:4px; border-radius:999px; background:var(--cont); margin-top:8px; overflow:hidden; }
+.sdv2 .metric .bar i { display:block; height:100%; border-radius:999px; }
+.sdv2 .m-ok i { background:var(--ok); } .sdv2 .m-ok .msym { color:var(--ok); }
+.sdv2 .m-warn i { background:var(--warn); } .sdv2 .m-warn .msym { color:var(--warn); }
+.sdv2 .m-info i { background:var(--info); } .sdv2 .m-info .msym { color:var(--info); }
+.sdv2 .m-bad i { background:#c5c5d3; } .sdv2 .m-bad .msym { color:#757682; }
+
+.sdv2 .hist { display:flex; flex-direction:column; gap:8px; }
+.sdv2 .hist-item { background:var(--surf); border:1px solid var(--line); border-radius:14px; padding:13px 15px;
+  display:flex; flex-direction:column; gap:6px; box-shadow:0 3px 12px rgba(20,30,60,.04); }
+.sdv2 .hist-top { display:flex; justify-content:space-between; align-items:center; }
+.sdv2 .hist-top .date { font-weight:700; font-size:.88rem; color:var(--txt); }
+.sdv2 .hist-times { display:flex; justify-content:space-between; font-size:.82rem; color:var(--muted); }
+.sdv2 .hist-times span { display:flex; align-items:center; gap:5px; }
+.sdv2 .hist-times .late { color:var(--warn); font-weight:700; }
+.sdv2 .sec-title { display:flex; justify-content:space-between; align-items:center; }
+.sdv2 .sec-title h3 { margin:0; font-size:1.02rem; color:var(--txt); }
+.sdv2 .sec-title .n { font-size:.75rem; color:var(--muted); }
+.sdv2 .link-all { display:flex; width:100%; min-height:46px; align-items:center; justify-content:center; gap:8px;
+  background:var(--cont); color:var(--p); font-weight:700; font-size:.88rem; border-radius:12px; text-decoration:none; }
+.sdv2 .secure { display:flex; align-items:center; justify-content:center; gap:6px; color:#757682; font-size:.74rem; padding:4px 0 8px; }
+@media (max-width: 480px) { .sdv2 .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+</style>
+
+<div class="sdv2">
+  <!-- Sapaan & waktu -->
   <div>
-    <span class="hero-date" id="today-date">Hari ini · {{ today|date:"l, d N Y" }}</span>
-    <p class="eyebrow" style="color:#a7f3d0">Ruang siswa</p>
-    {% if today_day and today_day.check_in_at %}
-      <h1>Kamu sudah absen masuk.</h1>
-      <p id="status-detail">Masuk pukul {{ today_day.check_in_at|localtime_wib }}{% if today_day.check_out_at %} · Pulang pukul {{ today_day.check_out_at|localtime_wib }}{% endif %}. Status: {{ today_status_label }}.</p>
-      {% if not today_day.check_out_at %}
-        <div class="hero-actions"><a class="btn" href="/attendance/absen/capture/?type=checkout">◉ &nbsp; Absen pulang</a></div>
-      {% else %}
-        <div class="hero-actions"><span class="badge badge--hadir" id="complete-badge">✓ Kehadiran hari ini lengkap</span></div>
-      {% endif %}
-    {% else %}
-      <h1 id="status-title">Siap untuk hari ini?</h1>
-      <p id="status-detail">Kehadiranmu belum tercatat. Pastikan kamu sudah berada di area absensi.</p>
-      <div class="hero-actions"><a id="btn-checkin" href="/attendance/absen/capture/" class="btn">◉ &nbsp; Mulai absen masuk</a></div>
-    {% endif %}
-  </div>
-  <div class="hero-ornament" aria-hidden="true">✓</div>
-</section>
-<div class="content-grid">
-  <section class="card"><div class="section-head"><div><p class="eyebrow">Perjalananmu</p><h2>Rekap {{ month_label }}</h2></div><a class="panel-link" href="/attendance/absen/riwayat/">Lihat riwayat →</a></div>
-    <div class="summary-grid">
-      <div class="summary-card summary-card--ok"><span class="summary-card__num">{{ month_present }}</span>Hari hadir<span class="summary-card__hint">Tepat waktu</span></div>
-      <div class="summary-card summary-card--warn"><span class="summary-card__num">{{ month_late }}</span>Terlambat<span class="summary-card__hint">{{ month_late_minutes }} menit total</span></div>
-      <div class="summary-card summary-card--info"><span class="summary-card__num">{{ month_excused }}</span>Izin / sakit<span class="summary-card__hint">Bulan berjalan</span></div>
-      <div class="summary-card summary-card--bad"><span class="summary-card__num">{{ month_absent }}</span>Tanpa keterangan<span class="summary-card__hint">Bulan berjalan</span></div>
+    <div class="flex" style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="chip"><span class="dot"></span> Server Sinkron NTP</span>
+      <span class="dateline" style="margin:0;"><span class="msym" style="font-size:15px;color:var(--info);">schedule</span> {{ now_time }} WIB</span>
     </div>
-  </section>
-  <aside class="card"><p class="eyebrow">Catatan hari ini</p><h2>Siap beraktivitas?</h2><div class="timeline"><div class="timeline-row"><span class="timeline-icon">1</span><div><div class="timeline-label">Datang ke lokasi</div><div class="timeline-sub">Pastikan GPS aktif</div></div></div><div class="timeline-row"><span class="timeline-icon">2</span><div><div class="timeline-label">Ambil selfie</div><div class="timeline-sub">Foto menjadi bukti kehadiran</div></div></div><div class="timeline-row"><span class="timeline-icon">3</span><div><div class="timeline-label">Selesai</div><div class="timeline-sub">Waktu dicatat otomatis</div></div></div></div></aside>
+    <h2 class="hello">{{ greeting }}, {{ student_name }}</h2>
+    {% if student_group %}<p class="subline"><span class="msym" style="font-size:18px;color:var(--p);">precision_manufacturing</span> {{ student_group }}</p>{% endif %}
+    <div class="dateline"><span class="msym" style="font-size:16px;color:#757682;">calendar_today</span> {{ today|date:"l, d N Y" }}</div>
+  </div>
+
+  <!-- Kartu utama: presensi hari ini -->
+  <div class="main-card">
+    <div class="card-head">
+      <div>
+        <span class="label">Status Sesi Hari Ini</span><br>
+        {% if today_day and today_day.check_in_at and today_day.check_out_at %}
+          <span class="badge badge--lengkap"><span class="dot"></span> Kehadiran Lengkap</span>
+        {% elif today_day and today_day.check_in_at %}
+          <span class="badge badge--masuk"><span class="dot"></span> Sudah Absen Masuk</span>
+        {% else %}
+          <span class="badge badge--belum"><span class="dot"></span> Belum Absen Masuk</span>
+        {% endif %}
+      </div>
+      <div class="icon-box"><span class="msym" style="font-size:24px;">factory</span></div>
+    </div>
+
+    {% if policy_check_in %}
+    <div class="shift-box">
+      <div class="shift-row">
+        <span class="k"><span class="msym" style="font-size:16px;">timer</span> Jam Kerja Shift</span>
+        <span class="v">{{ policy_check_in }} – {{ policy_check_out }} WIB</span>
+      </div>
+      <div class="shift-row">
+        <span class="k"><span class="msym" style="font-size:16px;">alarm</span> Batas Toleransi ({{ policy_tolerance }} mnt)</span>
+        <span class="v warn">Tepat Pukul {{ policy_tolerance_at }} WIB</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="k3">
+      <span class="msym">verified_user</span>
+      <p style="margin:0;">Wajib berada di dalam radius lokasi absensi. Sensor kamera &amp; GPS aktif saat tombol ditekan.</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% if today_day and today_day.check_in_at and today_day.check_out_at %}
+        <span class="btn-ghost">✓ Kehadiran hari ini sudah lengkap</span>
+      {% elif today_day and today_day.check_in_at %}
+        <a class="btn-main" href="/attendance/absen/capture/?type=checkout"><span class="msym">logout</span> Absen Pulang Sekarang</a>
+      {% else %}
+        <a class="btn-main" href="/attendance/absen/capture/" id="btn-absen-masuk"><span class="msym">photo_camera_front</span> Ambil Absen Masuk Sekarang</a>
+        <button class="btn-ghost" type="button" disabled><span class="msym">logout</span> Absen Pulang (aktif setelah absen masuk)</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Rekap bulan berjalan -->
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="rekap-head">
+      <h3>Rekap {{ month_label }}</h3>
+      <span class="pct">{{ discipline_pct }}% Disiplin</span>
+    </div>
+    <div class="metrics">
+      <div class="metric m-ok">
+        <div class="top"><span>Hadir Tepat</span><span class="msym">check_circle</span></div>
+        <span class="num">{{ month_present }} <small>Hari</small></span>
+        <div class="bar"><i style="width:{% widthratio month_present month_total 100 as w %}{{ w|default:0 }}%;"></i></div>
+      </div>
+      <div class="metric m-warn">
+        <div class="top"><span>Terlambat</span><span class="msym">schedule</span></div>
+        <span class="num">{{ month_late }} <small>Kali</small></span>
+        <div class="bar"><i style="width:{% widthratio month_late month_total 100 as w %}{{ w|default:0 }}%;"></i></div>
+      </div>
+      <div class="metric m-info">
+        <div class="top"><span>Izin / Sakit</span><span class="msym">assignment</span></div>
+        <span class="num">{{ month_excused }} <small>Hari</small></span>
+        <div class="bar"><i style="width:{% widthratio month_excused month_total 100 as w %}{{ w|default:0 }}%;"></i></div>
+      </div>
+      <div class="metric m-bad">
+        <div class="top"><span>Alpha (Alpa)</span><span class="msym">cancel</span></div>
+        <span class="num">{{ month_absent }} <small>Hari</small></span>
+        <div class="bar"><i style="width:{% widthratio month_absent month_total 100 as w %}{{ w|default:0 }}%;"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Riwayat 3 sesi terakhir -->
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div class="sec-title">
+      <h3>Catatan Kehadiran Terakhir</h3>
+      <span class="n">{{ recent_count }} Sesi Terakhir</span>
+    </div>
+    <div class="hist">
+      {% for day in recent_days %}
+      <div class="hist-item">
+        <div class="hist-top">
+          <span class="date">{{ day.work_date|date:"l, d N Y" }}</span>
+          {% if day.status == "late" %}
+            <span class="badge badge--belum" style="margin:0;"><span class="dot"></span> Terlambat {{ day.late_minutes }} mnt</span>
+          {% else %}
+            <span class="badge badge--masuk" style="margin:0;"><span class="dot"></span> Tepat Waktu</span>
+          {% endif %}
+        </div>
+        <div class="hist-times">
+          <span class="{% if day.status == 'late' %}late{% endif %}"><span class="msym" style="font-size:16px;{% if day.status == 'late' %}color:var(--warn);{% else %}color:var(--p);{% endif %}">login</span> {{ day.check_in_at|localtime_wib }} WIB</span>
+          <span><span class="msym" style="font-size:16px;color:#757682;">logout</span> {{ day.check_out_at|localtime_wib }} WIB</span>
+        </div>
+      </div>
+      {% empty %}
+      <div class="hist-item"><span style="color:var(--muted);font-size:.85rem;">Belum ada catatan kehadiran bulan ini.</span></div>
+      {% endfor %}
+    </div>
+    <a class="link-all" href="/attendance/absen/riwayat/"><span>Lihat Semua Riwayat Absensi</span><span class="msym" style="font-size:18px;">arrow_forward</span></a>
+  </div>
+
+  <div class="secure"><span class="msym" style="font-size:16px;">lock</span> Data kehadiran terenkripsi &amp; terikat pada akun siswa aktif</div>
 </div>
-<p class="footer-note">Lokasi hanya diakses saat kamu melakukan absensi.</p>
