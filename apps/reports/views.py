@@ -21,7 +21,7 @@ from django.utils import timezone as dj_timezone
 from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
 from apps.attendance.models import AttendanceDay, StudentProfile
-from apps.tenants.context import RoleRequiredMixin
+from apps.tenants.context import RoleRequiredMixin, role_required
 from .forms import AttendanceStatusForm
 
 _WIB_TZ = ZoneInfo("Asia/Jakarta")
@@ -57,7 +57,7 @@ def build_pembina_context(membership, organization):
     days_today = {
         d.student_id: d
         for d in AttendanceDay.objects.filter(
-            organization=org, work_date=today
+            organization=org, work_date=today, student__is_active=True
         ).select_related("student", "check_in_location", "check_out_location")
     }
 
@@ -173,6 +173,193 @@ class PembinaDashboardView(RoleRequiredMixin, View):
         return render(request, self.template_name, ctx)
 
 
+# ---------------------------------------------------------------- Dashboard Admin
+
+
+def build_admin_context(membership, organization):
+    """Context dashboard admin (dipakai tenants.views.dashboard_admin).
+
+    Mengikuti struktur mockup: KPI hari ini, tabel aktivitas presensi,
+    panel 'Perlu Tindakan' (siswa belum absen), mini-card per lokasi.
+    """
+    base = build_pembina_context(membership, organization)
+    org = organization
+    today = base["today"]
+
+    total = base["total_siswa"]
+    hadir = base["hadir"]
+    terlambat = base["terlambat"]
+    belum = base["belum_absen"]
+
+    def _pct(part, whole):
+        return round(part / whole * 100, 1) if whole else 0.0
+
+    # Tabel aktivitas dibatasi ke hari kerja saat ini dan siswa aktif.
+    today_days = AttendanceDay.objects.filter(
+        organization=org, work_date=today, student__is_active=True
+    ).select_related(
+        "student", "check_in_location", "check_out_location",
+        "check_in_media", "check_out_media",
+    ).order_by("-updated_at")
+    aktivitas_rows = []
+    for d in today_days[:10]:
+        media_id = (
+            d.check_in_media.id
+            if d.check_in_media
+            else (d.check_out_media.id if d.check_out_media else None)
+        )
+        aktivitas_rows.append(
+            {
+                "day": d,
+                "masuk": _local_time(d.check_in_at),
+                "pulang": _local_time(d.check_out_at),
+                "lokasi": (
+                    d.check_out_location.name
+                    if d.check_out_location
+                    else (d.check_in_location.name if d.check_in_location else "")
+                ),
+                "status_label": _student_status_label(d.status),
+                "late_minutes": d.late_minutes,
+                "photo_url": (
+                    f"/photos/{media_id}/"
+                    if media_id and membership.role == "admin"
+                    else None
+                ),
+            }
+        )
+
+    # Check-in per titik tersedia; backend tidak menyimpan penugasan
+    # siswa ke titik, jadi jangan tampilkan rasio kehadiran per lokasi.
+    lokasi_rows = []
+    for loc in org.attendance_locations.filter(is_active=True):
+        days_loc = AttendanceDay.objects.filter(
+            organization=org,
+            work_date=today,
+            check_in_location=loc,
+            student__is_active=True,
+        )
+        check_ins = days_loc.filter(check_in_at__isnull=False).count()
+        late_loc = days_loc.filter(status=AttendanceDay.Status.LATE).count()
+        lokasi_rows.append(
+            {
+                "location": loc,
+                "check_ins": check_ins,
+                "late": late_loc,
+                "radius_m": loc.radius_m,
+            }
+        )
+
+    koreksi_logs = (
+        AuditLog.objects.filter(
+            organization=org,
+            action__in=("attendance_corrected", "attendance_status_recorded"),
+        ).select_related("actor").order_by("-created_at")[:10]
+    )
+
+    return {
+        **base,
+        "pct_hadir": _pct(hadir, total),
+        "pct_terlambat": _pct(terlambat, total),
+        "pct_belum": _pct(belum, total),
+        "aktivitas_rows": aktivitas_rows,
+        "lokasi_rows": lokasi_rows,
+        "koreksi_logs": koreksi_logs,
+        "org_slug": org.slug,
+        "org_name": org.name,
+        "now_wib": dj_timezone.localtime(dj_timezone.now(), _WIB_TZ),
+    }
+
+
+@role_required("admin")
+def riwayat_koreksi(request):
+    """Riwayat koreksi dan status manual untuk satu organisasi."""
+    action = request.GET.get("action", "").strip()
+    logs = AuditLog.objects.filter(
+        organization=request.organization,
+        action__in=("attendance_corrected", "attendance_status_recorded"),
+    ).select_related("actor")
+    if action in {"attendance_corrected", "attendance_status_recorded"}:
+        logs = logs.filter(action=action)
+    logs = Paginator(logs.order_by("-created_at"), 25).get_page(
+        request.GET.get("page")
+    )
+    return render(
+        request,
+        "reports/riwayat_koreksi.html",
+        {"membership": request.membership, "logs": logs, "action": action},
+    )
+
+
+class AdminCatatIzinView(RoleRequiredMixin, View):
+    """POST dari modal 'Catat Izin' dashboard admin.
+
+    Siswa tanpa AttendanceDay hari ini → catat izin/tidak hadir dan audit.
+    Hanya admin sekolah; scope tenant dari membership aktif.
+    """
+
+    allowed_roles = ("admin",)
+
+    def post(self, request):
+        org = self.organization
+        student_id = (request.POST.get("student_id") or "").strip()
+        student = org.students.filter(pk=student_id, is_active=True).first()
+        if student is None:
+            messages.error(request, "Siswa tidak ditemukan di organisasi ini.")
+            return redirect("tenants:dashboard_admin")
+
+        today = dj_timezone.localtime(dj_timezone.now(), _WIB_TZ).date()
+        if AttendanceDay.objects.filter(
+            organization=org, student=student, work_date=today
+        ).exists():
+            messages.error(
+                request,
+                "Siswa sudah memiliki catatan hari ini. Gunakan alur koreksi absensi.",
+            )
+            return redirect("tenants:dashboard_admin")
+        form = AttendanceStatusForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, "Status dan alasan pencatatan wajib diisi dengan benar.")
+            return redirect("tenants:dashboard_admin")
+
+        new_status = form.cleaned_data["status"]
+        reason = form.cleaned_data["reason"]
+        try:
+            with transaction.atomic():
+                day = AttendanceDay.objects.create(
+                    organization=org,
+                    student=student,
+                    work_date=today,
+                    status=new_status,
+                    late_minutes=0,
+                )
+                catat_audit(
+                    action="attendance_status_recorded",
+                    object_type="attendance.AttendanceDay",
+                    object_id=day.pk,
+                    organization=org,
+                    actor=request.user,
+                    reason=reason,
+                    metadata={
+                        "old_status": None,
+                        "new_status": new_status,
+                        "work_date": day.work_date.isoformat(),
+                        "student_number": student.student_number,
+                        "created": True,
+                        "source": "dashboard_admin",
+                    },
+                )
+        except IntegrityError:
+            messages.error(
+                request,
+                "Siswa sudah memiliki catatan hari ini. Gunakan alur koreksi absensi.",
+            )
+            return redirect("tenants:dashboard_admin")
+        messages.success(
+            request, "Status siswa tersimpan dan tercatat di audit."
+        )
+        return redirect("tenants:dashboard_admin")
+
+
 # ---------------------------------------------------------------- Rekap
 
 
@@ -256,118 +443,6 @@ class RekapLaporanView(RoleRequiredMixin, View):
             "statuses": AttendanceDay.Status.values,
         }
         return render(request, self.template_name, ctx)
-
-
-# ---------------------------------------------------------- Audit & status manual
-
-
-class AuditHistoryView(RoleRequiredMixin, View):
-    """Riwayat audit yang dibatasi pada organisasi milik admin."""
-
-    allowed_roles = ("admin",)
-
-    def get(self, request):
-        action = request.GET.get("action", "").strip()
-        logs = AuditLog.objects.filter(organization=self.organization).select_related(
-            "actor"
-        )
-        if action:
-            logs = logs.filter(action=action)
-        page = Paginator(logs.order_by("-created_at"), 25).get_page(
-            request.GET.get("page")
-        )
-        return render(
-            request,
-            "reports/audit_history.html",
-            {"membership": self.membership, "logs": page, "action": action},
-        )
-
-
-class AttendanceStatusCreateView(RoleRequiredMixin, View):
-    """Catat izin/tidak hadir hari ini dengan alasan audit wajib."""
-
-    allowed_roles = ("admin",)
-    template_name = "reports/attendance_status_form.html"
-
-    def _today(self):
-        return dj_timezone.localtime(dj_timezone.now(), _WIB_TZ).date()
-
-    def _student(self):
-        return get_object_or_404(
-            StudentProfile,
-            pk=self.kwargs["student_id"],
-            organization=self.organization,
-            is_active=True,
-        )
-
-    def _already_recorded(self, student):
-        return AttendanceDay.objects.filter(
-            organization=self.organization,
-            student=student,
-            work_date=self._today(),
-        ).exists()
-
-    def get(self, request, student_id):
-        student = self._student()
-        if self._already_recorded(student):
-            messages.info(request, "Siswa sudah memiliki catatan absensi hari ini.")
-            return redirect("tenants:dashboard_admin")
-        return render(
-            request,
-            self.template_name,
-            {
-                "membership": self.membership,
-                "student": student,
-                "today": self._today(),
-                "form": AttendanceStatusForm(),
-            },
-        )
-
-    def post(self, request, student_id):
-        student = self._student()
-        if self._already_recorded(student):
-            messages.info(request, "Siswa sudah memiliki catatan absensi hari ini.")
-            return redirect("tenants:dashboard_admin")
-        form = AttendanceStatusForm(request.POST)
-        if form.is_valid():
-            work_date = self._today()
-            try:
-                with transaction.atomic():
-                    day = AttendanceDay.objects.create(
-                        organization=self.organization,
-                        student=student,
-                        work_date=work_date,
-                        status=form.cleaned_data["status"],
-                    )
-                    catat_audit(
-                        action="attendance_status_recorded",
-                        object_type="attendance.AttendanceDay",
-                        object_id=day.pk,
-                        organization=self.organization,
-                        actor=request.user,
-                        reason=form.cleaned_data["reason"],
-                        metadata={
-                            "student_number": student.student_number,
-                            "status": day.status,
-                            "work_date": work_date.isoformat(),
-                        },
-                    )
-            except IntegrityError:
-                messages.info(request, "Siswa sudah memiliki catatan absensi hari ini.")
-                return redirect("tenants:dashboard_admin")
-            messages.success(request, "Status siswa tersimpan dan tercatat di audit.")
-            return redirect("tenants:dashboard_admin")
-        return render(
-            request,
-            self.template_name,
-            {
-                "membership": self.membership,
-                "student": student,
-                "today": self._today(),
-                "form": form,
-            },
-            status=400,
-        )
 
 
 # ---------------------------------------------------------------- Koreksi
