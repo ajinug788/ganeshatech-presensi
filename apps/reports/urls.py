@@ -9,4 +9,6 @@ urlpatterns = [
     path("rekap/", views.RekapLaporanView.as_view(), name="rekap"),
     path("rekap/csv/", views.RekapCsvView.as_view(), name="rekap_csv"),
     path("koreksi/<uuid:pk>/", views.KoreksiAttendanceView.as_view(), name="koreksi"),
+    path("riwayat-koreksi/", views.riwayat_koreksi, name="riwayat_koreksi"),
+    path("admin/catat-izin/", views.AdminCatatIzinView.as_view(), name="admin_catat_izin"),
 ]

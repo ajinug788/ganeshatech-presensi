@@ -29,7 +29,12 @@ def dashboard_pembina(request):
 @login_required
 @role_required("admin", "billing")
 def dashboard_admin(request):
-    return render(request, "tenants/dashboard.html", {"membership": request.membership, "role_label": "Admin"})
+    """Dashboard admin/billing (mockup Web Builder, data nyata)."""
+    from apps.reports.views import build_admin_context
+
+    ctx = build_admin_context(request.membership, request.organization)
+    ctx["role_label"] = "Admin"
+    return render(request, "dashboard/admin.html", ctx)
 
 
 @login_required

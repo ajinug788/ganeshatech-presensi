@@ -1,0 +1,573 @@
+{% load static %}<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#00236f",
+        "primary-container": "#1e3a8a",
+        "on-primary": "#ffffff",
+        "secondary": "#006398",
+        "surface": "#faf8ff",
+        "surface-card": "#FFFFFF",
+        "surface-container": "#eaedff",
+        "surface-container-low": "#f2f3ff",
+        "surface-container-high": "#e2e7ff",
+        "surface-container-highest": "#dae2fd",
+        "on-surface": "#131b2e",
+        "on-surface-variant": "#5c5f70",
+        "outline": "#757682",
+        "success-emerald": "#059669",
+        "success-surface": "#ECFDF5",
+        "warning-amber": "#D97706",
+        "warning-surface": "#FFFBEB",
+        "alert-rose": "#E11D48",
+        "alert-surface": "#FFF1F2",
+        "info-sky": "#0284C7",
+        "info-surface": "#F0F9FF",
+        "tertiary-fixed": "#85f8c4",
+        "inverse-surface": "#283044",
+        "border-subtle": "#E2E8F0",
+      },
+      spacing: {
+        "space-xs": "4px", "space-sm": "8px", "space-md": "16px",
+        "space-lg": "24px", "space-xl": "32px",
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        headline: ["Plus Jakarta Sans", "sans-serif"],
+        mono: ["ui-monospace", "monospace"],
+      },
+      fontSize: {
+        "label-sm": ["12px", {lineHeight: "16px"}],
+        "label-md": ["14px", {lineHeight: "20px"}],
+        "body-sm": ["13px", {lineHeight: "18px"}],
+        "body-md": ["15px", {lineHeight: "22px"}],
+        "body-lg": ["18px", {lineHeight: "24px"}],
+        "headline-sm": ["18px", {lineHeight: "24px", fontWeight: "700"}],
+        "headline-md": ["24px", {lineHeight: "32px", fontWeight: "700"}],
+        "headline-lg": ["30px", {lineHeight: "38px", fontWeight: "700"}],
+        "headline-xl": ["36px", {lineHeight: "44px", fontWeight: "700"}],
+      },
+    },
+  },
+};
+</script>
+<style>
+  body { margin: 0; background: #F8FAFC; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+</style>
+<title>Dashboard Admin — {{ org_name }}</title>
+</head>
+<body class="font-sans text-body-md text-on-surface">
+<div class="max-w-7xl mx-auto px-space-md lg:px-space-lg py-space-lg flex flex-col gap-space-lg">
+
+<!-- TOP BAR -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+  <div class="flex flex-col gap-1">
+    <div class="flex items-center gap-space-sm flex-wrap">
+      <span class="px-2.5 py-1 rounded bg-surface-container-high text-primary font-label-sm text-label-sm uppercase tracking-wider font-semibold">{{ org_name|upper }} • KONSOL RESMI</span>
+      <span class="text-outline font-label-sm text-label-sm">•</span>
+      <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+        <span class="material-symbols-outlined text-body-sm text-success-emerald">verified</span>
+        Terverifikasi Multi-Tenant (ID: <code class="text-primary font-mono font-medium">{{ org_slug }}</code>)
+      </span>
+    </div>
+    <h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Dashboard Admin Sekolah</h1>
+    <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+      Pemantauan presensi siswa Teaching Factory &amp; operasional bengkel terintegrasi {{ org_name }} secara real-time.
+    </p>
+  </div>
+  <div class="flex items-center gap-space-sm flex-wrap lg:flex-nowrap">
+    <div class="flex flex-col text-right pr-space-sm hidden sm:flex">
+      <span class="font-label-md text-label-md text-on-surface">{{ today|date:"l, d N Y" }}</span>
+      <span class="font-label-sm text-label-sm text-success-emerald flex items-center justify-end gap-1 font-medium">
+        <span class="w-1.5 h-1.5 rounded-full bg-success-emerald animate-pulse"></span>
+        {{ role_label }} • {{ membership.get_role_display }}
+      </span>
+    </div>
+    <a class="h-11 px-space-md rounded-lg bg-surface-card hover:bg-surface-container transition-colors shadow-sm flex items-center gap-2 text-primary font-label-md text-label-md" href="{% url 'reports:rekap_csv' %}">
+      <span class="material-symbols-outlined text-body-lg">download</span>
+      <span>Ekspor Rekap (CSV)</span>
+    </a>
+    <a class="h-11 px-space-md rounded-lg bg-primary hover:bg-primary-container transition-colors text-on-primary shadow-sm flex items-center gap-2 font-label-md text-label-md" href="{% url 'reports:riwayat_koreksi' %}">
+      <span class="material-symbols-outlined text-body-lg">fact_check</span>
+      <span>Riwayat Koreksi</span>
+    </a>
+    <form method="post" action="{% url 'accounts:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="h-11 px-space-md rounded-lg bg-surface-card hover:bg-surface-container transition-colors shadow-sm flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+        <span class="material-symbols-outlined text-body-lg">logout</span>
+        <span>Keluar</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- MESSAGES -->
+{% if messages %}
+<div class="flex flex-col gap-2">
+  {% for message in messages %}
+  <div class="p-space-sm rounded-lg {{ message.tags|default:'' }} bg-surface-container-low border border-border-subtle font-label-md text-label-md text-on-surface flex items-center gap-2">
+    <span class="material-symbols-outlined text-body-sm">info</span>{{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- HERO / CLOCK -->
+<div class="relative w-full rounded-xl overflow-hidden shadow-md text-on-primary bg-primary min-h-[150px] flex items-center">
+  <div class="absolute inset-0 bg-gradient-to-r from-primary via-primary/95 to-primary/80"></div>
+  <div class="relative z-10 w-full p-space-lg flex flex-col md:flex-row md:items-center justify-between gap-space-lg">
+    <div class="flex flex-col gap-2 max-w-xl">
+      <span class="px-2 py-0.5 rounded bg-on-primary/10 text-on-primary font-label-sm text-label-sm font-semibold tracking-wide flex items-center gap-1.5 w-max">
+        <span class="w-2 h-2 rounded-full bg-warning-amber"></span>
+        RINGKASAN HARI INI (WIB)
+      </span>
+      <h2 class="font-headline-md text-headline-md text-on-primary">
+        {{ lokasi_rows|length }} Lokasi Absensi Aktif
+      </h2>
+      <p class="font-body-sm text-body-sm text-on-primary/80">
+        Pemantauan kehadiran hari ini di seluruh titik geofence {{ org_name }}.
+      </p>
+    </div>
+    <div class="flex items-center gap-space-md bg-on-primary/10 backdrop-blur-md px-space-lg py-space-md rounded-xl">
+      <div class="flex flex-col">
+        <span class="font-label-sm text-label-sm text-on-primary/75 uppercase tracking-wider">Jam Server</span>
+        <div class="flex items-baseline gap-2 mt-0.5">
+          <span class="font-mono font-headline-lg text-headline-lg text-on-primary font-bold tracking-tight" id="server-clock">{{ now_wib|date:"H:i:s" }}</span>
+          <span class="font-label-sm text-label-sm text-on-primary/80">WIB</span>
+        </div>
+      </div>
+      <div class="h-12 w-px bg-on-primary/20 hidden sm:block"></div>
+      <div class="flex flex-col hidden sm:flex">
+        <span class="font-label-sm text-label-sm text-on-primary/75 uppercase tracking-wider">Sudah Absen</span>
+        <span class="font-headline-sm text-headline-sm text-tertiary-fixed font-semibold mt-1">{{ hadir|add:terlambat }} / {{ total_siswa }} Siswa</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4 KPI CARDS -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+  <div class="p-space-lg rounded-xl bg-surface-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-on-surface-variant">Total Siswa Terdaftar</span>
+      <div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-body-lg">groups</span>
+      </div>
+    </div>
+    <div class="mt-space-md">
+      <div class="flex items-baseline gap-2">
+        <span class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">{{ total_siswa }}</span>
+        <span class="font-label-md text-label-md text-on-surface-variant font-normal">Siswa</span>
+      </div>
+    </div>
+    <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+      <span>Sedang Berjalan</span>
+      <span class="text-primary font-medium">{{ sedang_berjalan }} Sesi</span>
+    </div>
+  </div>
+  <div class="p-space-lg rounded-xl bg-surface-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-on-surface-variant">Hadir Tepat Waktu</span>
+      <div class="w-10 h-10 rounded-lg bg-success-surface flex items-center justify-center text-success-emerald">
+        <span class="material-symbols-outlined text-body-lg">check_circle</span>
+      </div>
+    </div>
+    <div class="mt-space-md">
+      <div class="flex items-baseline gap-2">
+        <span class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">{{ hadir }}</span>
+        <span class="font-label-md text-label-md text-success-emerald font-semibold">{{ pct_hadir }}%</span>
+      </div>
+    </div>
+    <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+      <span>Status Hari Ini</span>
+      <span class="text-success-emerald font-medium">Hadir</span>
+    </div>
+  </div>
+  <div class="p-space-lg rounded-xl bg-surface-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-on-surface-variant">Terlambat</span>
+      <div class="w-10 h-10 rounded-lg bg-warning-surface flex items-center justify-center text-warning-amber">
+        <span class="material-symbols-outlined text-body-lg">schedule</span>
+      </div>
+    </div>
+    <div class="mt-space-md">
+      <div class="flex items-baseline gap-2">
+        <span class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight">{{ terlambat }}</span>
+        <span class="font-label-md text-label-md text-warning-amber font-semibold">{{ pct_terlambat }}%</span>
+      </div>
+    </div>
+    <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+      <span>Hari Ini</span>
+      <span class="text-warning-amber font-medium">Perlu Pembinaan</span>
+    </div>
+  </div>
+  <div class="p-space-lg rounded-xl bg-surface-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+    <div class="flex items-center justify-between">
+      <span class="font-label-md text-label-md text-on-surface-variant">Belum Absen / Perlu Tindakan</span>
+      <div class="w-10 h-10 rounded-lg bg-alert-surface flex items-center justify-center text-alert-rose">
+        <span class="material-symbols-outlined text-body-lg">error_outline</span>
+      </div>
+    </div>
+    <div class="mt-space-md">
+      <div class="flex items-baseline gap-2">
+        <span class="font-headline-xl text-headline-xl text-alert-rose font-bold tracking-tight">{{ belum_absen }}</span>
+        <span class="font-label-md text-label-md text-alert-rose font-semibold">{{ pct_belum }}%</span>
+      </div>
+    </div>
+    <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+      <span>Belum Ada Catatan</span>
+      <span class="text-alert-rose font-medium">Perlu Tindakan</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN DUAL-COLUMN -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+  <!-- LEFT: ACTIVITY TABLE -->
+  <div class="lg:col-span-8 flex flex-col gap-space-md">
+    <div class="bg-surface-card rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-success-emerald animate-ping"></span>
+            <h3 class="font-headline-sm text-headline-sm text-primary">Aktivitas Presensi Terbaru</h3>
+          </div>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">
+            10 catatan presensi terakhir (semua lokasi, semua tanggal)
+          </p>
+        </div>
+        <div class="flex items-center bg-surface-container-low p-1 rounded-lg self-start sm:self-auto">
+          <button class="px-3 py-1.5 rounded-md font-label-sm text-label-sm font-semibold transition-all bg-surface-card text-primary shadow-sm" id="filter-all" onclick="filterTransactions('all')">Semua</button>
+          <button class="px-3 py-1.5 rounded-md font-label-sm text-label-sm font-medium text-on-surface-variant hover:text-on-surface transition-all" id="filter-hadir" onclick="filterTransactions('hadir')">Hadir</button>
+          <button class="px-3 py-1.5 rounded-md font-label-sm text-label-sm font-medium text-on-surface-variant hover:text-on-surface transition-all" id="filter-terlambat" onclick="filterTransactions('terlambat')">Terlambat</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto -mx-space-lg px-space-lg">
+        <table class="w-full text-left font-body-sm text-body-sm">
+          <thead>
+            <tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+              <th class="py-3 px-space-md rounded-l-lg">Siswa &amp; NIS</th>
+              <th class="py-3 px-space-md">Lokasi</th>
+              <th class="py-3 px-space-md">Masuk</th>
+              <th class="py-3 px-space-md">Pulang</th>
+              <th class="py-3 px-space-md">Foto</th>
+              <th class="py-3 px-space-md rounded-r-lg text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tx-tbody">
+            {% for row in aktivitas_rows %}
+            <tr class="tx-row hover:bg-surface-container-low/60 transition-colors" data-status="{% if row.day.status == 'late' %}terlambat{% elif row.day.status == 'present' %}hadir{% endif %}">
+              <td class="py-3.5 px-space-md">
+                <div class="flex items-center gap-space-sm">
+                  <div class="w-9 h-9 rounded-full {% if row.day.status == 'late' %}bg-warning-surface text-warning-amber{% else %}bg-primary-container text-on-primary{% endif %} flex items-center justify-center font-label-sm text-label-sm font-bold uppercase">
+                    {{ row.day.student.full_name|slice:":2"|upper }}
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-label-md text-label-md text-on-surface font-semibold truncate">{{ row.day.student.full_name }}</span>
+                    <span class="font-mono text-on-surface-variant font-label-sm text-label-sm">{{ row.day.student.student_number }}</span>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3.5 px-space-md">
+                <span class="font-label-sm text-label-sm text-on-surface font-medium block">{{ row.lokasi|default:"—" }}</span>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">{{ row.day.work_date|date:"d N Y" }}</span>
+              </td>
+              <td class="py-3.5 px-space-md">
+                <span class="font-mono font-medium {% if row.day.status == 'late' %}text-warning-amber{% else %}text-on-surface{% endif %}">{{ row.masuk }}</span>
+                <span class="block text-outline font-label-sm text-label-sm">WIB</span>
+              </td>
+              <td class="py-3.5 px-space-md">
+                <span class="font-mono font-medium text-on-surface">{{ row.pulang }}</span>
+              </td>
+              <td class="py-3.5 px-space-md">
+                {% if row.photo_url %}
+                <a href="{{ row.photo_url }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-info-surface text-info-sky font-label-sm text-label-sm font-semibold">
+                  <span class="material-symbols-outlined text-body-sm">photo_camera</span>
+                  Lihat
+                </a>
+                {% else %}
+                <span class="font-label-sm text-label-sm text-on-surface-variant">—</span>
+                {% endif %}
+              </td>
+              <td class="py-3.5 px-space-md text-right">
+                {% if row.day.status == 'late' %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-warning-surface text-warning-amber font-label-sm text-label-sm font-semibold">
+                  <span class="w-1.5 h-1.5 rounded-full bg-warning-amber"></span>
+                  TERLAMBAT{% if row.late_minutes %} +{{ row.late_minutes }}m{% endif %}
+                </span>
+                {% elif row.day.status == 'present' %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-success-surface text-success-emerald font-label-sm text-label-sm font-semibold">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span>
+                  HADIR
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">
+                  {{ row.status_label|upper }}
+                </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="py-6 text-center font-label-md text-label-md text-on-surface-variant">Belum ada catatan presensi.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-md text-label-md">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-success-emerald"></span>
+          <span>Scope organisasi: {{ org_name }}</span>
+        </div>
+        <a class="text-primary hover:text-primary-container font-semibold inline-flex items-center gap-1 transition-colors" href="{% url 'reports:rekap' %}">
+          <span>Lihat Seluruh Rekap Absensi</span>
+          <span class="material-symbols-outlined text-body-md">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <!-- Lokasi mini-cards (data nyata per AttendanceLocation) -->
+    {% if lokasi_rows %}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+      {% for lrow in lokasi_rows %}
+      <div class="p-space-md rounded-xl bg-surface-card shadow-sm flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="font-label-md text-label-md text-on-surface font-semibold">{{ lrow.location.name }}</span>
+          <span class="w-2 h-2 rounded-full {% if lrow.pct >= 90 %}bg-success-emerald{% elif lrow.pct >= 70 %}bg-warning-amber{% else %}bg-alert-rose{% endif %}"></span>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <span class="font-headline-sm text-headline-sm text-primary">{{ lrow.present }} / {{ lrow.total }}</span>
+          <span class="font-label-sm text-label-sm {% if lrow.pct >= 90 %}text-success-emerald{% elif lrow.pct >= 70 %}text-warning-amber{% else %}text-alert-rose{% endif %} font-medium">{{ lrow.pct }}% Hadir</span>
+        </div>
+        <span class="font-label-sm text-label-sm text-on-surface-variant">Radius geofence {{ lrow.radius_m }} m</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: PERLU TINDAKAN -->
+  <div class="lg:col-span-4 flex flex-col gap-space-md">
+    <div class="bg-surface-card rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-alert-surface flex items-center justify-center text-alert-rose">
+            <span class="material-symbols-outlined text-body-md">person_alert</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Perlu Tindakan</h3>
+            <span class="font-label-sm text-label-sm text-alert-rose font-medium">{{ belum_absen }} Siswa Belum Ada Catatan Hari Ini</span>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded-full bg-alert-surface text-alert-rose font-label-sm text-label-sm font-semibold">Tinggi</span>
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Siswa aktif yang belum memiliki catatan AttendanceDay hari ini.
+      </p>
+      <div class="flex flex-col gap-space-sm">
+        {% for s in belum_list|slice:":5" %}
+        <div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-2 hover:bg-surface-container transition-colors">
+          <div class="flex items-center justify-between">
+            <span class="font-label-md text-label-md text-on-surface font-semibold">{{ s.full_name }}</span>
+            <span class="px-2 py-0.5 rounded bg-alert-surface text-alert-rose font-label-sm text-label-sm font-semibold">Belum Absen</span>
+          </div>
+          <div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+            <span>{{ s.group|default:"—" }}</span>
+            <span class="font-mono">{{ s.student_number }}</span>
+          </div>
+          <div class="flex items-center justify-end pt-1">
+            {% if membership.role == 'admin' or membership.role == 'billing' %}
+            <button type="button" class="h-8 px-2.5 rounded bg-primary text-on-primary hover:bg-primary-container font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1"
+                    onclick="handleExcuseModal('{{ s.full_name|escapejs }}', '{{ s.student_number|escapejs }}', '{{ s.pk }}')">
+              <span class="material-symbols-outlined text-body-sm">edit_note</span>
+              Catat Izin
+            </button>
+            {% else %}
+            <span class="font-label-sm text-label-sm text-on-surface-variant">Belum ada catatan hari ini</span>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="p-space-sm rounded-lg bg-success-surface font-label-md text-label-md text-success-emerald flex items-center gap-2">
+          <span class="material-symbols-outlined text-body-sm">check_circle</span>
+          Semua siswa sudah tercatat hari ini.
+        </div>
+        {% endfor %}
+      </div>
+      {% if belum_absen > 5 %}
+      <div class="w-full py-2.5 rounded-lg bg-surface-container text-primary font-label-md text-label-md flex items-center justify-center gap-2">
+        <span>{{ belum_absen }} siswa belum tercatat — lihat rekap lengkap</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Koreksi terakhir -->
+    <div class="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col gap-space-sm">
+      <div class="flex items-center gap-space-sm">
+        <div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-body-md">history</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-label-md text-label-md text-primary font-semibold">Koreksi Terakhir</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Audit trail (attendance_corrected)</span>
+        </div>
+      </div>
+      <div class="p-space-sm rounded-lg bg-surface-card flex flex-col gap-2 font-label-sm text-label-sm">
+        {% for log in koreksi_logs %}
+        <div class="flex flex-col gap-0.5 pb-2 border-b border-border-subtle last:border-0 last:pb-0">
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface font-semibold">{{ log.metadata.student_number|default:log.object_id|truncatechars:20 }}</span>
+            <span class="text-on-surface-variant">{{ log.created_at|date:"d N H:i" }}</span>
+          </div>
+          <span class="text-on-surface-variant">{{ log.metadata.old_status|default:"—" }} → {{ log.metadata.new_status }} • oleh {{ log.actor.get_username|default:"sistem" }}</span>
+        </div>
+        {% empty %}
+        <span class="text-on-surface-variant">Belum ada koreksi tercatat.</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Tenant badge -->
+    <div class="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col gap-space-sm">
+      <div class="flex items-center gap-space-sm">
+        <div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-body-md">shield</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-label-md text-label-md text-primary font-semibold">Keamanan Multi-Tenant</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">Tenant scope aktif</span>
+        </div>
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Semua transaksi dibatasi pada organisasi Anda. Tidak ada pertukaran data antarsekolah.
+      </p>
+      <div class="p-space-sm rounded-lg bg-surface-card flex flex-col gap-1 font-mono font-label-sm text-label-sm">
+        <div class="flex items-center justify-between text-on-surface-variant">
+          <span>Role:</span>
+          <span class="text-primary font-semibold">{{ membership.role }}</span>
+        </div>
+        <div class="flex items-center justify-between text-on-surface-variant">
+          <span>Tenant ID:</span>
+          <span class="text-on-surface font-semibold">{{ org_slug }}</span>
+        </div>
+        <div class="flex items-center justify-between text-on-surface-variant">
+          <span>Audit Trail:</span>
+          <span class="text-success-emerald font-semibold">Aktif &amp; Terkunci</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATAT IZIN — form POST nyata -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm hidden" id="modal-excuse">
+  <form method="post" action="{% url 'reports:admin_catat_izin' %}" class="bg-surface-card rounded-xl shadow-xl w-full max-w-md p-space-lg flex flex-col gap-space-md mx-4">
+    {% csrf_token %}
+    <input type="hidden" name="student_id" id="modal-student-id" value=""/>
+    <div class="flex items-center justify-between pb-2">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center">
+          <span class="material-symbols-outlined text-body-md">edit_document</span>
+        </div>
+        <div>
+          <h4 class="font-headline-sm text-headline-sm text-on-surface">Pencatatan Status Siswa</h4>
+          <span class="font-label-sm text-label-sm text-on-surface-variant font-medium" id="modal-student-name">Siswa TeFa</span>
+        </div>
+      </div>
+      <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" onclick="closeExcuseModal()">
+        <span class="material-symbols-outlined text-body-lg">close</span>
+      </button>
+    </div>
+    <div class="flex flex-col gap-space-sm">
+      <label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="modal-status-select">Pilih Status</label>
+      <select class="h-11 px-space-sm rounded-lg bg-surface-card text-on-surface font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary" id="modal-status-select" name="status" required>
+        <option value="excused">Izin (Kedinasan / Sakit / Keperluan Mendesak)</option>
+        <option value="absent">Tidak Hadir (Alpha)</option>
+        <option value="present">Hadir</option>
+        <option value="late">Terlambat</option>
+      </select>
+    </div>
+    <div class="flex flex-col gap-space-sm">
+      <label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="modal-notes">Alasan (wajib)</label>
+      <textarea class="p-space-sm rounded-lg bg-surface-card text-on-surface font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" id="modal-notes" name="reason" required placeholder="Tuliskan nomor kontak orang tua atau alasan detail izin..." rows="3"></textarea>
+    </div>
+    <div class="flex items-center justify-end gap-space-sm pt-2">
+      <button type="button" class="h-10 px-space-md rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" onclick="closeExcuseModal()">
+        Batal
+      </button>
+      <button type="submit" class="h-10 px-space-md rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-colors flex items-center gap-1.5 shadow-sm">
+        <span class="material-symbols-outlined text-body-sm">save</span>
+        Simpan Koreksi
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+function filterTransactions(type) {
+  const rows = document.querySelectorAll('.tx-row');
+  ['filter-all', 'filter-hadir', 'filter-terlambat'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.className = "px-3 py-1.5 rounded-md font-label-sm text-label-sm font-medium text-on-surface-variant hover:text-on-surface transition-all";
+  });
+  const activeId = type === 'all' ? 'filter-all' : (type === 'hadir' ? 'filter-hadir' : 'filter-terlambat');
+  const activeBtn = document.getElementById(activeId);
+  if (activeBtn) activeBtn.className = "px-3 py-1.5 rounded-md font-label-sm text-label-sm font-semibold transition-all bg-surface-card text-primary shadow-sm";
+  rows.forEach(row => {
+    const rowStatus = row.getAttribute('data-status') || '';
+    if (type === 'all' || rowStatus === type) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+function handleExcuseModal(name, nisn, studentId) {
+  const modal = document.getElementById('modal-excuse');
+  const nameElem = document.getElementById('modal-student-name');
+  const idInput = document.getElementById('modal-student-id');
+  if (modal && nameElem && idInput) {
+    nameElem.innerText = name + ' (NIS: ' + nisn + ')';
+    idInput.value = studentId;
+    modal.classList.remove('hidden');
+  }
+}
+
+function closeExcuseModal() {
+  const modal = document.getElementById('modal-excuse');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Jam server WIB berjalan (baseline dari server, lanjut via client clock).
+(function () {
+  const el = document.getElementById('server-clock');
+  if (!el) return;
+  const start = new Date();
+  const parts = el.textContent.split(':').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return;
+  const base = parts[0] * 3600 + parts[1] * 60 + parts[2];
+  const tick = () => {
+    const elapsed = Math.floor((Date.now() - start.getTime()) / 1000);
+    let s = (base + elapsed) % 86400;
+    const h = String(Math.floor(s / 3600)).padStart(2, '0');
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    el.textContent = h + ':' + m + ':' + sec;
+  };
+  setInterval(tick, 1000);
+})();
+</script>
+</div>
+</body>
+</html>

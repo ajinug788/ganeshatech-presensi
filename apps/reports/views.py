@@ -17,9 +17,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.utils import timezone as dj_timezone
 
+from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
 from apps.attendance.models import AttendanceDay
-from apps.tenants.context import RoleRequiredMixin
+from apps.tenants.context import RoleRequiredMixin, role_required
 
 _WIB_TZ = ZoneInfo("Asia/Jakarta")
 
@@ -166,6 +167,187 @@ class PembinaDashboardView(RoleRequiredMixin, View):
     def get(self, request):
         ctx = build_pembina_context(self.membership, self.organization)
         return render(request, self.template_name, ctx)
+
+
+# ---------------------------------------------------------------- Dashboard Admin
+
+
+def build_admin_context(membership, organization):
+    """Context dashboard admin (dipakai tenants.views.dashboard_admin).
+
+    Mengikuti struktur mockup: KPI hari ini, tabel aktivitas presensi,
+    panel 'Perlu Tindakan' (siswa belum absen), mini-card per lokasi.
+    """
+    base = build_pembina_context(membership, organization)
+    org = organization
+    today = base["today"]
+
+    total = base["total_siswa"]
+    hadir = base["hadir"]
+    terlambat = base["terlambat"]
+    belum = base["belum_absen"]
+
+    def _pct(part, whole):
+        return round(part / whole * 100, 1) if whole else 0.0
+
+    # Tabel aktivitas (10 terbaru) + foto check-in bila ada.
+    aktivitas_rows = []
+    for row in base["aktivitas"]:
+        d = row["day"]
+        media_id = (
+            d.check_in_media.id
+            if d.check_in_media
+            else (d.check_out_media.id if d.check_out_media else None)
+        )
+        aktivitas_rows.append(
+            {
+                **row,
+                "status_label": _student_status_label(d.status),
+                "late_minutes": d.late_minutes,
+                "photo_url": f"/photos/{media_id}/" if media_id else None,
+            }
+        )
+
+    hadir_count = hadir + terlambat
+
+    # Mini-card per lokasi: kehadiran hari ini per AttendanceLocation.
+    lokasi_rows = []
+    for loc in org.attendance_locations.filter(is_active=True):
+        days_loc = AttendanceDay.objects.filter(
+            organization=org, work_date=today, check_in_location=loc
+        )
+        total_loc = days_loc.count()
+        present_loc = days_loc.exclude(status=AttendanceDay.Status.ABSENT).count()
+        lokasi_rows.append(
+            {
+                "location": loc,
+                "total": total_loc,
+                "present": present_loc,
+                "pct": _pct(present_loc, total_loc),
+                "radius_m": loc.radius_m,
+            }
+        )
+
+    koreksi_logs = (
+        AuditLog.objects.filter(
+            organization=org, action="attendance_corrected"
+        ).select_related("actor")[:10]
+    )
+
+    return {
+        **base,
+        "pct_hadir": _pct(hadir_count, total),
+        "pct_terlambat": _pct(terlambat, total),
+        "pct_belum": _pct(belum, total),
+        "aktivitas_rows": aktivitas_rows,
+        "lokasi_rows": lokasi_rows,
+        "koreksi_logs": koreksi_logs,
+        "org_slug": org.slug,
+        "org_name": org.name,
+        "now_wib": dj_timezone.localtime(dj_timezone.now(), _WIB_TZ),
+    }
+
+
+@role_required("admin", "billing")
+def riwayat_koreksi(request):
+    """Riwayat koreksi absensi org (AuditLog action='attendance_corrected')."""
+    logs = (
+        AuditLog.objects.filter(
+            organization=request.organization, action="attendance_corrected"
+        )
+        .select_related("actor")
+        .order_by("-created_at")[:100]
+    )
+    return render(
+        request,
+        "reports/riwayat_koreksi.html",
+        {"membership": request.membership, "logs": logs},
+    )
+
+
+class AdminCatatIzinView(RoleRequiredMixin, View):
+    """POST dari modal 'Catat Izin' dashboard admin.
+
+    Siswa tanpa AttendanceDay hari ini → buat AttendanceDay berstatus
+    dipilih (izin/absent/...) + audit 'attendance_corrected' (reason wajib).
+    Admin/billing saja; scope tenant dari membership aktif.
+    """
+
+    allowed_roles = ("admin", "billing")
+
+    def post(self, request):
+        org = self.organization
+        student_id = (request.POST.get("student_id") or "").strip()
+        new_status = (request.POST.get("status") or "").strip()
+        reason = (request.POST.get("reason") or "").strip()
+
+        student = org.students.filter(
+            pk=student_id, is_active=True
+        ).first()
+        if student is None:
+            messages.error(request, "Siswa tidak ditemukan di organisasi ini.")
+            return redirect("tenants:dashboard_admin")
+
+        today = dj_timezone.localtime(dj_timezone.now(), _WIB_TZ).date()
+        day = AttendanceDay.objects.filter(
+            organization=org, student=student, work_date=today
+        ).first()
+
+        allowed = {
+            AttendanceDay.Status.PRESENT,
+            AttendanceDay.Status.LATE,
+            AttendanceDay.Status.ABSENT,
+            AttendanceDay.Status.EXCUSED,
+        }
+        if new_status not in allowed:
+            messages.error(request, "Status tidak valid.")
+            return redirect("tenants:dashboard_admin")
+        if not reason:
+            messages.error(request, "Alasan koreksi wajib diisi.")
+            return redirect("tenants:dashboard_admin")
+
+        old_status = day.status if day else None
+        if day is None:
+            day = AttendanceDay.objects.create(
+                organization=org,
+                student=student,
+                work_date=today,
+                status=new_status,
+                late_minutes=0,
+            )
+            created = True
+        else:
+            if new_status == day.status:
+                messages.error(
+                    request, "Status baru sama dengan status saat ini."
+                )
+                return redirect("tenants:dashboard_admin")
+            day.status = new_status
+            if new_status != AttendanceDay.Status.LATE:
+                day.late_minutes = 0
+            day.save(update_fields=["status", "late_minutes", "updated_at"])
+            created = False
+
+        catat_audit(
+            action="attendance_corrected",
+            object_type="attendance.AttendanceDay",
+            object_id=day.pk,
+            organization=org,
+            actor=request.user,
+            reason=reason,
+            metadata={
+                "old_status": old_status,
+                "new_status": new_status,
+                "work_date": day.work_date.isoformat(),
+                "student_number": student.student_number,
+                "created": created,
+                "source": "dashboard_admin",
+            },
+        )
+        messages.success(
+            request, "Status siswa tersimpan dan tercatat di audit."
+        )
+        return redirect("tenants:dashboard_admin")
 
 
 # ---------------------------------------------------------------- Rekap
