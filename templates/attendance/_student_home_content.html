@@ -1,0 +1,14 @@
+<section class="hero-card">
+  <div><span class="hero-date" id="today-date">Hari ini</span><p class="eyebrow" style="color:#b9e5c6">Ruang siswa</p><h1 id="status-title">Memuat status kehadiran…</h1><p id="status-detail">Sebentar ya, kami sedang menyiapkan ringkasan harimu.</p>
+    <div class="hero-actions"><a id="btn-checkin" href="/absen/capture/" class="btn" hidden>◉ &nbsp; Absen masuk</a><a id="btn-checkout" href="/absen/capture/?type=checkout" class="btn" hidden>◉ &nbsp; Absen pulang</a><span id="complete-badge" class="badge" hidden>✓ Kehadiran lengkap</span></div>
+  </div><div class="hero-ornament" aria-hidden="true">✓</div>
+</section>
+<div id="home-error" class="message message--error" role="alert" hidden></div>
+<div class="content-grid">
+  <section class="card"><div class="section-head"><div><p class="eyebrow">Perjalananmu</p><h2>Kehadiran minggu ini</h2></div><a class="panel-link" href="/absen/riwayat/">Lihat riwayat →</a></div>
+    <div class="summary-grid"><div class="summary-card"><span class="summary-card__num" id="sum-hadir">4</span>Hari hadir<span class="summary-card__hint">Minggu berjalan</span></div><div class="summary-card"><span class="summary-card__num" id="sum-telat">1</span>Terlambat<span class="summary-card__hint">Tetap semangat</span></div><div class="summary-card"><span class="summary-card__num" id="sum-izin">0</span>Izin / sakit<span class="summary-card__hint">Minggu berjalan</span></div><div class="summary-card"><span class="summary-card__num" id="sum-alpa">0</span>Tanpa keterangan<span class="summary-card__hint">Minggu berjalan</span></div></div>
+  </section>
+  <aside class="card"><p class="eyebrow">Catatan hari ini</p><h2>Siap beraktivitas?</h2><div class="timeline"><div class="timeline-row"><span class="timeline-icon">1</span><div><div class="timeline-label">Datang ke lokasi</div><div class="timeline-sub">Pastikan GPS aktif</div></div></div><div class="timeline-row"><span class="timeline-icon">2</span><div><div class="timeline-label">Ambil selfie</div><div class="timeline-sub">Foto menjadi bukti kehadiran</div></div></div><div class="timeline-row"><span class="timeline-icon">3</span><div><div class="timeline-label">Selesai</div><div class="timeline-sub">Waktu dicatat otomatis</div></div></div></div></aside>
+</div>
+<p class="footer-note">Lokasi hanya diakses saat kamu melakukan absensi.</p>
+<script type="module" src="/static/js/student.js"></script>

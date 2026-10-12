@@ -47,10 +47,12 @@ async function initCamera() {
   const res = await startCamera(video);
   if (res.ok) {
     $('#cam-fallback').hidden = true;
+    $('#btn-camera-retry').hidden = true;
     setStatus('#cam-status', 'Kamera siap. Ambil foto selfie.', 'status--ok');
   } else {
     $('#cam-fallback').hidden = false;
-    showError('#cam-status', 'Kamera tidak bisa diakses.', 'Aktifkan izin kamera untuk absen, atau gunakan tombol ambil foto di bawah.');
+    $('#btn-camera-retry').hidden = false;
+    showError('#cam-status', 'Kamera tidak bisa diakses.', 'Izinkan kamera untuk absen, lalu coba lagi atau gunakan kamera perangkat di bawah.');
   }
 }
 
@@ -61,7 +63,7 @@ async function takePhoto() {
     blob = await captureFrame(video);
   } else {
     const fileInput = $('#cam-file');
-    if (!fileInput.files.length) { showError('#cam-status', 'Belum ada foto. Ambil selfie dulu.', '', 'status--error'); return; }
+    if (!fileInput.files.length) { showError('#cam-status', 'Belum ada foto. Ambil selfie dulu.'); return; }
     blob = fileInput.files[0];
   }
   state.photoBlob = await compressBlob(blob);
@@ -69,8 +71,6 @@ async function takePhoto() {
   stopCamera(video);
   setStep(2);
   setStatus('#photo-status', 'Foto siap. Lanjut ambil lokasi.', 'status--ok');
-  // otomatis lanjut ambil lokasi
-  await acquireLocation();
 }
 
 // --- Step 3: lokasi ---
@@ -89,6 +89,7 @@ async function acquireLocation() {
   document.querySelector('.stepper__step[data-step="3"]').dataset.failed = '';
   setStatus('#geo-status', `Lokasi didapat (akurasi ±${res.accuracy_m} m).`, 'status--ok');
   $('#btn-submit').disabled = false;
+  $('#btn-retry-geo').hidden = true;
   setStep(4);
 }
 
@@ -98,13 +99,18 @@ function newIdempotencyKey() {
   sessionStorage.setItem('absen_client_request_id', state.idempotencyKey);
 }
 
+function setBusy(busy, isCheckout) {
+  state.busy = busy;
+  $('#btn-submit').disabled = busy;
+  $('#btn-submit').textContent = busy ? 'Mengirim…' : (isCheckout ? 'Kirim Absen Pulang' : 'Kirim Absen Masuk');
+  $('#btn-submit').setAttribute('aria-busy', String(busy));
+}
+
 async function submit() {
   if (state.busy) return;
   if (!state.photoBlob) { showError('#submit-status', 'Foto belum ada. Ambil ulang selfie.'); return; }
   if (!state.geo) { showError('#submit-status', 'Lokasi belum didapat. Coba ambil lokasi lagi.'); return; }
-  state.busy = true;
-  $('#btn-submit').disabled = true;
-  $('#btn-submit').textContent = 'Mengirim…';
+  setBusy(true, document.body.dataset.absenType === 'checkout');
   if (!state.idempotencyKey) newIdempotencyKey();
 
   const form = new FormData();
@@ -119,16 +125,21 @@ async function submit() {
   try {
     const res = await api('POST', path, form, true);
     sessionStorage.removeItem('absen_client_request_id');
+    const time = res.server_time ? new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(res.server_time)) : 'waktu server';
     setStatus('#submit-status',
-      `Absen ${isCheckout ? 'pulang' : 'masuk'} tercatat pada ${new Date(res.server_time).toLocaleTimeString('id-ID')}`,
+      `Absen ${isCheckout ? 'pulang' : 'masuk'} tercatat pada ${time}.`,
       'status--ok');
     $('#wizard-result').dataset.state = 'success';
+    $('#wizard-result').innerHTML = '<p class="status status--ok">Kehadiran berhasil dicatat. Terima kasih!</p><a class="btn btn--secondary" href="/dashboard/siswa/">Kembali ke beranda</a>';
   } catch (err) {
     const code = err instanceof ApiError ? err.code : 'NETWORK';
     if (code === 'NETWORK') {
       showError('#submit-status', 'Koneksi terputus. Cek internet, lalu coba lagi.');
     } else if (code === 'ALREADY_CHECKED_IN' || code === 'ALREADY_CHECKED_OUT') {
-      showError('#submit-status', err.message); // status tersimpan, jangan minta absen lagi
+      setStatus('#submit-status', `${err.message} Status kehadiran sudah tercatat; kamu tidak perlu mengirim ulang.`, 'status--ok');
+      $('#wizard-result').dataset.state = 'already-recorded';
+      $('#wizard-result').innerHTML = '<a class="btn btn--secondary" href="/dashboard/siswa/">Kembali ke beranda</a>';
+      $('#btn-submit').hidden = true;
     } else if (code === 'AUTH_REQUIRED') {
       location.href = '/accounts/login/';
       return;
@@ -138,8 +149,8 @@ async function submit() {
     // biarkan idempotency key tetap untuk retry yang sama
     $('#btn-submit').disabled = false;
   } finally {
-    state.busy = false;
-    $('#btn-submit').textContent = isCheckout ? 'Kirim Absen Pulang' : 'Kirim Absen Masuk';
+    setBusy(false, isCheckout);
+    if (['success', 'already-recorded'].includes($('#wizard-result').dataset.state)) $('#btn-submit').hidden = true;
   }
 }
 
@@ -147,10 +158,20 @@ async function submit() {
 document.addEventListener('DOMContentLoaded', () => {
   const isCheckout = new URLSearchParams(location.search).get('type') === 'checkout';
   document.body.dataset.absenType = isCheckout ? 'checkout' : 'checkin';
+  $('#capture-title').textContent = isCheckout ? 'Absen pulang' : 'Absen masuk';
+  state.idempotencyKey = sessionStorage.getItem('absen_client_request_id') || null;
   const btnSubmit = $('#btn-submit');
   if (btnSubmit) btnSubmit.textContent = isCheckout ? 'Kirim Absen Pulang' : 'Kirim Absen Masuk';
   $('#btn-capture')?.addEventListener('click', takePhoto);
-  $('#btn-retake')?.addEventListener('click', () => { state.photoBlob = null; initCamera(); });
+  $('#btn-retake')?.addEventListener('click', () => {
+    state.photoBlob = null;
+    const preview = $('#photo-preview');
+    if (preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    $('#cam-file').value = '';
+    initCamera();
+  });
+  $('#btn-camera-retry')?.addEventListener('click', initCamera);
+  $('#btn-continue')?.addEventListener('click', acquireLocation);
   $('#btn-retry-geo')?.addEventListener('click', acquireLocation);
   $('#btn-submit')?.addEventListener('click', submit);
   initCamera();

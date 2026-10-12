@@ -1,18 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Login — Platform Absensi TeFa{% endblock %}
+{% block title %}Masuk — TeFa Presensi{% endblock %}
 {% block content %}
-<div class="card">
-  <h1>Masuk</h1>
-  <p class="text-muted">Gunakan email dan password yang diberikan pembina.</p>
-  <div class="message message--error" hidden>Contoh pesan error saat email/password salah.</div>
-  <form method="post" action="{% url 'accounts:login' %}">
-    {% csrf_token %}
-    <label for="id_username">Email</label>
-    <input type="email" name="username" id="id_username" autocomplete="email" required autofocus>
-    <label for="id_password">Password</label>
-    <input type="password" name="password" id="id_password" autocomplete="current-password" required>
-    <button type="submit" class="btn btn--big">Masuk</button>
-  </form>
-  <p><a href="#" title="Segera hadir — fitur reset password di Tahap berikutnya">Lupa password?</a></p>
-</div>
+<section class="login-layout" aria-labelledby="login-title">
+  <div class="login-story">
+    <a class="brand" href="#"><span class="brand__mark" aria-hidden="true">T</span>TeFa Presensi</a>
+    <div class="login-copy">
+      <p class="eyebrow" style="color:#b9e5c6">Teaching Factory</p>
+      <h1>Hari produktif dimulai dengan hadir.</h1>
+      <p>Catat kehadiran dengan mudah, langsung dari ponselmu.</p>
+    </div>
+    <p class="login-note">Ruang belajar, berkarya, dan bertumbuh.</p>
+  </div>
+  <div class="login-panel">
+    <div class="login-form">
+      <div class="login-form__top">
+        <p class="eyebrow">Selamat datang</p>
+        <h2 id="login-title">Masuk ke akunmu</h2>
+        <p class="text-muted">Gunakan email dan password yang diberikan pembina.</p>
+      </div>
+      {% if form.errors or rate_limited %}
+        <div class="message message--error" role="alert">
+          {% if rate_limited %}{{ rate_limited }}{% else %}Email atau password salah. Periksa kembali lalu coba lagi.{% endif %}
+        </div>
+      {% endif %}
+      <form method="post" action="{% url 'accounts:login' %}">
+        {% csrf_token %}
+        <label for="id_username">Email</label>
+        <input type="email" name="username" id="id_username" autocomplete="username" placeholder="nama@sekolah.sch.id" required autofocus value="{{ form.username.value|default:'' }}">
+        <div class="password-row"><label for="id_password">Password</label><span class="text-muted" style="font-size:.8rem">Jaga kerahasiaannya</span></div>
+        <input type="password" name="password" id="id_password" autocomplete="current-password" placeholder="Masukkan password" required>
+        <button type="submit" class="btn btn--big">Masuk <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="login-foot">Tidak bisa masuk? Hubungi pembina atau admin sekolah.</p>
+    </div>
+  </div>
+</section>
 {% endblock %}

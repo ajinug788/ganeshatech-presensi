@@ -1,99 +1,177 @@
-// dashboard.js — dashboard pembina: ringkasan, tabel, filter, modal koreksi & foto
 import { api } from './api.js';
 
-const $ = (s) => document.querySelector(s);
+const $ = (selector) => document.querySelector(selector);
+const pageSize = 8;
 let rows = [];
+let page = 0;
+let returnFocus = null;
 
-const BADGE = {
-  HADIR: 'badge--hadir', BELUM_PULANG: 'badge--belum', BELUM_HADIR: 'badge--tidak', PERLU_DITINJAU: 'badge--tinjau',
+const STATUS = {
+  HADIR: ['Hadir', 'badge--hadir'],
+  BELUM_PULANG: ['Belum pulang', 'badge--belum'],
+  BELUM_HADIR: ['Belum hadir', 'badge--tidak'],
+  PERLU_DITINJAU: ['Perlu ditinjau', 'badge--tinjau'],
 };
 
-async function load() {
-  const status = $('#pembina-status');
-  status.textContent = 'Memuat data…';
-  try {
-    const res = await api('GET', '/attendance/records/');
-    rows = res.results || [];
-    if (res.summary) {
-      $('#sum-hadir').textContent = res.summary.hadir ?? '–';
-      $('#sum-belum').textContent = res.summary.belum_hadir ?? '–';
-      $('#sum-pulang').textContent = res.summary.pulang ?? '–';
-      $('#sum-tinjau').textContent = res.summary.perlu_ditinjau ?? '–';
-    }
-    render();
-    status.textContent = '';
-  } catch (e) {
-    status.textContent = 'Gagal memuat: ' + e.message;
-  }
+function button(label, attrs = {}) {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'btn btn--secondary';
+  el.textContent = label;
+  for (const [key, value] of Object.entries(attrs)) el.dataset[key] = value;
+  return el;
+}
+
+function filteredRows() {
+  const query = $('#f-cari').value.trim().toLocaleLowerCase('id-ID');
+  const status = $('#f-status').value;
+  const group = $('#f-kelompok').value;
+  const date = $('#f-tanggal').value;
+  return rows.filter((row) => {
+    const matchesName = !query || row.name.toLocaleLowerCase('id-ID').includes(query);
+    const matchesStatus = !status || row.status === status;
+    const matchesGroup = !group || (row.group || row.group_name || '') === group;
+    const matchesDate = !date || (row.date || '') === date;
+    return matchesName && matchesStatus && matchesGroup && matchesDate;
+  });
 }
 
 function render() {
-  const q = $('#f-cari').value.toLowerCase();
-  const st = $('#f-status').value;
+  const visibleRows = filteredRows();
+  const start = page * pageSize;
+  const pageRows = visibleRows.slice(start, start + pageSize);
   const tbody = $('#tbl-siswa tbody');
-  tbody.innerHTML = '';
-  for (const r of rows) {
-    if (q && !r.name.toLowerCase().includes(q)) continue;
-    if (st && r.status !== st) continue;
+  tbody.replaceChildren();
+
+  for (const record of pageRows) {
     const tr = document.createElement('tr');
-    tr.innerHTML =
-      `<td><button class="btn btn--secondary" data-foto="${r.id}" style="padding:6px 10px;">Lihat</button></td>` +
-      `<td>${r.name}</td><td>${r.check_in ?? '—'}</td><td>${r.check_out ?? '—'}</td>` +
-      `<td><span class="badge ${BADGE[r.status] || ''}">${r.status.replace('_', ' ')}</span></td>` +
-      `<td>${r.distance_m != null ? r.distance_m + ' m' : '—'}</td>` +
-      `<td><button class="btn btn--secondary" data-koreksi="${r.id}" data-nama="${r.name}" style="padding:6px 10px;">Koreksi</button></td>`;
-    tbody.appendChild(tr);
+    const photoCell = document.createElement('td');
+    photoCell.append(button('Lihat', { foto: String(record.id) }));
+    tr.append(photoCell);
+    const nameCell = document.createElement('td');
+    nameCell.textContent = record.name;
+    tr.append(nameCell);
+    for (const value of [record.check_in, record.check_out]) {
+      const cell = document.createElement('td');
+      cell.textContent = value || '—';
+      tr.append(cell);
+    }
+    const statusCell = document.createElement('td');
+    const badge = document.createElement('span');
+    const [label, style] = STATUS[record.status] || [record.status, 'badge--tidak'];
+    badge.className = `badge ${style}`;
+    badge.textContent = label;
+    statusCell.append(badge);
+    tr.append(statusCell);
+    const distanceCell = document.createElement('td');
+    distanceCell.textContent = record.distance_m == null ? '—' : `${record.distance_m} m`;
+    tr.append(distanceCell);
+    const actionCell = document.createElement('td');
+    actionCell.append(button('Koreksi', { koreksi: String(record.id), nama: record.name }));
+    tr.append(actionCell);
+    tbody.append(tr);
   }
-  if (!tbody.children.length) $('#pembina-status').textContent = 'Tidak ada data cocok.';
+
+  const end = Math.min(start + pageRows.length, visibleRows.length);
+  $('#row-count').textContent = `${visibleRows.length} siswa`;
+  $('#page-label').textContent = visibleRows.length ? `Menampilkan ${start + 1}–${end} dari ${visibleRows.length}` : 'Tidak ada data cocok';
+  $('#page-prev').disabled = page === 0;
+  $('#page-next').disabled = end >= visibleRows.length;
+  $('#pembina-status').textContent = visibleRows.length ? '' : 'Tidak ada data yang sesuai dengan pencarian atau filter.';
 }
 
-function openModal(id) { $(id).hidden = false; }
-function closeModal(id) { $(id).hidden = true; }
+function openModal(id) {
+  returnFocus = document.activeElement;
+  $(id).hidden = false;
+  $(id).querySelector('button, input, textarea')?.focus();
+}
+
+function closeModal(id) {
+  $(id).hidden = true;
+  returnFocus?.focus();
+}
+
+async function load() {
+  $('#pembina-status').textContent = 'Memuat data kehadiran…';
+  try {
+    const result = await api('GET', '/attendance/records/');
+    rows = result.results || [];
+    const groupSelect = $('#f-kelompok');
+    const groups = [...new Set(rows.map(row => row.group || row.group_name).filter(Boolean))].sort();
+    groupSelect.replaceChildren(new Option('Semua kelompok', ''));
+    for (const group of groups) groupSelect.add(new Option(group, group));
+    if (result.summary) {
+      $('#sum-hadir').textContent = result.summary.hadir ?? '—';
+      $('#sum-belum').textContent = result.summary.belum_hadir ?? '—';
+      $('#sum-pulang').textContent = result.summary.pulang ?? '—';
+      $('#sum-tinjau').textContent = result.summary.perlu_ditinjau ?? '—';
+    }
+    $('#pembina-status').className = 'status-line';
+    page = 0;
+    render();
+  } catch (error) {
+    $('#pembina-status').className = 'status status--error';
+    $('#pembina-status').textContent = `Data belum dapat dimuat. ${error.message || 'Periksa koneksi lalu coba lagi.'}`;
+    $('#row-count').textContent = '—';
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+  $('#today-label').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jakarta' }).format(new Date());
   load();
-  $('#f-cari').addEventListener('input', render);
-  $('#f-status').addEventListener('change', render);
-  $('#f-tanggal').addEventListener('change', () => { /* backend filter; dummy abaikan */ });
+  $('#f-cari').addEventListener('input', () => { page = 0; render(); });
+  $('#f-status').addEventListener('change', () => { page = 0; render(); });
+  $('#f-kelompok').addEventListener('change', () => { page = 0; render(); });
+  $('#f-tanggal').addEventListener('change', () => { page = 0; render(); });
+  $('#page-prev').addEventListener('click', () => { page = Math.max(0, page - 1); render(); });
+  $('#page-next').addEventListener('click', () => { page += 1; render(); });
 
-  $('#tbl-siswa').addEventListener('click', async (ev) => {
-    const fotoBtn = ev.target.closest('[data-foto]');
-    if (fotoBtn) {
-      $('#modal-foto-img').src = `/api/v1/photos/${fotoBtn.dataset.foto}/?dummy=1`;
-      openModal('#modal-foto');
-      return;
-    }
-    const korBtn = ev.target.closest('[data-koreksi]');
-    if (korBtn) {
-      $('#modal-nama').textContent = korBtn.dataset.nama;
-      $('#kor-alasan').value = '';
-      $('#kor-status').textContent = '';
-      $('#kor-simpan').dataset.recordId = korBtn.dataset.koreksi;
-      openModal('#modal-koreksi');
-    }
+  $('#tbl-siswa').addEventListener('click', (event) => {
+    const photoButton = event.target.closest('[data-foto]');
+    if (photoButton) { openModal('#modal-foto'); return; }
+    const correctionButton = event.target.closest('[data-koreksi]');
+    if (!correctionButton) return;
+    $('#modal-nama').textContent = correctionButton.dataset.nama;
+    $('#kor-alasan').value = '';
+    $('#kor-waktu-masuk').value = '';
+    $('#kor-waktu-pulang').value = '';
+    $('#kor-status').textContent = '';
+    $('#kor-simpan').dataset.recordId = correctionButton.dataset.koreksi;
+    openModal('#modal-koreksi');
   });
 
   $('#kor-batal').addEventListener('click', () => closeModal('#modal-koreksi'));
   $('#foto-tutup').addEventListener('click', () => closeModal('#modal-foto'));
-  document.querySelectorAll('.modal').forEach(m =>
-    m.addEventListener('click', (e) => { if (e.target === m) m.hidden = true; }));
+  document.querySelectorAll('.modal').forEach((modal) => {
+    modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(`#${modal.id}`); });
+    modal.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(`#${modal.id}`); });
+  });
 
-  $('#kor-simpan').addEventListener('click', async () => {
-    const alasan = $('#kor-alasan').value.trim();
-    if (!alasan) { $('#kor-status').textContent = 'Alasan koreksi wajib diisi.'; $('#kor-status').className = 'status status--error'; return; }
-    const recordId = $('#kor-simpan').dataset.recordId;
+  $('#kor-simpan').addEventListener('click', async (event) => {
+    const saveButton = event.currentTarget;
+    const reason = $('#kor-alasan').value.trim();
+    const status = $('#kor-status');
+    if (!reason) {
+      status.className = 'status status--error';
+      status.textContent = 'Alasan koreksi wajib diisi.';
+      $('#kor-alasan').focus();
+      return;
+    }
+    saveButton.disabled = true;
     try {
-      await api('POST', `/attendance/records/${recordId}/corrections/`, {
+      await api('POST', `/attendance/records/${saveButton.dataset.recordId}/corrections/`, {
         check_in: $('#kor-waktu-masuk').value || null,
         check_out: $('#kor-waktu-pulang').value || null,
-        reason: alasan,
+        reason,
       });
-      $('#kor-status').textContent = 'Koreksi tersimpan.';
-      $('#kor-status').className = 'status status--ok';
-      setTimeout(() => { closeModal('#modal-koreksi'); load(); }, 600);
-    } catch (e) {
-      $('#kor-status').textContent = e.message;
-      $('#kor-status').className = 'status status--error';
+      status.className = 'status status--ok';
+      status.textContent = 'Koreksi tersimpan dan tercatat.';
+      window.setTimeout(() => { closeModal('#modal-koreksi'); load(); }, 700);
+    } catch (error) {
+      status.className = 'status status--error';
+      status.textContent = error.message || 'Koreksi belum dapat disimpan.';
+    } finally {
+      saveButton.disabled = false;
     }
   });
 });
