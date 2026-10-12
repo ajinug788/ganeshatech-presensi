@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ action_label|default:"Form Siswa" }}{% endblock %}
 {% block content %}
-<h1>{% if form.instance.pk %}Ubah Siswa{% else %}Tambah Siswa{% endif %}</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Simpan</button>
-  <a href="{% url 'attendance:student_list' %}">Batal</a>
-</form>
+<div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>{% if form.instance.pk %}Ubah Siswa{% else %}Tambah Siswa{% endif %}</h1></div><a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Simpan</button>
+      <a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">Batal</a>
+    </div>
+  </form>
+</section>
 {% endblock %}

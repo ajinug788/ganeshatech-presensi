@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Kebijakan Absensi{% endblock %}
 {% block content %}
-<h1>Kebijakan Absensi</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Simpan</button>
-</form>
+<div class="page-heading"><div><p class="eyebrow">Pengaturan absensi</p><h1>Kebijakan Absensi</h1></div></div>
+<section class="card" style="max-width:640px">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Simpan</button>
+    </div>
+  </form>
+</section>
 {% endblock %}

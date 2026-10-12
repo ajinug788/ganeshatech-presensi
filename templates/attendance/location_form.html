@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{% if form.instance.pk %}Ubah{% else %}Tambah{% endif %} Lokasi{% endblock %}
 {% block content %}
-<h1>{% if form.instance.pk %}Ubah{% else %}Tambah{% endif %} Lokasi</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Simpan</button>
-  <a href="{% url 'attendance:location_list' %}">Batal</a>
-</form>
+<div class="page-heading"><div><p class="eyebrow">Pengaturan absensi</p><h1>{% if form.instance.pk %}Ubah{% else %}Tambah{% endif %} Lokasi</h1></div><a class="btn btn--secondary" href="{% url 'attendance:location_list' %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Simpan</button>
+      <a class="btn btn--secondary" href="{% url 'attendance:location_list' %}">Batal</a>
+    </div>
+  </form>
+</section>
 {% endblock %}

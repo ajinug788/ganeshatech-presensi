@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Riwayat Kehadiran — TeFa Presensi{% endblock %}
-{% block nav %}<a href="/dashboard/siswa/">Beranda</a><a href="/absen/riwayat/" aria-current="page">Riwayat</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
+{% block nav %}<a href="/dashboard/siswa/">Beranda</a><a href="/absen/riwayat/" aria-current="page">Riwayat</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary">Keluar</button></form>{% endblock %}
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">Catatan kehadiran</p><h1>Riwayat absensi</h1><p class="text-muted">Pantau catatan kehadiranmu di Teaching Factory.</p></div><a class="btn btn--secondary" href="/dashboard/siswa/">← Beranda</a></div>
 <section class="card">

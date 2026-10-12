@@ -1,24 +1,32 @@
 {% load reports_extras %}
 <section class="hero-card">
-  <div><span class="hero-date">Hari ini · {{ today|date:"l, d N Y" }}</span><p class="eyebrow" style="color:#b9e5c6">Ruang siswa</p>
+  <div>
+    <span class="hero-date" id="today-date">Hari ini · {{ today|date:"l, d N Y" }}</span>
+    <p class="eyebrow" style="color:#a7f3d0">Ruang siswa</p>
     {% if today_day and today_day.check_in_at %}
       <h1>Kamu sudah absen masuk.</h1>
       <p id="status-detail">Masuk pukul {{ today_day.check_in_at|localtime_wib }}{% if today_day.check_out_at %} · Pulang pukul {{ today_day.check_out_at|localtime_wib }}{% endif %}. Status: {{ today_status_label }}.</p>
       {% if not today_day.check_out_at %}
         <div class="hero-actions"><a class="btn" href="/absen/capture/?type=checkout">◉ &nbsp; Absen pulang</a></div>
       {% else %}
-        <div class="hero-actions"><span class="badge badge--hadir">✓ Kehadiran hari ini lengkap</span></div>
+        <div class="hero-actions"><span class="badge badge--hadir" id="complete-badge">✓ Kehadiran hari ini lengkap</span></div>
       {% endif %}
     {% else %}
       <h1 id="status-title">Siap untuk hari ini?</h1>
       <p id="status-detail">Kehadiranmu belum tercatat. Pastikan kamu sudah berada di area absensi.</p>
       <div class="hero-actions"><a id="btn-checkin" href="/absen/capture/" class="btn">◉ &nbsp; Mulai absen masuk</a></div>
     {% endif %}
-  </div><div class="hero-ornament" aria-hidden="true">✓</div>
+  </div>
+  <div class="hero-ornament" aria-hidden="true">✓</div>
 </section>
 <div class="content-grid">
   <section class="card"><div class="section-head"><div><p class="eyebrow">Perjalananmu</p><h2>Rekap {{ month_label }}</h2></div><a class="panel-link" href="/absen/riwayat/">Lihat riwayat →</a></div>
-    <div class="summary-grid"><div class="summary-card"><span class="summary-card__num">{{ month_present }}</span>Hari hadir<span class="summary-card__hint">Tepat waktu</span></div><div class="summary-card"><span class="summary-card__num">{{ month_late }}</span>Terlambat<span class="summary-card__hint">{{ month_late_minutes }} menit total</span></div><div class="summary-card"><span class="summary-card__num">{{ month_excused }}</span>Izin / sakit<span class="summary-card__hint">Bulan berjalan</span></div><div class="summary-card"><span class="summary-card__num">{{ month_absent }}</span>Tanpa keterangan<span class="summary-card__hint">Bulan berjalan</span></div></div>
+    <div class="summary-grid">
+      <div class="summary-card summary-card--ok"><span class="summary-card__num">{{ month_present }}</span>Hari hadir<span class="summary-card__hint">Tepat waktu</span></div>
+      <div class="summary-card summary-card--warn"><span class="summary-card__num">{{ month_late }}</span>Terlambat<span class="summary-card__hint">{{ month_late_minutes }} menit total</span></div>
+      <div class="summary-card summary-card--info"><span class="summary-card__num">{{ month_excused }}</span>Izin / sakit<span class="summary-card__hint">Bulan berjalan</span></div>
+      <div class="summary-card summary-card--bad"><span class="summary-card__num">{{ month_absent }}</span>Tanpa keterangan<span class="summary-card__hint">Bulan berjalan</span></div>
+    </div>
   </section>
   <aside class="card"><p class="eyebrow">Catatan hari ini</p><h2>Siap beraktivitas?</h2><div class="timeline"><div class="timeline-row"><span class="timeline-icon">1</span><div><div class="timeline-label">Datang ke lokasi</div><div class="timeline-sub">Pastikan GPS aktif</div></div></div><div class="timeline-row"><span class="timeline-icon">2</span><div><div class="timeline-label">Ambil selfie</div><div class="timeline-sub">Foto menjadi bukti kehadiran</div></div></div><div class="timeline-row"><span class="timeline-icon">3</span><div><div class="timeline-label">Selesai</div><div class="timeline-sub">Waktu dicatat otomatis</div></div></div></div></aside>
 </div>
