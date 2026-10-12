@@ -395,21 +395,29 @@ def _get_policy_and_location(*, student, lat, lng):
     return rule, loc, dist, now
 
 
-def _check_window(kind, rule, now):
-    """Validasi window jam untuk kind; return (start, end) waktu window."""
+def _check_window(kind, policy, now):
+    """Validasi window jam untuk kind; return (start, end) waktu window.
+
+    Dukung window melewati tengah malam (mis. 22:00-01:00): bila end <= start,
+    window dianggap wrap; valid: t >= start ATAU t <= end.
+    """
     if kind == AttendanceAttempt.Kind.CHECK_IN:
         end = (
-            datetime.combine(now.date(), rule.check_in_end, tzinfo=now.tzinfo)
-            + timedelta(minutes=rule.late_tolerance_min or 0)
+            datetime.combine(now.date(), policy.check_in_end, tzinfo=now.tzinfo)
+            + timedelta(minutes=policy.late_tolerance_min or 0)
         ).time()
-        window = (rule.check_in_start, end)
+        window = (policy.check_in_start, end)
         code = OUTSIDE_CHECKIN_WINDOW
     else:
-        window = (rule.check_out_start, rule.check_out_end)
+        window = (policy.check_out_start, policy.check_out_end)
         code = OUTSIDE_CHECKOUT_WINDOW
     start, end = window
     t = now.time()
-    if not (start <= t <= end):
+    if start <= end:
+        ok = start <= t <= end
+    else:
+        ok = t >= start or t <= end  # wrap tengah malam
+    if not ok:
         raise AttendanceError(code)
     return window
 

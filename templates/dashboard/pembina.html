@@ -30,10 +30,15 @@
   <div class="section-head"><div><p class="eyebrow">Pemantauan</p><h2>Aktivitas absen terakhir</h2></div><a class="panel-link" href="/reports/rekap/">Lihat rekap →</a></div>
   {% if aktivitas %}
     <div class="table-wrap"><table class="table">
-      <thead><tr><th>Nama siswa</th><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Lokasi</th></tr></thead>
+      <thead><tr><th>Foto</th><th>Nama siswa</th><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Lokasi</th></tr></thead>
       <tbody>
         {% for item in aktivitas %}<tr>
-          <td>{{ item.day.student.full_name }}</td>
+          <td>
+            {% if item.day.check_in_media_id %}
+              <img src="/photos/{{ item.day.check_in_media_id }}/" alt="Selfie {{ item.day.student.full_name }}" loading="lazy" style="width:44px;height:44px;object-fit:cover;border-radius:10px;background:#eef1ee;cursor:pointer;" data-media="{{ item.day.check_in_media_id }}">
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td>{{ item.day.student.full_name }}<div style="font-size:.75rem;color:var(--color-muted)">{{ item.day.student.group|default:"" }}</div></td>
           <td>{{ item.day.work_date }}</td>
           <td>{{ item.masuk }}</td>
           <td>{{ item.pulang }}</td>
@@ -51,4 +56,52 @@
     <div class="empty-state"><strong>Belum ada aktivitas</strong>Aktivitas absen siswa akan muncul di sini.</div>
   {% endif %}
 </section>
+
+<!-- Modal foto bukti (endpoint terotorisasi) -->
+<div class="modal" id="modal-foto" hidden>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-label="Foto selfie absensi">
+    <p class="eyebrow">Bukti kehadiran</p>
+    <h2 class="modal__title">Foto selfie</h2>
+    <div id="foto-content" class="empty-state"><strong>Memuat…</strong></div>
+    <button class="btn btn--secondary" id="foto-tutup" type="button" style="margin-top:12px">Tutup</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Klik thumbnail → modal foto besar
+  document.querySelectorAll('img[data-media]').forEach((img) => {
+    img.addEventListener('click', async () => {
+      const modal = document.getElementById('modal-foto');
+      const content = document.getElementById('foto-content');
+      content.innerHTML = '<strong>Memuat foto…</strong>';
+      modal.hidden = false;
+      try {
+        const res = await fetch('/photos/' + img.dataset.media + '/', { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Foto tidak tersedia.');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        content.innerHTML = '';
+        const big = document.createElement('img');
+        big.src = url;
+        big.alt = 'Foto selfie absensi';
+        big.style.cssText = 'width:100%;max-height:60vh;object-fit:contain;border-radius:12px;';
+        big.onload = () => URL.revokeObjectURL(url);
+        content.appendChild(big);
+      } catch (e) {
+        content.innerHTML = '<strong>Foto tidak tersedia.</strong>';
+      }
+    });
+  });
+  document.getElementById('foto-tutup').addEventListener('click', () => {
+    document.getElementById('modal-foto').hidden = true;
+  });
+  document.getElementById('modal-foto').addEventListener('click', (e) => {
+    if (e.target.id === 'modal-foto') e.target.hidden = true;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.getElementById('modal-foto').hidden = true;
+  });
+});
+</script>
 {% endblock %}

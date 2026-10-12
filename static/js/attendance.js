@@ -117,7 +117,7 @@ async function submit() {
   form.append('photo', state.photoBlob, 'selfie.jpg');
   form.append('latitude', state.geo.latitude);
   form.append('longitude', state.geo.longitude);
-  form.append('accuracy_m', state.geo.accuracy_m);
+  form.append('accuracy', state.geo.accuracy_m);
   form.append('client_request_id', state.idempotencyKey);
 
   const isCheckout = document.body.dataset.absenType === 'checkout';
@@ -125,7 +125,7 @@ async function submit() {
   try {
     const res = await api('POST', path, form, true);
     sessionStorage.removeItem('absen_client_request_id');
-    const time = res.server_time ? new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(res.server_time)) : 'waktu server';
+    const time = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(res.server_time ? new Date(res.server_time) : new Date());
     setStatus('#submit-status',
       `Absen ${isCheckout ? 'pulang' : 'masuk'} tercatat pada ${time}.`,
       'status--ok');
