@@ -1,11 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Login — Platform Absensi TeFa{% endblock %}
 {% block content %}
-<h1>Login</h1>
-{% if rate_limited %}<p class="message message--error">{{ rate_limited }}</p>{% endif %}
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Masuk</button>
-</form>
+<div class="card">
+  <h1>Masuk</h1>
+  <p class="text-muted">Gunakan email dan password yang diberikan pembina.</p>
+  <div class="message message--error" hidden>Contoh pesan error saat email/password salah.</div>
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <label for="id_username">Email</label>
+    <input type="email" name="username" id="id_username" autocomplete="email" required autofocus>
+    <label for="id_password">Password</label>
+    <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+    <button type="submit" class="btn btn--big">Masuk</button>
+  </form>
+  <p><a href="{% url 'password_reset' %}">Lupa password?</a></p>
+</div>
 {% endblock %}
