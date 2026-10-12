@@ -14,6 +14,10 @@ urlpatterns = [
         "api/v1/photos/",
         include(("apps.media_assets.urls", "media_assets"), namespace="api_photos"),
     ),
+    path(
+        "api/v1/attendance/",
+        include(("apps.attendance.api_urls", "attendance"), namespace="api_attendance"),
+    ),
     path("", include("apps.tenants.urls")),
     # API v1 (DRF) menyusul di Tahap berikutnya:
     # path("api/v1/", include(...)),

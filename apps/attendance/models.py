@@ -10,6 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.media_assets.models import MediaAsset
 from apps.tenants.models import Organization
 
 
@@ -195,3 +196,173 @@ class AttendancePolicy(models.Model):
             raise ValidationError(
                 {"check_out_end": _("Akhir check-out harus setelah mulai check-out.")}
             )
+
+
+class AttendanceDay(models.Model):
+    """Ringkasan satu hari kerja siswa (Tahap 5; satu sesi, DEC-05)."""
+
+    class Status(models.TextChoices):
+        PRESENT = "present", _("Hadir")
+        LATE = "late", _("Terlambat")
+        ABSENT = "absent", _("Tidak Hadir")
+        EXCUSED = "excused", _("Izin")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="attendance_days",
+        verbose_name=_("organisasi"),
+    )
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.PROTECT,
+        related_name="attendance_days",
+        verbose_name=_("siswa"),
+    )
+    work_date = models.DateField(_("tanggal kerja"))
+    check_in_at = models.DateTimeField(_("waktu check-in"), null=True, blank=True)
+    check_in_location = models.ForeignKey(
+        AttendanceLocation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="check_in_days",
+        verbose_name=_("lokasi check-in"),
+    )
+    check_in_media = models.ForeignKey(
+        MediaAsset,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="check_in_days",
+        verbose_name=_("foto check-in"),
+    )
+    check_out_at = models.DateTimeField(_("waktu check-out"), null=True, blank=True)
+    check_out_location = models.ForeignKey(
+        AttendanceLocation,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="check_out_days",
+        verbose_name=_("lokasi check-out"),
+    )
+    check_out_media = models.ForeignKey(
+        MediaAsset,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="check_out_days",
+        verbose_name=_("foto check-out"),
+    )
+    status = models.CharField(
+        _("status"), max_length=20, choices=Status.choices, default=Status.PRESENT
+    )
+    late_minutes = models.PositiveIntegerField(_("menit terlambat"), default=0)
+    created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("diubah"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("hari absensi")
+        verbose_name_plural = _("hari absensi")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "work_date"],
+                name="uniq_attendance_day_student_date",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["organization", "work_date"]),
+            models.Index(fields=["organization", "status"]),
+        ]
+
+    def __str__(self):
+        return f"{self.student} @ {self.work_date} ({self.status})"
+
+
+class AttendanceAttempt(models.Model):
+    """Jejak percobaan absensi (TDIP §8.5) — bukan event sah; tanpa foto/koordinat."""
+
+    class Kind(models.TextChoices):
+        CHECK_IN = "check_in", _("Check-in")
+        CHECK_OUT = "check_out", _("Check-out")
+
+    class Outcome(models.TextChoices):
+        SUCCESS = "success", _("Berhasil")
+        REJECTED = "rejected", _("Ditolak")
+        FAILED = "failed", _("Gagal")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="attendance_attempts",
+        verbose_name=_("organisasi"),
+    )
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.PROTECT,
+        related_name="attendance_attempts",
+        verbose_name=_("siswa"),
+    )
+    kind = models.CharField(_("jenis"), max_length=20, choices=Kind.choices)
+    idempotency_key = models.CharField(_("idempotency key"), max_length=255)
+    payload_hash = models.CharField(_("hash payload"), max_length=64)
+    outcome = models.CharField(
+        _("hasil"), max_length=20, choices=Outcome.choices, default=Outcome.SUCCESS
+    )
+    error_code = models.CharField(
+        _("kode error"), max_length=64, null=True, blank=True
+    )
+    created_at = models.DateTimeField(_("dibuat"), auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = _("percobaan absensi")
+        verbose_name_plural = _("percobaan absensi")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["student", "idempotency_key"],
+                name="uniq_attempt_student_idemkey",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["organization", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.kind} {self.student} → {self.outcome} {self.error_code or ''}"
+
+
+class IdempotencyRecord(models.Model):
+    """Registri idempotensi request (TDIP §8.5).
+
+    Key sama + hash payload sama → ulangi hasil tersimpan; payload beda →
+    ditolak IDEMPOTENCY_CONFLICT.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="idempotency_records",
+        verbose_name=_("organisasi"),
+    )
+    key = models.CharField(_("kunci idempotensi"), max_length=255, unique=True)
+    endpoint = models.CharField(_("endpoint"), max_length=200)
+    request_hash = models.CharField(_("hash request"), max_length=64)
+    response_snapshot = models.JSONField(
+        _("snapshot respons"), default=dict, blank=True
+    )
+    created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("registri idempotensi")
+        verbose_name_plural = _("registri idempotensi")
+        indexes = [
+            models.Index(fields=["organization", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.endpoint} {self.key}"
+
+
