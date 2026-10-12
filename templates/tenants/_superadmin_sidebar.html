@@ -1,0 +1,21 @@
+{% load static %}
+<aside class="sa-sidebar">
+  <a class="sa-brand" href="{% url 'tenants:dashboard_superadmin' %}">
+    <span class="sa-brand-icon material-symbols-outlined" aria-hidden="true">hub</span>
+    <span><strong>Presensi TeFa</strong><small>Superadmin Console</small></span>
+  </a>
+  <div class="sa-nav-title">Modul utama platform</div>
+  <nav class="sa-nav" aria-label="Navigasi superadmin">
+    <a class="{% if active_page == 'overview' %}is-active{% endif %}" href="{% url 'tenants:dashboard_superadmin' %}" {% if active_page == 'overview' %}aria-current="page"{% endif %}><span class="material-symbols-outlined">dashboard</span>Ringkasan platform</a>
+    <a class="{% if active_page == 'organizations' %}is-active{% endif %}" href="{% url 'tenants:superadmin_organizations' %}" {% if active_page == 'organizations' %}aria-current="page"{% endif %}><span class="material-symbols-outlined">apartment</span>Kelola organisasi</a>
+    <span class="sa-nav-disabled"><span class="material-symbols-outlined">loyalty</span>Paket &amp; langganan <small>Segera</small></span>
+    <span class="sa-nav-disabled"><span class="material-symbols-outlined">receipt_long</span>Billing &amp; QRIS <small>Segera</small></span>
+    <a href="{% url 'admin:audit_auditlog_changelist' %}"><span class="material-symbols-outlined">policy</span>Audit log global</a>
+    <a href="{% url 'admin:index' %}"><span class="material-symbols-outlined">settings</span>Pengaturan sistem</a>
+  </nav>
+  <div class="sa-security">
+    <div class="sa-security-title"><span>Keamanan tenant</span><i></i></div>
+    <p>Ringkasan data lintas organisasi</p>
+    <small>Presensi TeFa · Superadmin</small>
+  </div>
+</aside>

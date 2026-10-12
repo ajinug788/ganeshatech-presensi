@@ -1,0 +1,8 @@
+<header class="sa-topbar">
+  <div class="sa-global"><span class="material-symbols-outlined">filter_list</span><span>Tenant:</span><strong>Semua organisasi</strong></div>
+  <div class="sa-account">
+    <div><strong>Superadmin platform</strong><small>{{ request.user.email }}</small></div>
+    <span class="sa-avatar material-symbols-outlined" aria-hidden="true">person</span>
+    <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" aria-label="Keluar" title="Keluar"><span class="material-symbols-outlined">logout</span></button></form>
+  </div>
+</header>

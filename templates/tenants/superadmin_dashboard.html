@@ -3,50 +3,18 @@
 
 {% block title %}Dashboard Superadmin — Presensi TeFa{% endblock %}
 {% block body_class %}superadmin-body{% endblock %}
-{% block extra_head %}
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/superadmin.css' %}">
-{% endblock %}
+{% block extra_head %}{% include "tenants/_superadmin_head.html" %}{% endblock %}
 {% block content %}
 <div class="sa-shell">
-  <aside class="sa-sidebar">
-    <a class="sa-brand" href="{% url 'tenants:dashboard_superadmin' %}">
-      <span class="sa-brand-icon material-symbols-outlined" aria-hidden="true">hub</span>
-      <span><strong>Presensi TeFa</strong><small>Superadmin Console</small></span>
-    </a>
-    <div class="sa-nav-title">Modul utama platform</div>
-    <nav class="sa-nav" aria-label="Navigasi superadmin">
-      <a class="is-active" href="{% url 'tenants:dashboard_superadmin' %}" aria-current="page"><span class="material-symbols-outlined">dashboard</span>Ringkasan platform</a>
-      <a href="{% url 'admin:tenants_organization_changelist' %}"><span class="material-symbols-outlined">apartment</span>Kelola organisasi</a>
-      <span class="sa-nav-disabled"><span class="material-symbols-outlined">loyalty</span>Paket &amp; langganan <small>Segera</small></span>
-      <span class="sa-nav-disabled"><span class="material-symbols-outlined">receipt_long</span>Billing &amp; QRIS <small>Segera</small></span>
-      <a href="{% url 'admin:audit_auditlog_changelist' %}"><span class="material-symbols-outlined">policy</span>Audit log global</a>
-      <a href="{% url 'admin:index' %}"><span class="material-symbols-outlined">settings</span>Pengaturan sistem</a>
-    </nav>
-    <div class="sa-security">
-      <div class="sa-security-title"><span>Keamanan tenant</span><i></i></div>
-      <p>Ringkasan data lintas organisasi</p>
-      <small>Presensi TeFa · Superadmin</small>
-    </div>
-  </aside>
+  {% include "tenants/_superadmin_sidebar.html" with active_page="overview" %}
 
   <div class="sa-main">
-    <header class="sa-topbar">
-      <div class="sa-global"><span class="material-symbols-outlined">filter_list</span><span>Tenant:</span><strong>Semua organisasi</strong></div>
-      <div class="sa-account">
-        <div><strong>Superadmin platform</strong><small>{{ request.user.email }}</small></div>
-        <span class="sa-avatar material-symbols-outlined" aria-hidden="true">person</span>
-        <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" aria-label="Keluar" title="Keluar"><span class="material-symbols-outlined">logout</span></button></form>
-      </div>
-    </header>
+    {% include "tenants/_superadmin_topbar.html" %}
 
     <div class="sa-content">
       <div class="sa-heading-row">
         <div><p class="sa-eyebrow">Ringkasan platform · {{ today|date:"l, d F Y" }}</p><h1>Dashboard Superadmin</h1><p class="sa-subtitle">Pantau kondisi organisasi dan aktivitas platform Presensi TeFa.</p></div>
-        <div class="sa-heading-actions"><span class="sa-system-status"><i></i>Platform aktif</span><a class="sa-button" href="{% url 'admin:tenants_organization_add' %}"><span class="material-symbols-outlined">add</span>Tambah organisasi</a></div>
+        <div class="sa-heading-actions"><span class="sa-system-status"><i></i>Platform aktif</span><a class="sa-button" href="{% url 'tenants:superadmin_organization_create' %}"><span class="material-symbols-outlined">add</span>Tambah organisasi</a></div>
       </div>
 
       <section class="sa-metrics" aria-label="Ringkasan data platform">
@@ -57,10 +25,10 @@
       </section>
 
       <section class="sa-panel sa-org-panel" id="organisasi">
-        <div class="sa-panel-heading"><div><h2>Organisasi terbaru</h2><p>Daftar organisasi dan jumlah anggota aktif.</p></div><a class="sa-text-link" href="{% url 'admin:tenants_organization_changelist' %}">Lihat semua <span class="material-symbols-outlined">arrow_forward</span></a></div>
+        <div class="sa-panel-heading"><div><h2>Organisasi terbaru</h2><p>Daftar organisasi dan jumlah anggota aktif.</p></div><a class="sa-text-link" href="{% url 'tenants:superadmin_organizations' %}">Lihat semua <span class="material-symbols-outlined">arrow_forward</span></a></div>
         <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Organisasi</th><th>Status</th><th>Siswa aktif</th><th>Anggota aktif</th><th>Dibuat</th><th></th></tr></thead><tbody>
           {% for organization in organizations %}
-          <tr><td><strong>{{ organization.name }}</strong><small class="sa-slug">{{ organization.slug }}</small></td><td><span class="sa-status sa-status--{{ organization.status }}">{{ organization.get_status_display }}</span></td><td>{{ organization.active_student_count }}</td><td>{{ organization.active_member_count }}</td><td>{{ organization.created_at|date:"d M Y" }}</td><td><a class="sa-row-link" href="{% url 'admin:tenants_organization_change' organization.pk %}" aria-label="Kelola {{ organization.name }}"><span class="material-symbols-outlined">open_in_new</span></a></td></tr>
+          <tr><td><strong>{{ organization.name }}</strong><small class="sa-slug">{{ organization.slug }}</small></td><td><span class="sa-status sa-status--{{ organization.status }}">{{ organization.get_status_display }}</span></td><td>{{ organization.active_student_count }}</td><td>{{ organization.active_member_count }}</td><td>{{ organization.created_at|date:"d M Y" }}</td><td><a class="sa-row-link" href="{% url 'tenants:superadmin_organization_edit' organization.pk %}" aria-label="Kelola {{ organization.name }}"><span class="material-symbols-outlined">edit</span></a></td></tr>
           {% empty %}<tr><td class="sa-empty" colspan="6">Belum ada organisasi yang terdaftar.</td></tr>{% endfor %}
         </tbody></table></div>
       </section>
