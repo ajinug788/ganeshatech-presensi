@@ -18,7 +18,7 @@ date: "12 Oktober 2026"
 
 **Changelog:**
 
-- **v1.0 (Dokumen A)** — baseline teknis agent utama: kuat pada deployment VPS spesifik (aturan keras VPS bersama, struktur server, provisioning, port 8010, cron backup), suite pengujian isolasi tenant, constraint DB konkret, desain frontend, observabilitas.
+- **v1.1 (revisi)** — DEC-01 diputuskan: login email + password saja untuk semua peran (ARC-11 dokumen Codex v1.1). User model, API auth, dan tahap bootstrap diperbarui sesuai keputusan tersebut.
 - **v1.0 (Dokumen B / Codex)** — baseline teknis Codex: kuat pada pola otorisasi per request, checklist isolasi tenant, tabel API endpoint + contoh request/response + tabel error code, pipeline media tajam (larangan SVG, anti-DoS, file yatim), template task AI coding agent, keputusan terbuka DEC-01..13, kehati-hatian versi software, catatan QRIS ≠ autodebit, `session_key` di AttendanceDay.
 - **v1.1 (gabungan)** — menggabungkan keduanya: substansi utama mengikuti Dokumen B, seluruh bagian deployment VPS spesifik Dokumen A dipertahankan sebagai bagian tersendiri (§6). Duplikasi dihilangkan; tidak ada klaim/fitur baru di luar kedua dokumen.
 
@@ -292,13 +292,14 @@ Ini rancangan awal untuk memandu model Django; nama tabel/field boleh disesuaika
 - `id (uuid)`, `name`, `slug (unique)`, `status` [active, suspended, closed], `timezone` (default `Asia/Jakarta`), `settings JSONB` (radius default, akurasi maks, jam efektif), `created_at`.
 
 `accounts.User`
-- Custom user (AbstractBaseUser + PermissionsMixin): `username (unique)`, `password (hash)`, `is_platform_admin`, `is_active`, `created_at`. Siswa login pakai ID siswa sebagai username — **(default, bisa diubah; PRD §17 / DEC-01)**.
+- Custom user (AbstractBaseUser + PermissionsMixin): **`email (unique platform-wide, lowercase-normalized, USERNAME_FIELD)`**, `email_verified_at`, `password (hash)`, `is_platform_admin`, `is_active`, `created_at`. Tidak ada field username.
+- **Keputusan DEC-01 (DIPUTUSKAN 12 Okt 2026): login email + password saja untuk semua peran.** Tidak ada login username, ID siswa, atau nomor HP. Email wajib terverifikasi sebelum akun aktif (tautan sekali pakai + kedaluwarsa; reset password via token aman sekali pakai, response generik tidak membocorkan keberadaan akun; jangan kirim password via email). Perubahan email wajib verifikasi ulang + audit log. Jangan sediakan username sebagai identifier login.
 
 `accounts.Membership` — unique `[organization, user]`
 - `organization`, `user`, `role` [admin, pembina, siswa, billing], `scope JSONB` (kelompok/lokasi yang ditugaskan), `is_active`.
 
 `attendance.StudentProfile`
-- `organization`, `user (OneToOne, nullable untuk data siswa tanpa akun)`, `student_number (unique per org)`, `full_name`, `group` (kelas/kelompok, nullable), `is_active`.
+- `organization`, `user (OneToOne, nullable untuk data siswa tanpa akun)`, `student_number (unique per org; identitas akademik/laporan/impor — BUKAN identifier login)`, `full_name`, `group` (kelas/kelompok, nullable), `is_active`.
 
 `attendance.AttendanceLocation`
 - `organization`, `name`, `latitude (DecimalField 9,6)`, `longitude`, `radius_m` (default 100 — **default, bisa diubah**), `max_accuracy_m` (default 50 — **default, bisa diubah**), `is_active`. Indeks tenant/status; validasi koordinat/radius di model/service.
@@ -351,7 +352,10 @@ Autentikasi: session-based untuk web server-rendered; token (DRF TokenAuthentica
 | Method | Endpoint | Pengguna | Fungsi |
 |---|---|---|---|
 | `GET` | `/api/v1/me/` | Semua login | Info user, membership/role aktif, organisasi aktif. |
-| `POST` | `/api/v1/auth/login/` | Semua | Membuat sesi web; rate limit percobaan gagal (AUTH-07). |
+| `POST` | `/api/v1/auth/login/` | Semua | Membuat sesi web dengan **email + password** (DEC-01); username/ID siswa tidak diterima. Rate limit percobaan gagal (AUTH-07). |
+| `POST` | `/api/v1/auth/email-verification/confirm/` | Pemegang token undangan/verifikasi | Verifikasi email + aktivasi akun; token sekali pakai dan kedaluwarsa. |
+| `POST` | `/api/v1/auth/password-reset/request/` | Semua | Kirim tautan reset ke email bila berlaku; response generik tidak membocorkan keberadaan akun. |
+| `POST` | `/api/v1/auth/password-reset/confirm/` | Pemegang token reset | Ubah password dengan token valid, sekali pakai, kedaluwarsa. |
 | `POST` | `/api/v1/auth/logout/` | Semua login | Mengakhiri sesi. |
 | `GET` | `/api/v1/attendance/today/` | Siswa/pembina/admin | Status absensi hari ini sesuai hak akses + tombol relevan. |
 | `POST` | `/api/v1/attendance/check-in/`, `/check-out/` | Siswa | Multipart: foto + koordinat + accuracy + `client_request_id`. |
@@ -586,7 +590,7 @@ Urutan mengikuti PRD §16 dan merupakan urutan dependensi. Coding agent hanya me
 **Tahap 0 — Bootstrap dan keputusan minimum**
 - Buat repo/folder proyek + baseline dokumentasi; tetapkan versi Python/Django, dependency locking, cara run lokal.
 - `.gitignore`, `.env.example`, README awal, pemisahan settings environment.
-- Putuskan identifier login siswa (DEC-01) sebelum model User dibuat; **wajib** custom User model sebelum migrasi pertama.
+- Putuskan identifier login (DEC-01 **sudah diputuskan: email-only**) sebelum model User dibuat; **wajib** custom User model + manager email (`USERNAME_FIELD = "email"`, tanpa username) sebelum migrasi pertama. Sertakan endpoint verifikasi email & reset password berbasis token.
 
 **Tahap 1 — Fondasi (Project Foundation)**
 - Scaffold Django (apps §3.1), settings base/local/staging/production, custom User + migrasi awal, PostgreSQL lokal, health endpoint, logging dasar, template base + static + halaman error, design system dasar, CI test.
@@ -721,7 +725,7 @@ Keputusan berikut tidak menghalangi penulisan fondasi umum, tetapi harus diputus
 
 | ID | Keputusan | Default yang dipakai dokumen ini | Tenggat keputusan |
 |---|---|---|---|
-| DEC-01 | Login siswa menggunakan apa? | ID siswa (username) + password dibuat admin | Sebelum custom User/migrasi pertama |
+| DEC-01 | Login siswa menggunakan apa? | **DIPUTUSKAN 12 Okt 2026: email + password saja untuk semua peran.** Email wajib, unik, terverifikasi (USERNAME_FIELD); tanpa username/ID siswa/nomor HP. ID siswa hanya identitas akademik di StudentProfile. Endpoint verifikasi email & reset password wajib ada. | Terapkan sebelum custom User/migrasi pertama |
 | DEC-02 | Nama produk dan domain | Nama kerja sementara | Sebelum branding/peluncuran publik |
 | DEC-03 | Registrasi tenant | Undangan/admin platform dulu; self-service nanti bila perlu | Sebelum tenant onboarding |
 | DEC-04 | Radius dan akurasi GPS | Radius 100 m, akurasi maksimum 50 m | Sebelum pilot lapangan |
