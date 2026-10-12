@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if is_new %}Tambah{% else %}Ubah{% endif %} Organisasi — Superadmin{% endblock %}
+{% block body_class %}superadmin-body{% endblock %}
+{% block extra_head %}{% include "tenants/_superadmin_head.html" %}{% endblock %}
+{% block content %}
+<div class="sa-shell">
+  {% include "tenants/_superadmin_sidebar.html" %}
+  <div class="sa-main">
+    {% include "tenants/_superadmin_topbar.html" %}
+    <div class="sa-content sa-form-content">
+      <div class="sa-breadcrumb"><a href="{% url 'tenants:dashboard_superadmin' %}">Dashboard</a><span>/</span><a href="{% url 'tenants:superadmin_organizations' %}">Organisasi</a><span>/</span><span>{% if is_new %}Tambah{% else %}Ubah{% endif %}</span></div>
+      <div class="sa-heading-row"><div><p class="sa-eyebrow">Manajemen tenant</p><h1>{% if is_new %}Tambah organisasi{% else %}Ubah organisasi{% endif %}</h1><p class="sa-subtitle">{% if is_new %}Masukkan informasi dasar organisasi baru.{% else %}Perbarui informasi {{ organization.name }}.{% endif %}</p></div></div>
+      <section class="sa-panel sa-form-panel">
+        <form method="post" class="sa-org-form" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="sa-form-errors">{{ form.non_field_errors }}</div>{% endif %}
+          <div class="sa-field"><label for="{{ form.name.id_for_label }}">Nama organisasi</label>{{ form.name }}{% if form.name.errors %}<div class="sa-field-error">{{ form.name.errors }}</div>{% endif %}</div>
+          <div class="sa-field"><label for="{{ form.slug.id_for_label }}">Slug organisasi</label>{{ form.slug }}{% if form.slug.help_text %}<small>{{ form.slug.help_text }}</small>{% endif %}{% if form.slug.errors %}<div class="sa-field-error">{{ form.slug.errors }}</div>{% endif %}</div>
+          <div class="sa-form-grid"><div class="sa-field"><label for="{{ form.status.id_for_label }}">Status</label>{{ form.status }}{% if form.status.errors %}<div class="sa-field-error">{{ form.status.errors }}</div>{% endif %}</div>
+          <div class="sa-field"><label for="{{ form.timezone.id_for_label }}">Zona waktu</label>{{ form.timezone }}{% if form.timezone.help_text %}<small>{{ form.timezone.help_text }}</small>{% endif %}{% if form.timezone.errors %}<div class="sa-field-error">{{ form.timezone.errors }}</div>{% endif %}</div></div>
+          <div class="sa-form-actions"><a class="sa-cancel-button" href="{% url 'tenants:superadmin_organizations' %}">Batal</a><button class="sa-button" type="submit"><span class="material-symbols-outlined">save</span>{% if is_new %}Simpan organisasi{% else %}Simpan perubahan{% endif %}</button></div>
+        </form>
+      </section>
+      <footer class="sa-footer">Presensi TeFa · Manajemen organisasi</footer>
+    </div>
+  </div>
+</div>
+{% endblock %}

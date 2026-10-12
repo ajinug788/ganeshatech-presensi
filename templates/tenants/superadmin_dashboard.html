@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard Superadmin — Presensi TeFa{% endblock %}
+{% block body_class %}superadmin-body{% endblock %}
+{% block extra_head %}{% include "tenants/_superadmin_head.html" %}{% endblock %}
+{% block content %}
+<div class="sa-shell">
+  {% include "tenants/_superadmin_sidebar.html" with active_page="overview" %}
+
+  <div class="sa-main">
+    {% include "tenants/_superadmin_topbar.html" %}
+
+    <div class="sa-content">
+      <div class="sa-heading-row">
+        <div><p class="sa-eyebrow">Ringkasan platform · {{ today|date:"l, d F Y" }}</p><h1>Dashboard Superadmin</h1><p class="sa-subtitle">Pantau kondisi organisasi dan aktivitas platform Presensi TeFa.</p></div>
+        <div class="sa-heading-actions"><span class="sa-system-status"><i></i>Platform aktif</span><a class="sa-button" href="{% url 'tenants:superadmin_organization_create' %}"><span class="material-symbols-outlined">add</span>Tambah organisasi</a></div>
+      </div>
+
+      <section class="sa-metrics" aria-label="Ringkasan data platform">
+        <article class="sa-metric"><div class="sa-metric-top"><span>Total organisasi</span><span class="material-symbols-outlined">apartment</span></div><strong>{{ organization_count }}</strong><small>{{ active_organization_count }} organisasi aktif</small></article>
+        <article class="sa-metric"><div class="sa-metric-top"><span>Akun aktif</span><span class="material-symbols-outlined">group</span></div><strong>{{ active_user_count }}</strong><small>Semua akun platform</small></article>
+        <article class="sa-metric"><div class="sa-metric-top"><span>Siswa aktif</span><span class="material-symbols-outlined">school</span></div><strong>{{ active_student_count }}</strong><small>Profil siswa terdaftar</small></article>
+        <article class="sa-metric"><div class="sa-metric-top"><span>Presensi hari ini</span><span class="material-symbols-outlined">how_to_reg</span></div><strong>{{ today_attendance_count }}</strong><small>{{ inactive_organization_count }} organisasi nonaktif</small></article>
+      </section>
+
+      <section class="sa-panel sa-org-panel" id="organisasi">
+        <div class="sa-panel-heading"><div><h2>Organisasi terbaru</h2><p>Daftar organisasi dan jumlah anggota aktif.</p></div><a class="sa-text-link" href="{% url 'tenants:superadmin_organizations' %}">Lihat semua <span class="material-symbols-outlined">arrow_forward</span></a></div>
+        <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Organisasi</th><th>Status</th><th>Siswa aktif</th><th>Anggota aktif</th><th>Dibuat</th><th></th></tr></thead><tbody>
+          {% for organization in organizations %}
+          <tr><td><strong>{{ organization.name }}</strong><small class="sa-slug">{{ organization.slug }}</small></td><td><span class="sa-status sa-status--{{ organization.status }}">{{ organization.get_status_display }}</span></td><td>{{ organization.active_student_count }}</td><td>{{ organization.active_member_count }}</td><td>{{ organization.created_at|date:"d M Y" }}</td><td><a class="sa-row-link" href="{% url 'tenants:superadmin_organization_edit' organization.pk %}" aria-label="Kelola {{ organization.name }}"><span class="material-symbols-outlined">edit</span></a></td></tr>
+          {% empty %}<tr><td class="sa-empty" colspan="6">Belum ada organisasi yang terdaftar.</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+
+      <section class="sa-panel sa-audit-panel">
+        <div class="sa-panel-heading"><div><h2>Aktivitas terbaru</h2><p>Jejak aktivitas yang tercatat di audit log.</p></div><a class="sa-text-link" href="{% url 'admin:audit_auditlog_changelist' %}">Buka audit log <span class="material-symbols-outlined">arrow_forward</span></a></div>
+        <div class="sa-activity-list">
+          {% for log in recent_audit_logs %}
+          <article class="sa-activity"><span class="sa-activity-icon material-symbols-outlined">history</span><div class="sa-activity-copy"><strong>{{ log.get_action_display|default:log.action }} · {{ log.object_type }}</strong><small>{% if log.actor %}{{ log.actor.email }}{% else %}Sistem{% endif %}{% if log.organization %} · {{ log.organization.name }}{% endif %}</small></div><time datetime="{{ log.created_at|date:'c' }}">{{ log.created_at|date:"d M, H:i" }}</time></article>
+          {% empty %}<p class="sa-empty-activity">Belum ada aktivitas yang tercatat.</p>{% endfor %}
+        </div>
+      </section>
+      <footer class="sa-footer">Presensi TeFa · Dashboard superadmin</footer>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Kelola Organisasi — Superadmin{% endblock %}
+{% block body_class %}superadmin-body{% endblock %}
+{% block extra_head %}{% include "tenants/_superadmin_head.html" %}{% endblock %}
+{% block content %}
+<div class="sa-shell">
+  {% include "tenants/_superadmin_sidebar.html" %}
+  <div class="sa-main">
+    {% include "tenants/_superadmin_topbar.html" %}
+    <div class="sa-content">
+      <div class="sa-breadcrumb"><a href="{% url 'tenants:dashboard_superadmin' %}">Dashboard</a><span>/</span><span>Organisasi</span></div>
+      <div class="sa-heading-row">
+        <div><p class="sa-eyebrow">Manajemen tenant</p><h1>Kelola organisasi</h1><p class="sa-subtitle">Tambah dan perbarui data organisasi yang menggunakan Presensi TeFa.</p></div>
+        <a class="sa-button" href="{% url 'tenants:superadmin_organization_create' %}"><span class="material-symbols-outlined">add</span>Tambah organisasi</a>
+      </div>
+      <section class="sa-panel">
+        <div class="sa-list-tools"><form method="get" class="sa-search"><label class="sr-only" for="org-search">Cari organisasi</label><span class="material-symbols-outlined">search</span><input id="org-search" type="search" name="q" value="{{ query }}" placeholder="Cari nama atau slug organisasi"><button type="submit">Cari</button>{% if query %}<a href="{% url 'tenants:superadmin_organizations' %}">Hapus</a>{% endif %}</form><span class="sa-results-count">{{ organizations.paginator.count }} organisasi</span></div>
+        <div class="sa-table-wrap"><table class="sa-table"><thead><tr><th>Organisasi</th><th>Status</th><th>Siswa aktif</th><th>Anggota aktif</th><th>Zona waktu</th><th></th></tr></thead><tbody>
+          {% for organization in organizations %}
+          <tr><td><strong>{{ organization.name }}</strong><small class="sa-slug">{{ organization.slug }}</small></td><td><span class="sa-status sa-status--{{ organization.status }}">{{ organization.get_status_display }}</span></td><td>{{ organization.active_student_count }}</td><td>{{ organization.active_member_count }}</td><td>{{ organization.timezone }}</td><td><a class="sa-row-edit" href="{% url 'tenants:superadmin_organization_edit' organization.id %}"><span class="material-symbols-outlined">edit</span>Ubah</a></td></tr>
+          {% empty %}<tr><td class="sa-empty" colspan="6">{% if query %}Tidak ada organisasi yang cocok dengan pencarian ini.{% else %}Belum ada organisasi. Tambahkan organisasi pertama untuk memulai.{% endif %}</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% if organizations.has_other_pages %}<nav class="sa-pagination" aria-label="Halaman organisasi">{% if organizations.has_previous %}<a href="?q={{ query|urlencode }}&page={{ organizations.previous_page_number }}">Sebelumnya</a>{% else %}<span>Sebelumnya</span>{% endif %}<span>Halaman {{ organizations.number }} dari {{ organizations.paginator.num_pages }}</span>{% if organizations.has_next %}<a href="?q={{ query|urlencode }}&page={{ organizations.next_page_number }}">Berikutnya</a>{% else %}<span>Berikutnya</span>{% endif %}</nav>{% endif %}
+      </section>
+      <footer class="sa-footer">Presensi TeFa · Manajemen organisasi</footer>
+    </div>
+  </div>
+</div>
+{% endblock %}
