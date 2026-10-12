@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ action_label|default:"Form Siswa" }}{% endblock %}
+{% block content %}
+<h1>{% if form.instance.pk %}Ubah Siswa{% else %}Tambah Siswa{% endif %}</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Simpan</button>
+  <a href="{% url 'attendance:student_list' %}">Batal</a>
+</form>
+{% endblock %}

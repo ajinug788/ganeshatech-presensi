@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Nonaktifkan Lokasi{% endblock %}
+{% block content %}
+<h1>Nonaktifkan {{ object.name }}?</h1>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Ya, nonaktifkan</button>
+  <a href="{% url 'attendance:location_list' %}">Batal</a>
+</form>
+{% endblock %}

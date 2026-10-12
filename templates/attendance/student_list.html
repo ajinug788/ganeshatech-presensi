@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Daftar Siswa{% endblock %}
+{% block content %}
+<h1>Daftar Siswa</h1>
+<form method="get" class="filter-form">
+  <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / nomor induk">
+  <input type="text" name="group" value="{{ group }}" placeholder="Kelompok">
+  <select name="status">
+    <option value="">Semua status</option>
+    <option value="active" {% if status == 'active' %}selected{% endif %}>Aktif</option>
+    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Nonaktif</option>
+  </select>
+  <button type="submit">Filter</button>
+  <a href="{% url 'attendance:student_create' %}">+ Tambah Siswa</a>
+</form>
+<table>
+  <thead>
+    <tr><th>NIS</th><th>Nama</th><th>Kelompok</th><th>Akun</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for student in object_list %}
+    <tr>
+      <td>{{ student.student_number }}</td>
+      <td><a href="{% url 'attendance:student_detail' student.pk %}">{{ student.full_name }}</a></td>
+      <td>{{ student.group|default:"—" }}</td>
+      <td>{{ student.user.email|default:"(tanpa akun)" }}</td>
+      <td>{{ student.is_active|yesno:"Aktif,Nonaktif" }}</td>
+      <td>
+        <a href="{% url 'attendance:student_update' student.pk %}">Ubah</a>
+        <a href="{% url 'attendance:student_delete' student.pk %}">Nonaktifkan</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Belum ada siswa.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include "attendance/_pagination.html" %}
+{% endblock %}

@@ -7,6 +7,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz/", health, name="health"),
     path("accounts/", include("apps.accounts.urls")),
+    path("attendance/", include("apps.attendance.urls")),
     path("", include("apps.tenants.urls")),
     # API v1 (DRF) menyusul di Tahap berikutnya:
     # path("api/v1/", include(...)),

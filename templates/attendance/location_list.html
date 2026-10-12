@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Lokasi Absensi{% endblock %}
+{% block content %}
+<h1>Lokasi Absensi</h1>
+<a href="{% url 'attendance:location_create' %}">+ Tambah Lokasi</a>
+<table>
+  <thead>
+    <tr><th>Nama</th><th>Koordinat</th><th>Radius</th><th>Akurasi maks</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for location in object_list %}
+    <tr>
+      <td>{{ location.name }}</td>
+      <td>{{ location.latitude }}, {{ location.longitude }}</td>
+      <td>{{ location.radius_m }} m</td>
+      <td>{{ location.max_accuracy_m }} m</td>
+      <td>{{ location.is_active|yesno:"Aktif,Nonaktif" }}</td>
+      <td>
+        <a href="{% url 'attendance:location_update' location.pk %}">Ubah</a>
+        <a href="{% url 'attendance:location_delete' location.pk %}">Nonaktifkan</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Belum ada lokasi.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include "attendance/_pagination.html" %}
+{% endblock %}

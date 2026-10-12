@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Detail Siswa{% endblock %}
+{% block content %}
+<h1>{{ object.full_name }}</h1>
+<ul>
+  <li>NIS: {{ object.student_number }}</li>
+  <li>Kelompok: {{ object.group|default:"—" }}</li>
+  <li>Akun: {{ object.user.email|default:"(tanpa akun)" }}</li>
+  <li>Status: {{ object.is_active|yesno:"Aktif,Nonaktif" }}</li>
+</ul>
+<a href="{% url 'attendance:student_update' object.pk %}">Ubah</a>
+<a href="{% url 'attendance:student_list' %}">Kembali</a>
+{% endblock %}

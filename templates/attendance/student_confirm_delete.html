@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Nonaktifkan Siswa{% endblock %}
+{% block content %}
+<h1>Nonaktifkan {{ object.full_name }}?</h1>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Ya, nonaktifkan</button>
+  <a href="{% url 'attendance:student_list' %}">Batal</a>
+</form>
+{% endblock %}

@@ -78,9 +78,17 @@ class RoleRequiredMixin(TenantRequiredMixin):
     allowed_roles = ()
 
     def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if response is not None:
-            return response
+        # Cek role SEBELUM super().dispatch(): super() sudah menjalankan
+        # handler view dan selalu mengembalikan response, sehingga cek
+        # setelahnya tidak pernah dieksekusi (bug lama).
+        if not request.user.is_authenticated:
+            from django.contrib.auth.views import redirect_to_login
+
+            return redirect_to_login(request.get_full_path())
+        self.membership = get_active_membership(request.user)
+        if self.membership is None:
+            raise PermissionDenied("Anda tidak punya keanggotaan organisasi aktif.")
+        self.organization = self.membership.organization
         if self.allowed_roles and self.membership.role not in self.allowed_roles:
             raise PermissionDenied("Role Anda tidak memiliki akses ke halaman ini.")
-        return response
+        return super().dispatch(request, *args, **kwargs)
