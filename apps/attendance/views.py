@@ -5,8 +5,9 @@ Semua queryset ter-scope organization dari membership aktif
 """
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
@@ -288,3 +289,28 @@ class PolicyView(AdminRequiredMixin, UpdateView):
         )
         messages.success(self.request, "Kebijakan absensi disimpan.")
         return response
+
+
+# ---------------------------------------------------------------- Halaman siswa
+
+@login_required
+def capture_page(request):
+    """Halaman wizard absen (kamera + GPS). JS-nya attendance.js."""
+    from apps.tenants.context import get_active_membership
+
+    membership = get_active_membership(request.user)
+    if membership is None:
+        return render(request, "tenants/no_membership.html", status=403)
+    kind = "check_out" if request.GET.get("type") == "checkout" else "check_in"
+    return render(request, "attendance/capture.html", {"kind": kind})
+
+
+@login_required
+def history_page(request):
+    """Halaman riwayat kehadiran siswa. JS-nya history.js (API me/history)."""
+    from apps.tenants.context import get_active_membership
+
+    membership = get_active_membership(request.user)
+    if membership is None:
+        return render(request, "tenants/no_membership.html", status=403)
+    return render(request, "attendance/history.html")

@@ -18,4 +18,7 @@ urlpatterns = [
     path("locations/<uuid:pk>/hapus/", views.LocationDeleteView.as_view(), name="location_delete"),
     # Kebijakan (satu per org)
     path("policy/", views.PolicyView.as_view(), name="policy"),
+    # Halaman siswa: wizard absen & riwayat
+    path("absen/capture/", views.capture_page, name="capture"),
+    path("absen/riwayat/", views.history_page, name="history_page"),
 ]
