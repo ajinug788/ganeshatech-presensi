@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from apps.attendance.models import AttendanceDay, StudentProfile
 from apps.audit.models import AuditLog
-from apps.reports.views import build_pembina_context, build_student_home_context
+from apps.reports.views import build_pembina_context, build_student_dashboard_context, build_student_home_context
 from .context import TenantRequiredMixin, get_active_membership, role_required
 from .models import Organization
 
@@ -56,7 +56,7 @@ def dashboard_siswa(request):
     membership = get_active_membership(request.user)
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
-    ctx = build_student_home_context(membership)
+    ctx = build_student_dashboard_context(membership)
     ctx["role_label"] = "Siswa"
     return render(request, "tenants/dashboard.html", ctx)
 
