@@ -20,7 +20,7 @@ from django.utils import timezone as dj_timezone
 
 from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
-from apps.attendance.models import AttendanceDay, StudentProfile
+from apps.attendance.models import AttendanceDay, AttendancePolicy, StudentProfile
 from apps.tenants.context import RoleRequiredMixin, role_required
 from .forms import AttendanceStatusForm
 
@@ -231,7 +231,8 @@ def build_admin_context(membership, organization):
     # Check-in per titik tersedia; backend tidak menyimpan penugasan
     # siswa ke titik, jadi jangan tampilkan rasio kehadiran per lokasi.
     lokasi_rows = []
-    for loc in org.attendance_locations.filter(is_active=True):
+    active_locations = org.attendance_locations.filter(is_active=True)
+    for loc in active_locations:
         days_loc = AttendanceDay.objects.filter(
             organization=org,
             work_date=today,
@@ -256,6 +257,20 @@ def build_admin_context(membership, organization):
         ).select_related("actor").order_by("-created_at")[:10]
     )
 
+    try:
+        policy = org.attendance_policy
+    except AttendancePolicy.DoesNotExist:
+        policy = None
+
+    policy_tolerance_at = None
+    if policy:
+        import datetime as _dt
+
+        policy_tolerance_at = (
+            _dt.datetime.combine(today, policy.check_in_end, tzinfo=_WIB_TZ)
+            + _dt.timedelta(minutes=policy.late_tolerance_min)
+        ).time()
+
     return {
         **base,
         "pct_hadir": _pct(hadir, total),
@@ -263,10 +278,13 @@ def build_admin_context(membership, organization):
         "pct_belum": _pct(belum, total),
         "aktivitas_rows": aktivitas_rows,
         "lokasi_rows": lokasi_rows,
+        "lokasi_aktif": len(lokasi_rows),
         "koreksi_logs": koreksi_logs,
         "org_slug": org.slug,
         "org_name": org.name,
         "now_wib": dj_timezone.localtime(dj_timezone.now(), _WIB_TZ),
+        "policy": policy,
+        "policy_tolerance_at": policy_tolerance_at,
     }
 
 
