@@ -26,7 +26,7 @@ function mapError(code, detail) {
     RATE_LIMITED: 'Terlalu sering. Tunggu sebentar, lalu coba lagi.',
     AUTH_REQUIRED: 'Sesi berakhir. Silakan login kembali.',
   };
-  return { code, message: M[code] || (detail || 'Terjadi kesalahan. Coba lagi.'), detail: detail || '' };
+  return new ApiError(code, M[code] || (detail || 'Terjadi kesalahan. Coba lagi.'), detail || '');
 }
 
 class ApiError extends Error {
@@ -35,7 +35,10 @@ class ApiError extends Error {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+function todayStr() {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+  return `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}-${parts.find(p => p.type === 'day').value}`;
+}
 
 // ---- Data dummy (tanpa data siswa nyata) ----
 const dummyState = {
@@ -91,10 +94,10 @@ const dummyHandlers = {
   async 'GET /attendance/records/'() {
     await delay(SIM_DELAY);
     const siswa = [
-      { id: 'p1', name: 'Andi Pratama', check_in: '07:55', check_out: '16:30', status: 'HADIR', distance_m: 14.2 },
-      { id: 'p2', name: 'Bunga Sari', check_in: '08:11', check_out: null, status: 'BELUM_PULANG', distance_m: 25.0 },
-      { id: 'p3', name: 'Citra Dewi', check_in: null, check_out: null, status: 'BELUM_HADIR', distance_m: null },
-      { id: 'p4', name: 'Dimas Arya', check_in: '07:49', check_out: '15:58', status: 'PERLU_DITINJAU', distance_m: 210.0 },
+      { id: 'p1', name: 'Andi Pratama', group: 'Produksi 1', date: todayStr(), check_in: '07:55', check_out: '16:30', status: 'HADIR', distance_m: 14.2 },
+      { id: 'p2', name: 'Bunga Sari', group: 'Produksi 1', date: todayStr(), check_in: '08:11', check_out: null, status: 'BELUM_PULANG', distance_m: 25.0 },
+      { id: 'p3', name: 'Citra Dewi', group: 'Desain 2', date: todayStr(), check_in: null, check_out: null, status: 'BELUM_HADIR', distance_m: null },
+      { id: 'p4', name: 'Dimas Arya', group: 'Produksi 2', date: todayStr(), check_in: '07:49', check_out: '15:58', status: 'PERLU_DITINJAU', distance_m: 210.0 },
     ];
     return { summary: { hadir: 2, belum_hadir: 1, pulang: 2, perlu_ditinjau: 1 }, results: siswa, next: null };
   },
@@ -107,7 +110,9 @@ const dummyHandlers = {
 
 // ---- Real handler (backend belum ada — akan digunakan saat siap) ----
 async function realRequest(method, path, body, isForm = false) {
-  const opts = { method, headers: {} };
+  const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+  const opts = { method, credentials: 'same-origin', headers: {} };
+  if (csrfToken && !['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method.toUpperCase())) opts.headers['X-CSRFToken'] = decodeURIComponent(csrfToken);
   if (body) {
     if (isForm) { opts.body = body; }
     else { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
@@ -122,9 +127,10 @@ async function realRequest(method, path, body, isForm = false) {
 
 async function dummyRequest(method, path, body) {
   const key = `${method} ${path}`;
-  const h = dummyHandlers[key];
+  const correction = key.match(/^POST \/attendance\/records\/([^/]+)\/corrections\/$/);
+  const h = correction ? dummyHandlers['POST /attendance/records/{id}/corrections/'] : dummyHandlers[key];
   if (!h) throw mapError('NOT_IMPLEMENTED_DUMMY', `Endpoint ${key} belum tersedia di dummy mode.`);
-  return h(path, { body });
+  return h(correction ? correction[1] : path, { body });
 }
 
 export async function api(method, path, body, isForm = false) {

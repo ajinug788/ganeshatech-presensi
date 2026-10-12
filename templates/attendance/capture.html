@@ -1,46 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Absen — Platform Absensi TeFa{% endblock %}
-{% block nav %}<a href="/">Batal</a>{% endblock %}
+{% load static %}
+{% block title %}Absensi — TeFa Presensi{% endblock %}
+{% block nav %}<a href="/dashboard/siswa/">Beranda</a><a href="/absen/riwayat/">Riwayat</a>{% endblock %}
 {% block content %}
+<div class="page-heading"><div><p class="eyebrow">Pencatatan kehadiran</p><h1 id="capture-title">Absen masuk</h1><p class="text-muted">Ikuti langkah singkat ini untuk mencatat kehadiranmu.</p></div><a class="btn btn--secondary" href="/dashboard/siswa/">← Kembali</a></div>
 <ol class="stepper" aria-label="Langkah absensi">
-  <li class="stepper__step is-active" data-step="1">Kamera</li>
+  <li class="stepper__step is-active" data-step="1" aria-current="step">Kamera</li>
   <li class="stepper__step" data-step="2">Foto</li>
   <li class="stepper__step" data-step="3">Lokasi</li>
-  <li class="stepper__step" data-step="4">Kirim</li>
+  <li class="stepper__step" data-step="4">Selesai</li>
 </ol>
-
-<!-- Pane 1: kamera -->
-<section data-pane="1">
-  <video id="cam-video" class="cam-box" autoplay playsinline muted></video>
-  <p id="cam-status" class="status" role="status"></p>
-  <div id="cam-fallback" hidden>
-    <p>Fallback: gunakan kamera bawaan perangkat.</p>
-    <input type="file" id="cam-file" accept="image/*" capture="user" aria-label="Ambil foto dengan kamera">
-  </div>
-  <button id="btn-capture" class="btn btn--big">📷 Ambil Foto</button>
-</section>
-
-<!-- Pane 2: preview foto -->
-<section data-pane="2" hidden>
-  <img id="photo-preview" class="photo-preview" alt="Preview selfie">
-  <p id="photo-status" class="status" role="status"></p>
-  <button id="btn-retake" class="btn btn--secondary btn--big">↺ Ambil Ulang</button>
-</section>
-
-<!-- Pane 3: lokasi -->
-<section data-pane="3" hidden>
-  <p id="geo-status" class="status" role="status"></p>
-  <button id="btn-retry-geo" class="btn btn--secondary btn--big" hidden>↺ Coba Ambil Lokasi Lagi</button>
-</section>
-
-<!-- Pane 4: konfirmasi & kirim -->
-<section data-pane="4" hidden>
-  <div class="card">
-    <p id="submit-status" class="status" role="status"></p>
-    <button id="btn-submit" class="btn btn--big" disabled>Kirim Absen</button>
-    <div id="wizard-result" aria-live="polite"></div>
-  </div>
-</section>
-
-<script type="module" src="/static/js/attendance.js"></script>
+<div class="capture-layout">
+  <section class="card capture-main" aria-label="Proses absensi">
+    <section data-pane="1">
+      <p class="capture-kicker">Posisikan wajah di tengah bingkai, lalu ambil selfie.</p>
+      <video id="cam-video" class="cam-box" autoplay playsinline muted aria-label="Pratinjau kamera"></video>
+      <p id="cam-status" class="status" role="status" aria-live="polite"></p>
+      <button id="btn-camera-retry" class="btn btn--secondary" type="button" hidden>Coba akses kamera lagi</button>
+      <div id="cam-fallback" hidden><label for="cam-file">Gunakan kamera perangkat</label><input type="file" id="cam-file" accept="image/*" capture="user" aria-label="Ambil foto dengan kamera depan"></div>
+      <button id="btn-capture" class="btn btn--big" type="button">Ambil selfie</button>
+    </section>
+    <section data-pane="2" hidden>
+      <p class="capture-kicker">Pastikan foto terlihat jelas. Kamu masih bisa mengambil ulang.</p>
+      <img id="photo-preview" class="photo-preview" alt="Pratinjau selfie untuk absensi">
+      <p id="photo-status" class="status" role="status"></p>
+      <div class="hero-actions"><button id="btn-retake" class="btn btn--secondary" type="button">Ambil ulang</button><button id="btn-continue" class="btn" type="button">Lanjut ke lokasi →</button></div>
+    </section>
+    <section data-pane="3" hidden>
+      <div class="identity-panel"><span class="avatar" aria-hidden="true">◎</span><div><h2>Verifikasi lokasi</h2><p>Lokasi hanya diambil untuk absensi ini.</p></div></div>
+      <p id="geo-status" class="status" role="status" aria-live="polite"></p>
+      <button id="btn-retry-geo" class="btn btn--secondary" type="button" hidden>Coba ambil lokasi lagi</button>
+    </section>
+    <section data-pane="4" hidden>
+      <div class="identity-panel"><span class="avatar" aria-hidden="true">✓</span><div><h2>Siap dikirim</h2><p>Foto dan lokasi siap untuk diverifikasi.</p></div></div>
+      <p id="submit-status" class="status" role="status" aria-live="polite"></p>
+      <button id="btn-submit" class="btn btn--big" type="button" disabled>Kirim absensi</button>
+      <div id="wizard-result" aria-live="polite"></div>
+    </section>
+  </section>
+  <aside class="card capture-aside"><p class="eyebrow">Sebelum mulai</p><h2>Beberapa hal kecil</h2><div class="capture-tips">
+    <div class="tip-row"><span class="tip-check">✓</span><span>Pastikan izin kamera dan lokasi sudah aktif di browser.</span></div>
+    <div class="tip-row"><span class="tip-check">✓</span><span>Ambil foto langsung dari kamera. Foto diperkecil sebelum dikirim.</span></div>
+    <div class="tip-row"><span class="tip-check">✓</span><span>Berada di sekitar lokasi praktik agar posisi dapat diverifikasi.</span></div>
+    <div class="tip-row"><span class="tip-check">✓</span><span>Catatan waktu resmi mengikuti waktu server.</span></div>
+  </div><p class="footer-note" style="text-align:left">Data foto dan lokasi digunakan untuk mencatat kehadiran.</p></aside>
+</div>
+<script type="module" src="{% static 'js/attendance.js' %}"></script>
 {% endblock %}
