@@ -70,7 +70,7 @@ class LoginView(View):
 
     def _dashboard_url(self, request):
         if request.user.is_superuser or request.user.is_platform_admin:
-            return reverse("admin:index")
+            return reverse("tenants:dashboard_superadmin")
 
         membership = get_active_membership(request.user)
         if membership is None:
