@@ -168,6 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const preview = $('#photo-preview');
     if (preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
     $('#cam-file').value = '';
+    // Percobaan baru (foto diambil ulang), bukan retry jaringan → key idempotency baru.
+    sessionStorage.removeItem('absen_client_request_id');
+    state.idempotencyKey = null;
     initCamera();
   });
   $('#btn-camera-retry')?.addEventListener('click', initCamera);
