@@ -69,6 +69,9 @@ class LoginView(View):
         return render(request, self.template_name, {"form": form}, status=401)
 
     def _dashboard_url(self, request):
+        if request.user.is_superuser or request.user.is_platform_admin:
+            return reverse("admin:index")
+
         membership = get_active_membership(request.user)
         if membership is None:
             return reverse("tenants:no_membership")
