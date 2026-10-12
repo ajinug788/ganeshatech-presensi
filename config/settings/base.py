@@ -89,6 +89,11 @@ STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else 
 # Media privat - TIDAK dilayani publik (IMG-07); akses hanya via view terotorisasi.
 MEDIA_ROOT = BASE_DIR / "private_media"
 
+# Batas media (Tahap 4, DEC-14: default kerja 2 MB; Nginx client_max_body_size
+# wajib disetel ke nilai yang sama).
+MEDIA_MAX_UPLOAD_MB = 2
+MEDIA_MAX_PIXELS = 25_000_000  # >25MP ditolak
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Keamanan minimum (diperketat di production.py)
