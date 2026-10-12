@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Dashboard Admin — {{ organization.name }}{% endblock %}
+{% block body_class %}tefa-admin-body{% endblock %}
+{% block extra_head %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+{% endblock %}
+{% block content %}
+<div class="ta-shell">
+  <aside class="ta-sidebar">
+    <a class="ta-brand" href="{% url 'tenants:dashboard_admin' %}"><span class="ta-brand-mark material-symbols-outlined">factory</span><span><strong>Presensi TeFa</strong><small>Teaching Factory System</small></span></a>
+    <div class="ta-school"><span class="ta-school-icon material-symbols-outlined">school</span><div><strong>{{ organization.name }}</strong><small>Tenant ID · {{ organization.slug }}</small></div></div>
+    <p class="ta-nav-label">Menu sekolah</p>
+    <nav class="ta-nav" aria-label="Menu admin sekolah">
+      <a class="is-active" href="{% url 'tenants:dashboard_admin' %}" aria-current="page"><span class="material-symbols-outlined">dashboard</span>Ringkasan dashboard</a>
+      {% if is_school_admin %}
+      <a href="{% url 'reports:rekap' %}"><span class="material-symbols-outlined">fact_check</span>Rekap absensi</a>
+      <a href="{% url 'attendance:student_list' %}"><span class="material-symbols-outlined">groups</span>Master siswa</a>
+      <a href="{% url 'attendance:location_list' %}"><span class="material-symbols-outlined">near_me</span>Titik geofence</a>
+      <a href="{% url 'reports:audit_history' %}"><span class="material-symbols-outlined">history</span>Koreksi &amp; audit</a>
+      <a href="{% url 'attendance:policy' %}"><span class="material-symbols-outlined">tune</span>Shift &amp; toleransi</a>
+      {% endif %}
+    </nav>
+    <div class="ta-security"><div><span class="material-symbols-outlined">shield</span><strong>Keamanan tenant</strong></div><p>Data dibatasi pada organisasi ini.</p><small>Presensi TeFa · {{ membership.get_role_display }}</small></div>
+  </aside>
+
+  <div class="ta-main">
+    <header class="ta-topbar"><div class="ta-crumb"><a href="{% url 'tenants:dashboard_admin' %}">Presensi TeFa</a><span>/</span>{{ organization.name }}</div><div class="ta-user"><div><strong>{{ membership.get_role_display }}</strong><small>{{ request.user.email }}</small></div><span class="ta-avatar material-symbols-outlined">person</span><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit" title="Keluar" aria-label="Keluar"><span class="material-symbols-outlined">logout</span></button></form></div></header>
+    <div class="ta-content">
+      {% if messages %}{% for message in messages %}<div class="ta-message" role="status">{{ message }}</div>{% endfor %}{% endif %}
+      <section class="ta-welcome"><div><p class="ta-eyebrow">Konsol resmi · {{ organization.name }}</p><h1>Dashboard Admin Sekolah</h1><p>Pantau presensi, siswa, lokasi, dan kebijakan Teaching Factory.</p></div><div class="ta-welcome-actions"><span class="ta-date"><span class="material-symbols-outlined">calendar_today</span>{{ today|date:"l, d F Y" }}</span>{% if is_school_admin %}<a class="ta-button" href="{% url 'reports:rekap_csv' %}"><span class="material-symbols-outlined">download</span>Ekspor rekap CSV</a>{% endif %}</div></section>
+
+      <section class="ta-metrics" aria-label="Ringkasan presensi hari ini">
+        <article class="ta-metric"><div class="ta-metric-head"><span>Siswa aktif</span><span class="material-symbols-outlined">groups</span></div><strong>{{ total_siswa }}</strong><small>Profil siswa di organisasi ini</small></article>
+        <article class="ta-metric ta-metric--green"><div class="ta-metric-head"><span>Hadir tepat waktu</span><span class="material-symbols-outlined">check_circle</span></div><strong>{{ present_on_time }}</strong><small>{{ attendance_rate }}% sudah check-in, termasuk terlambat</small></article>
+        <article class="ta-metric ta-metric--amber"><div class="ta-metric-head"><span>Terlambat</span><span class="material-symbols-outlined">schedule</span></div><strong>{{ late_today }}</strong><small>{% if attendance_policy %}Toleransi {{ attendance_policy.late_tolerance_min }} menit{% else %}Kebijakan shift belum disetel{% endif %}</small></article>
+        <article class="ta-metric ta-metric--rose"><div class="ta-metric-head"><span>Belum tercatat</span><span class="material-symbols-outlined">person_alert</span></div><strong>{{ belum_absen }}</strong><small>Siswa aktif tanpa catatan absensi hari ini</small></article>
+      </section>
+
+      <div class="ta-main-grid">
+        <section class="ta-panel ta-activity-panel">
+          <div class="ta-panel-head"><div><p class="ta-eyebrow">Presensi hari ini</p><h2>Aktivitas terbaru</h2><p>Catatan masuk dan pulang yang tersimpan untuk {{ today|date:"d M Y" }}.</p></div>{% if is_school_admin %}<a class="ta-link" href="{% url 'reports:rekap' %}">Lihat rekap <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}</div>
+          <div class="ta-table-wrap"><table class="ta-table"><thead><tr><th>Siswa</th><th>Kelompok</th><th>Masuk</th><th>Pulang</th><th>Lokasi</th><th>Status</th>{% if is_school_admin %}<th></th>{% endif %}</tr></thead><tbody>
+            {% for day in today_activity %}<tr><td><strong>{{ day.student.full_name }}</strong><small>{{ day.student.student_number }}</small></td><td>{{ day.student.group|default:"—" }}</td><td>{{ day.check_in_at|date:"H:i"|default:"—" }}</td><td>{{ day.check_out_at|date:"H:i"|default:"—" }}</td><td>{% if day.check_out_location %}{{ day.check_out_location.name }}{% elif day.check_in_location %}{{ day.check_in_location.name }}{% else %}—{% endif %}</td><td><span class="ta-status ta-status--{{ day.status }}">{{ day.get_status_display }}{% if day.status == 'late' %} · {{ day.late_minutes }} mnt{% endif %}</span></td>{% if is_school_admin %}<td><a class="ta-row-action" href="{% url 'reports:koreksi' day.id %}" aria-label="Koreksi absensi {{ day.student.full_name }}">Koreksi</a></td>{% endif %}</tr>
+            {% empty %}<tr><td colspan="{% if is_school_admin %}7{% else %}6{% endif %}" class="ta-empty">Belum ada catatan presensi hari ini.</td></tr>{% endfor %}
+          </tbody></table></div>
+          <div class="ta-panel-foot"><span>{{ recorded_today }} catatan hari ini</span><span>{{ absent_recorded }} tidak hadir · {{ excused_today }} izin tercatat</span></div>
+        </section>
+
+        <section class="ta-panel ta-policy-panel"><div class="ta-panel-head"><div><p class="ta-eyebrow">Pengaturan operasional</p><h2>Shift &amp; lokasi</h2></div>{% if is_school_admin %}<a class="ta-icon-link" href="{% url 'attendance:policy' %}" aria-label="Ubah kebijakan"><span class="material-symbols-outlined">edit</span></a>{% endif %}</div>
+          {% if attendance_policy %}<div class="ta-policy-row"><span class="material-symbols-outlined">login</span><div><small>Jam check-in</small><strong>{{ attendance_policy.check_in_start|time:"H:i" }}–{{ attendance_policy.check_in_end|time:"H:i" }}</strong></div></div><div class="ta-policy-row"><span class="material-symbols-outlined">logout</span><div><small>Jam check-out</small><strong>{{ attendance_policy.check_out_start|time:"H:i" }}–{{ attendance_policy.check_out_end|time:"H:i" }}</strong></div></div><div class="ta-policy-row"><span class="material-symbols-outlined">schedule</span><div><small>Toleransi terlambat</small><strong>{{ attendance_policy.late_tolerance_min }} menit</strong></div></div>{% else %}<div class="ta-empty-state"><strong>Kebijakan belum tersedia</strong><span>Atur jam masuk, pulang, dan toleransi untuk organisasi ini.</span>{% if is_school_admin %}<a href="{% url 'attendance:policy' %}">Atur kebijakan</a>{% endif %}</div>{% endif %}
+          <div class="ta-location-summary"><div><span class="material-symbols-outlined">near_me</span><strong>Titik geofence aktif</strong></div><b>{{ active_location_count }}</b></div>
+          {% if active_locations %}<ul class="ta-location-list">{% for location in active_locations %}<li><span>{{ location.name }}</span><small>Radius {{ location.radius_m }} m</small></li>{% endfor %}</ul>{% else %}<p class="ta-location-empty">Belum ada titik lokasi aktif.</p>{% endif %}
+          {% if is_school_admin %}<a class="ta-link ta-location-link" href="{% url 'attendance:location_list' %}">Kelola titik lokasi <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}
+        </section>
+      </div>
+
+      <div class="ta-secondary-grid">
+        <section class="ta-panel"><div class="ta-panel-head"><div><p class="ta-eyebrow">Distribusi siswa</p><h2>Ringkasan per kelompok</h2><p>Perbandingan siswa aktif dengan yang sudah check-in hari ini.</p></div></div>
+          {% if group_summaries %}<div class="ta-group-list">{% for group in group_summaries %}<div class="ta-group-row"><div class="ta-group-heading"><strong>{{ group.name }}</strong><span>{{ group.attended }} / {{ group.total }} · {{ group.rate }}%</span></div><div class="ta-progress"><span style="width:{{ group.rate }}%"></span></div></div>{% endfor %}</div>{% else %}<div class="ta-empty-state"><strong>Belum ada kelompok siswa</strong><span>Kelompok muncul setelah data siswa ditambahkan.</span></div>{% endif %}
+        </section>
+
+        <section class="ta-panel"><div class="ta-panel-head"><div><p class="ta-eyebrow">Perlu dipantau</p><h2>Belum tercatat hari ini</h2><p>{{ belum_absen }} siswa aktif belum memiliki catatan.</p></div>{% if is_school_admin %}<a class="ta-link" href="{% url 'attendance:student_list' %}">Daftar siswa <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}</div>
+          {% if belum_list %}<div class="ta-missing-list">{% for student in belum_list|slice:":6" %}<div><span class="ta-student-avatar">{{ student.full_name|first|upper }}</span>{% if is_school_admin %}<a class="ta-missing-person" href="{% url 'attendance:student_detail' student.id %}"><strong>{{ student.full_name }}</strong><small>{{ student.student_number }} · {{ student.group|default:"Tanpa kelompok" }}</small></a><a class="ta-missing-action" href="{% url 'reports:status_record' student.id %}">Catat status</a>{% else %}<span class="ta-missing-person"><strong>{{ student.full_name }}</strong><small>{{ student.student_number }} · {{ student.group|default:"Tanpa kelompok" }}</small></span>{% endif %}</div>{% endfor %}</div>{% else %}<div class="ta-empty-state"><strong>Semua siswa sudah tercatat</strong><span>Tidak ada siswa aktif tanpa catatan absensi hari ini.</span></div>{% endif %}
+        </section>
+      </div>
+
+      <section class="ta-panel ta-audit-panel"><div class="ta-panel-head"><div><p class="ta-eyebrow">Jejak perubahan</p><h2>Koreksi &amp; pencatatan terbaru</h2><p>Status baru dan koreksi tersimpan bersama alasan serta pelakunya.</p></div>{% if is_school_admin %}<a class="ta-link" href="{% url 'reports:audit_history' %}">Buka riwayat audit <span class="material-symbols-outlined">arrow_forward</span></a>{% endif %}</div>
+        <div class="ta-correction-list">{% for log in recent_corrections %}<article><span class="material-symbols-outlined">edit_note</span><div><strong>{{ log.metadata.student_number|default:log.object_id }}</strong><small>{{ log.actor.email|default:"Sistem" }}{% if log.reason %} · {{ log.reason }}{% endif %}</small></div><time>{{ log.created_at|date:"d M, H:i" }}</time></article>{% empty %}<p class="ta-empty">Belum ada koreksi absensi tercatat.</p>{% endfor %}</div>
+      </section>
+      <footer class="ta-footer">Presensi TeFa · {{ organization.name }} · Ringkasan hari ini berdasarkan data absensi tersimpan.</footer>
+    </div>
+  </div>
+</div>
+{% endblock %}

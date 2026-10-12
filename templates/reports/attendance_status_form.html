@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Catat Status Siswa — {{ membership.organization.name }}{% endblock %}
+{% block nav %}<a href="{% url 'tenants:dashboard_admin' %}">Dashboard</a><a href="{% url 'reports:rekap' %}">Rekap &amp; laporan</a><a href="{% url 'attendance:student_list' %}">Daftar siswa</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary">Keluar</button></form>{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">{{ membership.organization.name }} · Presensi hari ini</p><h1>Catat status siswa</h1><p class="text-muted">Tambahkan keterangan izin atau tidak hadir untuk siswa yang belum tercatat.</p></div></div>
+<section class="card status-record-card">
+  <div class="status-record-student"><span class="status-record-avatar">{{ student.full_name|first|upper }}</span><div><strong>{{ student.full_name }}</strong><small>{{ student.student_number }} · {{ student.group|default:"Tanpa kelompok" }}</small></div><time>{{ today|date:"d M Y" }}</time></div>
+  {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div><label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>{{ form.status }}{% if form.status.errors %}<div class="field-errors">{{ form.status.errors }}</div>{% endif %}</div>
+    <div><label for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>{{ form.reason }}<p class="form-help">{{ form.reason.help_text }}</p>{% if form.reason.errors %}<div class="field-errors">{{ form.reason.errors }}</div>{% endif %}</div>
+    <div class="status-record-actions"><a class="btn btn--secondary" href="{% url 'tenants:dashboard_admin' %}">Batal</a><button class="btn" type="submit">Simpan status</button></div>
+  </form>
+</section>
+{% endblock %}

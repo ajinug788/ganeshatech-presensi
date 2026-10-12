@@ -8,7 +8,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from django.contrib import messages
-from django.db import transaction
+from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.db.models import Sum  # noqa: F401
 from django.db import models  # noqa: F401
@@ -17,9 +18,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.utils import timezone as dj_timezone
 
+from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
-from apps.attendance.models import AttendanceDay
+from apps.attendance.models import AttendanceDay, StudentProfile
 from apps.tenants.context import RoleRequiredMixin
+from .forms import AttendanceStatusForm
 
 _WIB_TZ = ZoneInfo("Asia/Jakarta")
 _BULAN_ID = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -253,6 +256,118 @@ class RekapLaporanView(RoleRequiredMixin, View):
             "statuses": AttendanceDay.Status.values,
         }
         return render(request, self.template_name, ctx)
+
+
+# ---------------------------------------------------------- Audit & status manual
+
+
+class AuditHistoryView(RoleRequiredMixin, View):
+    """Riwayat audit yang dibatasi pada organisasi milik admin."""
+
+    allowed_roles = ("admin",)
+
+    def get(self, request):
+        action = request.GET.get("action", "").strip()
+        logs = AuditLog.objects.filter(organization=self.organization).select_related(
+            "actor"
+        )
+        if action:
+            logs = logs.filter(action=action)
+        page = Paginator(logs.order_by("-created_at"), 25).get_page(
+            request.GET.get("page")
+        )
+        return render(
+            request,
+            "reports/audit_history.html",
+            {"membership": self.membership, "logs": page, "action": action},
+        )
+
+
+class AttendanceStatusCreateView(RoleRequiredMixin, View):
+    """Catat izin/tidak hadir hari ini dengan alasan audit wajib."""
+
+    allowed_roles = ("admin",)
+    template_name = "reports/attendance_status_form.html"
+
+    def _today(self):
+        return dj_timezone.localtime(dj_timezone.now(), _WIB_TZ).date()
+
+    def _student(self):
+        return get_object_or_404(
+            StudentProfile,
+            pk=self.kwargs["student_id"],
+            organization=self.organization,
+            is_active=True,
+        )
+
+    def _already_recorded(self, student):
+        return AttendanceDay.objects.filter(
+            organization=self.organization,
+            student=student,
+            work_date=self._today(),
+        ).exists()
+
+    def get(self, request, student_id):
+        student = self._student()
+        if self._already_recorded(student):
+            messages.info(request, "Siswa sudah memiliki catatan absensi hari ini.")
+            return redirect("tenants:dashboard_admin")
+        return render(
+            request,
+            self.template_name,
+            {
+                "membership": self.membership,
+                "student": student,
+                "today": self._today(),
+                "form": AttendanceStatusForm(),
+            },
+        )
+
+    def post(self, request, student_id):
+        student = self._student()
+        if self._already_recorded(student):
+            messages.info(request, "Siswa sudah memiliki catatan absensi hari ini.")
+            return redirect("tenants:dashboard_admin")
+        form = AttendanceStatusForm(request.POST)
+        if form.is_valid():
+            work_date = self._today()
+            try:
+                with transaction.atomic():
+                    day = AttendanceDay.objects.create(
+                        organization=self.organization,
+                        student=student,
+                        work_date=work_date,
+                        status=form.cleaned_data["status"],
+                    )
+                    catat_audit(
+                        action="attendance_status_recorded",
+                        object_type="attendance.AttendanceDay",
+                        object_id=day.pk,
+                        organization=self.organization,
+                        actor=request.user,
+                        reason=form.cleaned_data["reason"],
+                        metadata={
+                            "student_number": student.student_number,
+                            "status": day.status,
+                            "work_date": work_date.isoformat(),
+                        },
+                    )
+            except IntegrityError:
+                messages.info(request, "Siswa sudah memiliki catatan absensi hari ini.")
+                return redirect("tenants:dashboard_admin")
+            messages.success(request, "Status siswa tersimpan dan tercatat di audit.")
+            return redirect("tenants:dashboard_admin")
+        return render(
+            request,
+            self.template_name,
+            {
+                "membership": self.membership,
+                "student": student,
+                "today": self._today(),
+                "form": form,
+            },
+            status=400,
+        )
 
 
 # ---------------------------------------------------------------- Koreksi

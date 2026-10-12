@@ -8,13 +8,15 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from apps.attendance.models import AttendanceDay, StudentProfile
+from apps.attendance.models import (
+    AttendanceDay,
+    AttendanceLocation,
+    AttendancePolicy,
+    StudentProfile,
+)
 from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
-from apps.reports.views import (
-    build_pembina_context,
-    build_student_dashboard_context,
-)
+from apps.reports.views import build_pembina_context, build_student_dashboard_context
 from .context import TenantRequiredMixin, get_active_membership, role_required
 from .forms import OrganizationForm
 from .models import Organization
@@ -154,7 +156,69 @@ def dashboard_pembina(request):
 @login_required
 @role_required("admin", "billing")
 def dashboard_admin(request):
-    return render(request, "tenants/dashboard.html", {"membership": request.membership, "role_label": "Admin"})
+    organization = request.organization
+    context = build_pembina_context(request.membership, organization)
+    today = context["today"]
+    today_days = AttendanceDay.objects.filter(
+        organization=organization, work_date=today, student__is_active=True
+    )
+    status_counts = {
+        row["status"]: row["total"]
+        for row in today_days.values("status").annotate(total=Count("id"))
+    }
+    checked_in = status_counts.get(AttendanceDay.Status.PRESENT, 0) + status_counts.get(
+        AttendanceDay.Status.LATE, 0
+    )
+    context.update({
+        "role_label": "Admin Sekolah",
+        "is_school_admin": request.membership.role == "admin",
+        "organization": organization,
+        "present_on_time": status_counts.get(AttendanceDay.Status.PRESENT, 0),
+        "late_today": status_counts.get(AttendanceDay.Status.LATE, 0),
+        "absent_recorded": status_counts.get(AttendanceDay.Status.ABSENT, 0),
+        "excused_today": status_counts.get(AttendanceDay.Status.EXCUSED, 0),
+        "recorded_today": sum(status_counts.values()),
+        "checked_in_today": checked_in,
+        "attendance_rate": round(checked_in / context["total_siswa"] * 100, 1)
+        if context["total_siswa"] else 0,
+        "active_location_count": AttendanceLocation.objects.filter(
+            organization=organization, is_active=True
+        ).count(),
+        "today_activity": today_days.select_related(
+            "student", "check_in_location", "check_out_location"
+        ).order_by("-updated_at")[:8],
+        "recent_corrections": AuditLog.objects.filter(
+            organization=organization,
+            action__in=("attendance_corrected", "attendance_status_recorded"),
+        ).select_related("actor").order_by("-created_at")[:4],
+    })
+
+    groups = organization.students.filter(is_active=True).values("group").annotate(
+        total=Count("id")
+    ).order_by("group")
+    attended_by_group = dict(
+        today_days.filter(status__in=[AttendanceDay.Status.PRESENT, AttendanceDay.Status.LATE])
+        .values("student__group").annotate(total=Count("id"))
+        .values_list("student__group", "total")
+    )
+    context["group_summaries"] = [
+        {
+            "name": row["group"] or "Belum dikelompokkan",
+            "total": row["total"],
+            "attended": attended_by_group.get(row["group"], 0),
+            "rate": round(attended_by_group.get(row["group"], 0) / row["total"] * 100, 1)
+            if row["total"] else 0,
+        }
+        for row in groups
+    ]
+    try:
+        context["attendance_policy"] = organization.attendance_policy
+    except AttendancePolicy.DoesNotExist:
+        context["attendance_policy"] = None
+    context["active_locations"] = AttendanceLocation.objects.filter(
+        organization=organization, is_active=True
+    ).order_by("name")[:4]
+    return render(request, "dashboard/admin.html", context)
 
 
 @login_required
