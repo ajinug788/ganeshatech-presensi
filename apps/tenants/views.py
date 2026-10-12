@@ -158,7 +158,7 @@ def dashboard_admin(request):
     from apps.reports.views import build_admin_context
 
     ctx = build_admin_context(request.membership, request.organization)
-    ctx["role_label"] = "Admin"
+    ctx["role_label"] = request.membership.get_role_display()
     return render(request, "dashboard/admin.html", ctx)
 
 

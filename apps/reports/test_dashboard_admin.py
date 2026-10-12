@@ -88,7 +88,7 @@ def test_admin_dashboard_200_dan_angka_benar(client):
     assert ctx["hadir"] == 1
     assert ctx["terlambat"] == 1
     assert ctx["belum_absen"] == 1
-    assert ctx["pct_hadir"] == 66.7
+    assert ctx["pct_hadir"] == 33.3
     # Perlu tindakan memuat siswa3
     assert any(s.pk == siswa3.pk for s in ctx["belum_list"])
     # Aktivitas memuat 2 baris
@@ -133,7 +133,7 @@ def test_catat_izin_buat_attendanceday_dan_audit(client):
     )
     assert resp.status_code == 302
     assert AttendanceDay.objects.filter(student=siswa).count() == 0
-    assert AuditLog.objects.filter(action='attendance_corrected').count() == 0
+    assert AuditLog.objects.filter(action='attendance_status_recorded').count() == 0
 
     # Valid → AttendanceDay dibuat + audit.
     resp = client.post(
@@ -149,8 +149,8 @@ def test_catat_izin_buat_attendanceday_dan_audit(client):
         organization=org, student=siswa, work_date=TODAY
     )
     assert day.status == AttendanceDay.Status.EXCUSED
-    log = AuditLog.objects.filter(action="attendance_corrected").get()
-    assert log.action == "attendance_corrected"
+    log = AuditLog.objects.filter(action="attendance_status_recorded").get()
+    assert log.action == "attendance_status_recorded"
     assert log.reason == "Sakit, konfirmasi ortu"
     assert log.metadata["new_status"] == "excused"
 

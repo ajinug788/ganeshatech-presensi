@@ -78,23 +78,22 @@ tailwind.config = {
       <span class="px-2.5 py-1 rounded bg-surface-container-high text-primary font-label-sm text-label-sm uppercase tracking-wider font-semibold">{{ org_name|upper }} • KONSOL RESMI</span>
       <span class="text-outline font-label-sm text-label-sm">•</span>
       <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
-        <span class="material-symbols-outlined text-body-sm text-success-emerald">verified</span>
-        Terverifikasi Multi-Tenant (ID: <code class="text-primary font-mono font-medium">{{ org_slug }}</code>)
+        Organisasi aktif: <code class="text-primary font-mono font-medium">{{ org_slug }}</code>
       </span>
     </div>
     <h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">Dashboard Admin Sekolah</h1>
     <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-      Pemantauan presensi siswa Teaching Factory &amp; operasional bengkel terintegrasi {{ org_name }} secara real-time.
+      Ringkasan presensi dan pengelolaan operasional sekolah {{ org_name }}.
     </p>
   </div>
   <div class="flex items-center gap-space-sm flex-wrap lg:flex-nowrap">
     <div class="flex flex-col text-right pr-space-sm hidden sm:flex">
       <span class="font-label-md text-label-md text-on-surface">{{ today|date:"l, d N Y" }}</span>
       <span class="font-label-sm text-label-sm text-success-emerald flex items-center justify-end gap-1 font-medium">
-        <span class="w-1.5 h-1.5 rounded-full bg-success-emerald animate-pulse"></span>
-        {{ role_label }} • {{ membership.get_role_display }}
+        {{ role_label }}
       </span>
     </div>
+    {% if membership.role == 'admin' %}
     <a class="h-11 px-space-md rounded-lg bg-surface-card hover:bg-surface-container transition-colors shadow-sm flex items-center gap-2 text-primary font-label-md text-label-md" href="{% url 'reports:rekap_csv' %}">
       <span class="material-symbols-outlined text-body-lg">download</span>
       <span>Ekspor Rekap (CSV)</span>
@@ -103,6 +102,7 @@ tailwind.config = {
       <span class="material-symbols-outlined text-body-lg">fact_check</span>
       <span>Riwayat Koreksi</span>
     </a>
+    {% endif %}
     <form method="post" action="{% url 'accounts:logout' %}">
       {% csrf_token %}
       <button type="submit" class="h-11 px-space-md rounded-lg bg-surface-card hover:bg-surface-container transition-colors shadow-sm flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
@@ -112,6 +112,16 @@ tailwind.config = {
     </form>
   </div>
 </div>
+
+{% if membership.role == 'admin' %}
+<nav aria-label="Menu pengelolaan sekolah" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-space-sm">
+  <a class="p-space-sm rounded-lg bg-surface-card shadow-sm text-primary font-label-md text-label-md hover:bg-surface-container-low" href="{% url 'attendance:student_list' %}">Master Siswa</a>
+  <a class="p-space-sm rounded-lg bg-surface-card shadow-sm text-primary font-label-md text-label-md hover:bg-surface-container-low" href="{% url 'attendance:location_list' %}">Titik Geofence</a>
+  <a class="p-space-sm rounded-lg bg-surface-card shadow-sm text-primary font-label-md text-label-md hover:bg-surface-container-low" href="{% url 'attendance:policy' %}">Shift &amp; Toleransi</a>
+  <a class="p-space-sm rounded-lg bg-surface-card shadow-sm text-primary font-label-md text-label-md hover:bg-surface-container-low" href="{% url 'reports:rekap' %}">Laporan Absensi</a>
+  <a class="p-space-sm rounded-lg bg-surface-card shadow-sm text-primary font-label-md text-label-md hover:bg-surface-container-low" href="{% url 'reports:riwayat_koreksi' %}">Riwayat Audit</a>
+</nav>
+{% endif %}
 
 <!-- MESSAGES -->
 {% if messages %}
@@ -191,8 +201,8 @@ tailwind.config = {
       </div>
     </div>
     <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
-      <span>Status Hari Ini</span>
-      <span class="text-success-emerald font-medium">Hadir</span>
+      <span>Dari {{ total_siswa }} siswa aktif</span>
+      <span class="text-success-emerald font-medium">Tepat waktu</span>
     </div>
   </div>
   <div class="p-space-lg rounded-xl bg-surface-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
@@ -210,7 +220,7 @@ tailwind.config = {
     </div>
     <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
       <span>Hari Ini</span>
-      <span class="text-warning-amber font-medium">Perlu Pembinaan</span>
+      <span class="text-warning-amber font-medium">Status hari ini</span>
     </div>
   </div>
   <div class="p-space-lg rounded-xl bg-surface-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
@@ -245,7 +255,7 @@ tailwind.config = {
             <h3 class="font-headline-sm text-headline-sm text-primary">Aktivitas Presensi Terbaru</h3>
           </div>
           <p class="font-body-sm text-body-sm text-on-surface-variant">
-            10 catatan presensi terakhir (semua lokasi, semua tanggal)
+            Catatan presensi hari ini (maksimal 10 siswa aktif)
           </p>
         </div>
         <div class="flex items-center bg-surface-container-low p-1 rounded-lg self-start sm:self-auto">
@@ -268,7 +278,7 @@ tailwind.config = {
           </thead>
           <tbody id="tx-tbody">
             {% for row in aktivitas_rows %}
-            <tr class="tx-row hover:bg-surface-container-low/60 transition-colors" data-status="{% if row.day.status == 'late' %}terlambat{% elif row.day.status == 'present' %}hadir{% endif %}">
+            <tr class="tx-row hover:bg-surface-container-low/60 transition-colors" data-status="{% if row.day.status == 'late' %}terlambat{% elif row.day.status == 'present' %}hadir{% else %}lainnya{% endif %}">
               <td class="py-3.5 px-space-md">
                 <div class="flex items-center gap-space-sm">
                   <div class="w-9 h-9 rounded-full {% if row.day.status == 'late' %}bg-warning-surface text-warning-amber{% else %}bg-primary-container text-on-primary{% endif %} flex items-center justify-center font-label-sm text-label-sm font-bold uppercase">
@@ -330,10 +340,10 @@ tailwind.config = {
           <span class="w-2 h-2 rounded-full bg-success-emerald"></span>
           <span>Scope organisasi: {{ org_name }}</span>
         </div>
-        <a class="text-primary hover:text-primary-container font-semibold inline-flex items-center gap-1 transition-colors" href="{% url 'reports:rekap' %}">
+        {% if membership.role == 'admin' %}<a class="text-primary hover:text-primary-container font-semibold inline-flex items-center gap-1 transition-colors" href="{% url 'reports:rekap' %}">
           <span>Lihat Seluruh Rekap Absensi</span>
           <span class="material-symbols-outlined text-body-md">arrow_forward</span>
-        </a>
+        </a>{% endif %}
       </div>
     </div>
     <!-- Lokasi mini-cards (data nyata per AttendanceLocation) -->
@@ -343,11 +353,11 @@ tailwind.config = {
       <div class="p-space-md rounded-xl bg-surface-card shadow-sm flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <span class="font-label-md text-label-md text-on-surface font-semibold">{{ lrow.location.name }}</span>
-          <span class="w-2 h-2 rounded-full {% if lrow.pct >= 90 %}bg-success-emerald{% elif lrow.pct >= 70 %}bg-warning-amber{% else %}bg-alert-rose{% endif %}"></span>
+          <span class="w-2 h-2 rounded-full bg-success-emerald"></span>
         </div>
         <div class="flex items-baseline justify-between">
-          <span class="font-headline-sm text-headline-sm text-primary">{{ lrow.present }} / {{ lrow.total }}</span>
-          <span class="font-label-sm text-label-sm {% if lrow.pct >= 90 %}text-success-emerald{% elif lrow.pct >= 70 %}text-warning-amber{% else %}text-alert-rose{% endif %} font-medium">{{ lrow.pct }}% Hadir</span>
+          <span class="font-headline-sm text-headline-sm text-primary">{{ lrow.check_ins }} check-in</span>
+          <span class="font-label-sm text-label-sm text-warning-amber font-medium">{{ lrow.late }} terlambat</span>
         </div>
         <span class="font-label-sm text-label-sm text-on-surface-variant">Radius geofence {{ lrow.radius_m }} m</span>
       </div>
@@ -369,7 +379,6 @@ tailwind.config = {
             <span class="font-label-sm text-label-sm text-alert-rose font-medium">{{ belum_absen }} Siswa Belum Ada Catatan Hari Ini</span>
           </div>
         </div>
-        <span class="px-2 py-0.5 rounded-full bg-alert-surface text-alert-rose font-label-sm text-label-sm font-semibold">Tinggi</span>
       </div>
       <p class="font-body-sm text-body-sm text-on-surface-variant">
         Siswa aktif yang belum memiliki catatan AttendanceDay hari ini.
@@ -386,7 +395,7 @@ tailwind.config = {
             <span class="font-mono">{{ s.student_number }}</span>
           </div>
           <div class="flex items-center justify-end pt-1">
-            {% if membership.role == 'admin' or membership.role == 'billing' %}
+            {% if membership.role == 'admin' %}
             <button type="button" class="h-8 px-2.5 rounded bg-primary text-on-primary hover:bg-primary-container font-label-sm text-label-sm font-semibold transition-colors flex items-center gap-1"
                     onclick="handleExcuseModal('{{ s.full_name|escapejs }}', '{{ s.student_number|escapejs }}', '{{ s.pk }}')">
               <span class="material-symbols-outlined text-body-sm">edit_note</span>
@@ -411,6 +420,7 @@ tailwind.config = {
       {% endif %}
     </div>
 
+    {% if membership.role == 'admin' %}
     <!-- Koreksi terakhir -->
     <div class="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col gap-space-sm">
       <div class="flex items-center gap-space-sm">
@@ -419,7 +429,7 @@ tailwind.config = {
         </div>
         <div class="flex flex-col">
           <span class="font-label-md text-label-md text-primary font-semibold">Koreksi Terakhir</span>
-          <span class="font-label-sm text-label-sm text-on-surface-variant">Audit trail (attendance_corrected)</span>
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Catatan status manual dan koreksi</span>
         </div>
       </div>
       <div class="p-space-sm rounded-lg bg-surface-card flex flex-col gap-2 font-label-sm text-label-sm">
@@ -429,13 +439,15 @@ tailwind.config = {
             <span class="text-on-surface font-semibold">{{ log.metadata.student_number|default:log.object_id|truncatechars:20 }}</span>
             <span class="text-on-surface-variant">{{ log.created_at|date:"d N H:i" }}</span>
           </div>
-          <span class="text-on-surface-variant">{{ log.metadata.old_status|default:"—" }} → {{ log.metadata.new_status }} • oleh {{ log.actor.get_username|default:"sistem" }}</span>
+          <span class="text-on-surface-variant">{% if log.action == 'attendance_status_recorded' %}Status dicatat: {{ log.metadata.new_status }}{% else %}{{ log.metadata.old_status|default:"—" }} → {{ log.metadata.new_status }}{% endif %} • oleh {{ log.actor.get_username|default:"sistem" }}</span>
+          {% if log.reason %}<span class="text-on-surface-variant">Alasan: {{ log.reason }}</span>{% endif %}
         </div>
         {% empty %}
         <span class="text-on-surface-variant">Belum ada koreksi tercatat.</span>
         {% endfor %}
       </div>
     </div>
+    {% endif %}
 
     <!-- Tenant badge -->
     <div class="p-space-lg rounded-xl bg-surface-container-low shadow-sm flex flex-col gap-space-sm">
@@ -462,7 +474,7 @@ tailwind.config = {
         </div>
         <div class="flex items-center justify-between text-on-surface-variant">
           <span>Audit Trail:</span>
-          <span class="text-success-emerald font-semibold">Aktif &amp; Terkunci</span>
+          <span class="text-success-emerald font-semibold">Tercatat</span>
         </div>
       </div>
     </div>
@@ -493,8 +505,6 @@ tailwind.config = {
       <select class="h-11 px-space-sm rounded-lg bg-surface-card text-on-surface font-body-md text-body-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary" id="modal-status-select" name="status" required>
         <option value="excused">Izin (Kedinasan / Sakit / Keperluan Mendesak)</option>
         <option value="absent">Tidak Hadir (Alpha)</option>
-        <option value="present">Hadir</option>
-        <option value="late">Terlambat</option>
       </select>
     </div>
     <div class="flex flex-col gap-space-sm">
@@ -507,7 +517,7 @@ tailwind.config = {
       </button>
       <button type="submit" class="h-10 px-space-md rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-colors flex items-center gap-1.5 shadow-sm">
         <span class="material-symbols-outlined text-body-sm">save</span>
-        Simpan Koreksi
+        Simpan Status
       </button>
     </div>
   </form>
