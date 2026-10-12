@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Riwayat Absensi — Platform Absensi TeFa{% endblock %}
+{% block nav %}<a href="/">Beranda</a> <a href="/accounts/logout/">Keluar</a>{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Riwayat Absensi</h1>
+  <div class="table-wrap">
+    <table class="table" id="tbl-history">
+      <thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p id="hist-status" role="status"></p>
+</div>
+<script type="module">
+  import { api } from '/static/js/api.js';
+  const tbody = document.querySelector('#tbl-history tbody');
+  const status = document.getElementById('hist-status');
+  try {
+    const res = await api('GET', '/attendance/my-records/');
+    for (const r of res.results) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.date}</td><td>${r.check_in ?? '—'}</td><td>${r.check_out ?? '—'}</td>` +
+        `<td><span class="badge badge--${r.status === 'HADIR' ? 'hadir' : 'belum'}">${r.status}</span></td>`;
+      tbody.appendChild(tr);
+    }
+    if (!res.results.length) status.textContent = 'Belum ada riwayat.';
+  } catch (e) {
+    status.textContent = 'Gagal memuat riwayat: ' + e.message;
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Absen — Platform Absensi TeFa{% endblock %}
+{% block nav %}<a href="/">Batal</a>{% endblock %}
+{% block content %}
+<ol class="stepper" aria-label="Langkah absensi">
+  <li class="stepper__step is-active" data-step="1">Kamera</li>
+  <li class="stepper__step" data-step="2">Foto</li>
+  <li class="stepper__step" data-step="3">Lokasi</li>
+  <li class="stepper__step" data-step="4">Kirim</li>
+</ol>
+
+<!-- Pane 1: kamera -->
+<section data-pane="1">
+  <video id="cam-video" class="cam-box" autoplay playsinline muted></video>
+  <p id="cam-status" class="status" role="status"></p>
+  <div id="cam-fallback" hidden>
+    <p>Fallback: gunakan kamera bawaan perangkat.</p>
+    <input type="file" id="cam-file" accept="image/*" capture="user" aria-label="Ambil foto dengan kamera">
+  </div>
+  <button id="btn-capture" class="btn btn--big">📷 Ambil Foto</button>
+</section>
+
+<!-- Pane 2: preview foto -->
+<section data-pane="2" hidden>
+  <img id="photo-preview" class="photo-preview" alt="Preview selfie">
+  <p id="photo-status" class="status" role="status"></p>
+  <button id="btn-retake" class="btn btn--secondary btn--big">↺ Ambil Ulang</button>
+</section>
+
+<!-- Pane 3: lokasi -->
+<section data-pane="3" hidden>
+  <p id="geo-status" class="status" role="status"></p>
+  <button id="btn-retry-geo" class="btn btn--secondary btn--big" hidden>↺ Coba Ambil Lokasi Lagi</button>
+</section>
+
+<!-- Pane 4: konfirmasi & kirim -->
+<section data-pane="4" hidden>
+  <div class="card">
+    <p id="submit-status" class="status" role="status"></p>
+    <button id="btn-submit" class="btn btn--big" disabled>Kirim Absen</button>
+    <div id="wizard-result" aria-live="polite"></div>
+  </div>
+</section>
+
+<script type="module" src="/static/js/attendance.js"></script>
+{% endblock %}
