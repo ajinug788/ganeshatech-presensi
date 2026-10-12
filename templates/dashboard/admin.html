@@ -29,7 +29,8 @@
         <a class="nav-link" href="{% url 'attendance:location_list' %}"><span aria-hidden="true">⌖</span>Titik geofence</a>
         <a class="nav-link" href="{% url 'reports:riwayat_koreksi' %}"><span aria-hidden="true">↶</span>Riwayat koreksi &amp; audit</a>
         <a class="nav-link" href="{% url 'reports:rekap_csv' %}"><span aria-hidden="true">⇩</span>Laporan &amp; ekspor CSV</a>
-        <a class="nav-link" href="{% url 'attendance:policy' %}"><span aria-hidden="true">⚙</span>Shift &amp; toleransi</a>
+        <a class="nav-link" href="{% url 'attendance:shift_list' %}"><span aria-hidden="true">⚙</span>Pengaturan shift</a>
+        <a class="nav-link" href="{% url 'attendance:policy' %}"><span aria-hidden="true">◷</span>Kebijakan organisasi</a>
         {% endif %}
       </nav>
 
@@ -69,17 +70,19 @@
         <section class="overview-banner" aria-label="Informasi presensi hari ini">
           <div class="banner-copy">
             <span class="banner-kicker"><i aria-hidden="true"></i> RINGKASAN PRESENSI HARI INI</span>
-            <h2>{% if policy %}Kebijakan presensi sekolah{% else %}Presensi {{ org_name }}{% endif %}</h2>
-            {% if policy %}
-            <p>Jam masuk {{ policy.check_in_start|time:"H:i" }}–{{ policy.check_in_end|time:"H:i" }} WIB · toleransi {{ policy.late_tolerance_min }} menit setelah jam akhir masuk · mulai pulang {{ policy.check_out_start|time:"H:i" }} WIB.</p>
+            <h2>{% if shift_aktif %}{{ shift_aktif }} shift aktif{% elif policy %}Kebijakan presensi organisasi{% else %}Presensi {{ org_name }}{% endif %}</h2>
+            {% if shift_aktif %}
+              <p>Jam dan toleransi mengikuti shift yang ditetapkan untuk siswa. {{ fallback_total }} siswa tanpa shift aktif menggunakan kebijakan organisasi jika tersedia.</p>
+            {% elif policy %}
+              <p>Siswa tanpa shift aktif mengikuti jam masuk {{ policy.check_in_start|time:"H:i" }}–{{ policy.check_in_end|time:"H:i" }} WIB dengan toleransi {{ policy.late_tolerance_min }} menit.</p>
             {% else %}
-              <p>Belum ada kebijakan shift. Admin dapat mengatur jam presensi dan toleransi melalui menu Shift &amp; Toleransi.</p>
+              <p>Belum ada shift aktif atau kebijakan organisasi untuk mengatur waktu presensi.</p>
             {% endif %}
           </div>
           <div class="banner-stats">
             <div><span>Sesi berjalan</span><strong>{{ sedang_berjalan }}</strong><small>Sudah check-in, belum checkout</small></div>
+            <div><span>Shift aktif</span><strong>{{ shift_aktif }}</strong><small>Jadwal berdasarkan penetapan siswa</small></div>
             <div><span>Lokasi aktif</span><strong>{{ lokasi_aktif }}</strong><small>Titik absensi organisasi</small></div>
-            {% if policy %}<div><span>Batas toleransi</span><strong>{{ policy_tolerance_at|time:"H:i" }}</strong><small>Akhir jam masuk + toleransi</small></div>{% endif %}
           </div>
         </section>
 
@@ -137,6 +140,19 @@
                 </table>
               </div>
               <div class="panel-footer"><span>{{ aktivitas_rows|length }} catatan ditampilkan · Maksimal 10</span>{% if membership.role == 'admin' %}<a href="{% url 'reports:rekap' %}">Buka rekap absensi <span aria-hidden="true">→</span></a>{% endif %}</div>
+            </section>
+
+            <section class="location-section">
+              <div class="section-heading"><div><p class="eyebrow">JADWAL PRESENSI</p><h2>Shift sekolah</h2></div>{% if membership.role == 'admin' %}<a href="{% url 'attendance:shift_list' %}">Kelola shift <span aria-hidden="true">→</span></a>{% endif %}</div>
+              {% if shift_rows %}
+              <div class="location-grid">
+                {% for item in shift_rows %}
+                <article class="location-card"><div class="location-title"><span class="location-pin" aria-hidden="true">◷</span><strong>{{ item.shift.name }}</strong></div><div class="location-number">{{ item.recorded }} <small>/ {{ item.assigned_total }} siswa tercatat</small></div><div class="shift-window">Masuk {{ item.shift.check_in_start|time:"H:i" }}–{{ item.shift.check_in_end|time:"H:i" }} · toleransi {{ item.shift.late_tolerance_min }} mnt · batas {{ item.tolerance_at|time:"H:i" }}</div><div class="location-meta"><span>{{ item.unrecorded }} belum tercatat</span><span>{{ item.late }} terlambat</span></div></article>
+                {% endfor %}
+                {% if fallback_total %}<article class="location-card fallback-card"><div class="location-title"><span class="location-pin" aria-hidden="true">◷</span><strong>Kebijakan organisasi</strong></div><div class="location-number">{{ fallback_total }} <small>siswa tanpa shift aktif</small></div>{% if policy %}<div class="shift-window">Masuk {{ policy.check_in_start|time:"H:i" }}–{{ policy.check_in_end|time:"H:i" }} · toleransi {{ policy.late_tolerance_min }} mnt</div><div class="location-meta"><span>{{ fallback_unrecorded }} belum tercatat</span><span>Fallback aktif</span></div>{% else %}<div class="shift-window">Kebijakan fallback belum dikonfigurasi.</div>{% endif %}</article>{% endif %}
+              </div>
+              {% elif policy %}<div class="empty-location">Belum ada shift aktif. {{ fallback_total }} siswa menggunakan kebijakan organisasi.</div>
+              {% else %}<div class="empty-location">Belum ada shift aktif atau kebijakan organisasi. Atur jadwal presensi agar siswa dapat melakukan absensi.</div>{% endif %}
             </section>
 
             <section class="location-section">

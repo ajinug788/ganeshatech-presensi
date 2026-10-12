@@ -153,6 +153,7 @@ h1, h2, p { margin-top: 0; }
 .location-pin { width: 23px; height: 23px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 6px; color: var(--blue); background: #edf1ff; font-size: 15px; }
 .location-number { margin: 10px 0 8px; color: var(--navy); font-size: 20px; font-weight: 750; letter-spacing: -.03em; }
 .location-number small { color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: 0; }
+.shift-window { min-height: 29px; color: #5d6b82; font-size: 9px; line-height: 1.5; }
 .location-meta { display: flex; justify-content: space-between; gap: 7px; padding-top: 7px; border-top: 1px solid #edf0f5; color: var(--muted); font-size: 9px; }
 .empty-location { padding: 16px; border: 1px dashed #d5dce8; border-radius: 9px; color: var(--muted); background: #fbfcfe; font-size: 11px; }
 

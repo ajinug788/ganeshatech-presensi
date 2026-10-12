@@ -51,7 +51,7 @@ def build_pembina_context(membership, organization):
     org = organization
     today = dj_timezone.localtime(dj_timezone.now(), _WIB_TZ).date()
 
-    students = org.students.filter(is_active=True)
+    students = org.students.filter(is_active=True).select_related("shift")
     total_siswa = students.count()
 
     days_today = {
@@ -182,6 +182,8 @@ def build_admin_context(membership, organization):
     Mengikuti struktur mockup: KPI hari ini, tabel aktivitas presensi,
     panel 'Perlu Tindakan' (siswa belum absen), mini-card per lokasi.
     """
+    import datetime as _dt
+
     base = build_pembina_context(membership, organization)
     org = organization
     today = base["today"]
@@ -262,14 +264,40 @@ def build_admin_context(membership, organization):
     except AttendancePolicy.DoesNotExist:
         policy = None
 
-    policy_tolerance_at = None
-    if policy:
-        import datetime as _dt
-
-        policy_tolerance_at = (
-            _dt.datetime.combine(today, policy.check_in_end, tzinfo=_WIB_TZ)
-            + _dt.timedelta(minutes=policy.late_tolerance_min)
+    shift_rows = []
+    active_shifts = org.shifts.filter(is_active=True)
+    for shift in active_shifts:
+        assigned_total = students.filter(shift=shift).count()
+        shift_days = AttendanceDay.objects.filter(
+            organization=org,
+            student__is_active=True,
+            student__shift=shift,
+            work_date=today,
+        )
+        recorded = shift_days.count()
+        shift_cutoff = (
+            _dt.datetime.combine(today, shift.check_in_end, tzinfo=_WIB_TZ)
+            + _dt.timedelta(minutes=shift.late_tolerance_min)
         ).time()
+        shift_rows.append({
+            "shift": shift,
+            "assigned_total": assigned_total,
+            "recorded": recorded,
+            "check_ins": shift_days.filter(check_in_at__isnull=False).count(),
+            "late": shift_days.filter(status=AttendanceDay.Status.LATE).count(),
+            "unrecorded": max(assigned_total - recorded, 0),
+            "tolerance_at": shift_cutoff,
+        })
+
+    fallback_students = students.filter(
+        Q(shift__isnull=True) | Q(shift__is_active=False)
+    )
+    fallback_total = fallback_students.count()
+    fallback_recorded = AttendanceDay.objects.filter(
+        organization=org,
+        student__is_active=True,
+        work_date=today,
+    ).filter(Q(student__shift__isnull=True) | Q(student__shift__is_active=False)).count()
 
     return {
         **base,
@@ -284,7 +312,10 @@ def build_admin_context(membership, organization):
         "org_name": org.name,
         "now_wib": dj_timezone.localtime(dj_timezone.now(), _WIB_TZ),
         "policy": policy,
-        "policy_tolerance_at": policy_tolerance_at,
+        "shift_rows": shift_rows,
+        "shift_aktif": len(shift_rows),
+        "fallback_total": fallback_total,
+        "fallback_unrecorded": max(fallback_total - fallback_recorded, 0),
     }
 
 
@@ -636,8 +667,8 @@ def _policy_context(org, ctx):
         ctx["policy_tolerance"] = policy.late_tolerance_min
         import datetime as _dt
         base = now_wib().replace(
-            hour=policy.check_in_start.hour,
-            minute=policy.check_in_start.minute,
+            hour=policy.check_in_end.hour,
+            minute=policy.check_in_end.minute,
             second=0,
             microsecond=0,
         )
