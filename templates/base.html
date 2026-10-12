@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Platform Absensi TeFa{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <span class="brand">TeFa Presensi</span>
+    {% if user.is_authenticated %}
+      <nav>{% block nav %}{% endblock %}</nav>
+    {% endif %}
+  </header>
+  <main class="site-main">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message message--{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

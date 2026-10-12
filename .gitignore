@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Django
+db.sqlite3
+staticfiles/
+private_media/
+media/
+
+# Environment & secrets
+.env
+*.env.local
+
+# Tools
+.pytest_cache/
+.ruff_cache/
+
+# OS
+.DS_Store

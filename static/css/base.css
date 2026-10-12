@@ -1,0 +1,46 @@
+/* Design system dasar — mobile-first (TDIP §10). Akan disempurnakan dengan desain dari Tahap UI/UX. */
+:root {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-text: #1c2733;
+  --color-muted: #5c6b7a;
+  --color-primary: #0b6e4f;
+  --color-primary-contrast: #ffffff;
+  --color-danger: #b3261e;
+  --radius: 10px;
+  --space: 16px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+.site-header {
+  display: flex; align-items: center; gap: var(--space);
+  padding: var(--space); background: var(--color-surface);
+  border-bottom: 1px solid #e3e7eb;
+}
+.brand { font-weight: 700; color: var(--color-primary); }
+.site-main { max-width: 720px; margin: 0 auto; padding: var(--space); }
+.card {
+  background: var(--color-surface); border-radius: var(--radius);
+  padding: var(--space); margin-bottom: var(--space);
+  border: 1px solid #e3e7eb;
+}
+.btn {
+  display: inline-block; padding: 12px 20px; border: 0; border-radius: var(--radius);
+  background: var(--color-primary); color: var(--color-primary-contrast);
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.message { padding: var(--space); border-radius: var(--radius); margin-bottom: var(--space); }
+.message--success { background: #e6f4ea; color: #1e4620; }
+.message--error { background: #fdecea; color: var(--color-danger); }
+label { display: block; margin-bottom: 4px; font-weight: 600; }
+input, select {
+  width: 100%; padding: 10px; border: 1px solid #c8d0d8;
+  border-radius: var(--radius); font-size: 1rem; margin-bottom: var(--space);
+}
