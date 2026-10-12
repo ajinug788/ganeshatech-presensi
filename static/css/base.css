@@ -103,3 +103,65 @@ input, select {
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
   outline: 3px solid #7cb9a3; outline-offset: 2px;
 }
+
+
+/* ==== Ekstensi komponen frontend ====
+ */
+
+/* Stepper wizard */
+.stepper { display: flex; gap: 8px; margin-bottom: var(--space); padding: 0; list-style: none; }
+.stepper__step {
+  flex: 1; text-align: center; padding: 8px 4px; border-radius: var(--radius);
+  background: #e9edf1; color: var(--color-muted); font-size: .8rem; font-weight: 600;
+}
+.stepper__step.is-active { background: var(--color-primary); color: var(--color-primary-contrast); }
+.stepper__step.is-done { background: #cfe9dd; color: #1e4620; }
+.stepper__step.is-failed { background: var(--color-danger); color: #fff; }
+
+/* Status inline */
+.status { padding: 10px 12px; border-radius: var(--radius); margin: 8px 0; font-size: .95rem; }
+.status--ok { background: #e6f4ea; color: #1e4620; }
+.status--error { background: #fdecea; color: var(--color-danger); border-left: 4px solid var(--color-danger); }
+
+/* Tombol besar (absen) */
+.btn--big { display: block; width: 100%; padding: 18px; font-size: 1.15rem; text-align: center; }
+.btn--secondary { background: #e9edf1; color: var(--color-text); }
+.btn--danger { background: var(--color-danger); }
+
+/* Video kamera & preview foto */
+.cam-box { width: 100%; aspect-ratio: 3/4; background: #10161c; border-radius: var(--radius); object-fit: cover; }
+.photo-preview { width: 100%; border-radius: var(--radius); border: 1px solid #e3e7eb; }
+
+/* Tabel (dashboard pembina, riwayat) */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.table th, .table td { padding: 8px 10px; border-bottom: 1px solid #e3e7eb; text-align: left; white-space: nowrap; }
+.table th { background: #f0f3f6; font-weight: 600; }
+
+/* Badge status */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+.badge--hadir { background: #e6f4ea; color: #1e4620; }
+.badge--belum { background: #fff4e0; color: #8a5a00; }
+.badge--tinjau { background: #fdecea; color: var(--color-danger); }
+.badge--tidak { background: #eef1f4; color: var(--color-muted); }
+
+/* Modal */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: var(--space); z-index: 50; }
+.modal[hidden] { display: none; }
+.modal__box { background: var(--color-surface); border-radius: var(--radius); padding: var(--space); width: 100%; max-width: 420px; max-height: 90vh; overflow: auto; }
+.modal__title { margin: 0 0 12px; font-size: 1.05rem; }
+
+/* Filter bar pembina */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space); }
+.filters input, .filters select { width: auto; flex: 1 1 130px; margin-bottom: 0; }
+
+/* Ringkasan kartu */
+.summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space); }
+@media (min-width: 480px) { .summary-grid { grid-template-columns: repeat(4, 1fr); } }
+.summary-card { text-align: center; padding: 12px; }
+.summary-card__num { font-size: 1.6rem; font-weight: 700; color: var(--color-primary); }
+
+/* Fokus keyboard */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #7cb9a3; outline-offset: 2px;
+}
