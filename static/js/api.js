@@ -1,7 +1,7 @@
 // api.js — satu pintu semua fetch. Mode dummy (?dummy=1 atau DUMMY=true) untuk demo tanpa backend.
 // Implementasi nyata ke /api/v1/ tetap ada; saat backend siap cukup matikan dummy.
 
-const DUMMY = new URLSearchParams(location.search).has('dummy') || false; // konstanta file: ubah ke true untuk selalu dummy
+const DUMMY = new URLSearchParams(location.search).has('dummy') || true; // default DUMMY aktif sampai backend siap; ubah ke `false` saat /api/v1/ nyata
 const BASE = '/api/v1';
 const SIM_DELAY = 600; // ms delay simulasi
 
