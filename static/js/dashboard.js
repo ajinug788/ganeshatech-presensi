@@ -26,14 +26,24 @@ function filteredRows() {
   const query = $('#f-cari').value.trim().toLocaleLowerCase('id-ID');
   const status = $('#f-status').value;
   const group = $('#f-kelompok').value;
-  const date = $('#f-tanggal').value;
   return rows.filter((row) => {
     const matchesName = !query || row.name.toLocaleLowerCase('id-ID').includes(query);
     const matchesStatus = !status || row.status === status;
     const matchesGroup = !group || (row.group || row.group_name || '') === group;
-    const matchesDate = !date || (row.date || '') === date;
-    return matchesName && matchesStatus && matchesGroup && matchesDate;
+    return matchesName && matchesStatus && matchesGroup;
   });
+}
+
+function thumbnail(mediaId) {
+  if (!mediaId) return null;
+  const img = document.createElement('img');
+  img.src = `/photos/${encodeURIComponent(mediaId)}/`;
+  img.alt = 'Foto selfie absensi';
+  img.loading = 'lazy';
+  img.style.cssText = 'width:44px;height:44px;object-fit:cover;border-radius:10px;display:block;background:#eef1ee;cursor:pointer;';
+  img.onerror = () => { img.replaceWith(button('Lihat', { foto: mediaId })); };
+  img.addEventListener('click', () => openPhotoModal(mediaId));
+  return img;
 }
 
 function render() {
@@ -46,10 +56,16 @@ function render() {
   for (const record of pageRows) {
     const tr = document.createElement('tr');
     const photoCell = document.createElement('td');
-    photoCell.append(button('Lihat', { foto: String(record.id) }));
+    photoCell.append(thumbnail(record.check_in_media_id) || button('Lihat', { foto: record.id }));
     tr.append(photoCell);
     const nameCell = document.createElement('td');
     nameCell.textContent = record.name;
+    if (record.group) {
+      const grp = document.createElement('div');
+      grp.textContent = record.group;
+      grp.style.cssText = 'font-size:.75rem;color:var(--color-muted);';
+      nameCell.append(grp);
+    }
     tr.append(nameCell);
     for (const value of [record.check_in, record.check_out]) {
       const cell = document.createElement('td');
@@ -60,12 +76,13 @@ function render() {
     const badge = document.createElement('span');
     const [label, style] = STATUS[record.status] || [record.status, 'badge--tidak'];
     badge.className = `badge ${style}`;
-    badge.textContent = label;
+    badge.textContent = record.status === 'PERLU_DITINJAU' && record.late_minutes
+      ? `Terlambat ${record.late_minutes} mnt` : label;
     statusCell.append(badge);
     tr.append(statusCell);
-    const distanceCell = document.createElement('td');
-    distanceCell.textContent = record.distance_m == null ? '—' : `${record.distance_m} m`;
-    tr.append(distanceCell);
+    const distCell = document.createElement('td');
+    distCell.textContent = record.location || '—';
+    tr.append(distCell);
     const actionCell = document.createElement('td');
     actionCell.append(button('Koreksi', { koreksi: String(record.id), nama: record.name }));
     tr.append(actionCell);
@@ -92,13 +109,13 @@ function closeModal(id) {
 }
 
 // Foto bukti via endpoint terotorisasi /photos/{id}/ — bukan file publik.
-async function openPhotoModal(photoId) {
+async function openPhotoModal(mediaId) {
   const content = $('#foto-content');
   content.className = 'empty-state';
   content.innerHTML = '<strong>Memuat foto…</strong>';
   openModal('#modal-foto');
   try {
-    const res = await fetch(`/api/v1/photos/${encodeURIComponent(photoId)}/`, { credentials: 'same-origin' });
+    const res = await fetch(`/photos/${encodeURIComponent(mediaId)}/`, { credentials: 'same-origin' });
     if (!res.ok) throw new Error(res.status === 404 ? 'Foto tidak ditemukan.' : 'Foto belum tersedia di server.');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -118,10 +135,12 @@ async function openPhotoModal(photoId) {
 async function load() {
   $('#pembina-status').textContent = 'Memuat data kehadiran…';
   try {
-    const result = await api('GET', '/attendance/records/');
+    const dateVal = $('#f-tanggal').value;
+    const path = '/attendance/records/' + (dateVal ? `?date=${encodeURIComponent(dateVal)}` : '');
+    const result = await api('GET', path);
     rows = result.results || [];
     const groupSelect = $('#f-kelompok');
-    const groups = [...new Set(rows.map(row => row.group || row.group_name).filter(Boolean))].sort();
+    const groups = [...new Set(rows.map(row => row.group).filter(Boolean))].sort();
     groupSelect.replaceChildren(new Option('Semua kelompok', ''));
     for (const group of groups) groupSelect.add(new Option(group, group));
     if (result.summary) {
@@ -146,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#f-cari').addEventListener('input', () => { page = 0; render(); });
   $('#f-status').addEventListener('change', () => { page = 0; render(); });
   $('#f-kelompok').addEventListener('change', () => { page = 0; render(); });
-  $('#f-tanggal').addEventListener('change', () => { page = 0; render(); });
+  $('#f-tanggal').addEventListener('change', () => { page = 0; load(); });
   $('#page-prev').addEventListener('click', () => { page = Math.max(0, page - 1); render(); });
   $('#page-next').addEventListener('click', () => { page += 1; render(); });
 

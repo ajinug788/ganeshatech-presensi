@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Status Akun Siswa{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>Status Akun</h1></div><a class="btn btn--secondary" href="{% url 'attendance:student_detail' object.pk %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  {% if object.user %}
+  <p>
+    {% if object.user.is_active %}
+    Nonaktifkan akun <strong>{{ object.user.email }}</strong>? Siswa tidak bisa login, tetapi seluruh rekam jejak absen tetap tersimpan.
+    {% else %}
+    Aktifkan kembali akun <strong>{{ object.user.email }}</strong>?
+    {% endif %}
+  </p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="active" value="{% if object.user.is_active %}off{% else %}on{% endif %}">
+    <div class="form-actions">
+      <button class="btn" type="submit">{% if object.user.is_active %}Nonaktifkan Akun{% else %}Aktifkan Akun{% endif %}</button>
+      <a class="btn btn--secondary" href="{% url 'attendance:student_detail' object.pk %}">Batal</a>
+    </div>
+  </form>
+  {% else %}
+  <p>Siswa ini tidak punya akun.</p>
+  {% endif %}
+</section>
+{% endblock %}

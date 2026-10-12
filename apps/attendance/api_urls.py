@@ -2,6 +2,7 @@
 from django.urls import path
 
 from . import api
+from . import admin_api
 
 app_name = "api_attendance"
 
@@ -9,4 +10,5 @@ urlpatterns = [
     path("check-in/", api.CheckInView.as_view(), name="check_in"),
     path("check-out/", api.CheckOutView.as_view(), name="check_out"),
     path("me/history/", api.MyHistoryView.as_view(), name="history"),
+    path("records/", admin_api.AdminRecordsView.as_view(), name="records"),
 ]

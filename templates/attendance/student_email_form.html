@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Ubah Email Akun Siswa{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>Ubah Email Akun</h1></div><a class="btn btn--secondary" href="{% url 'attendance:student_detail' object.pk %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  {% if object.user %}
+  <p>Email sekarang: <strong>{{ object.user.email }}</strong></p>
+  <form method="post">
+    {% csrf_token %}
+    {{ email_form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Simpan</button>
+      <a class="btn btn--secondary" href="{% url 'attendance:student_detail' object.pk %}">Batal</a>
+    </div>
+  </form>
+  {% else %}
+  <p>Siswa ini tidak punya akun.</p>
+  {% endif %}
+</section>
+{% endblock %}

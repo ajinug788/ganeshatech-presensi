@@ -80,6 +80,144 @@ def provision_student(
 
 
 # =====================================================================
+# Manajemen akun siswa (PRD AUTH-02) + penugasan shift
+# =====================================================================
+
+from django.core.exceptions import ValidationError as DjangoValidationError  # noqa: E402
+from django.core.validators import validate_email as dj_validate_email  # noqa: E402
+
+
+def _validate_unique_email(email):
+    email = User.objects.normalize_email(email).lower()
+    dj_validate_email(email)
+    if User.objects.filter(email=email).exists():
+        raise ValueError("Email ini sudah terdaftar.")
+    return email
+
+
+def set_student_account_active(*, student, active, actor):
+    """Nonaktifkan/aktifkan akun siswa (User.is_active). Rekam absen utuh."""
+    if student.user is None:
+        raise ValueError("Siswa ini tidak punya akun.")
+    user = student.user
+    user.is_active = active
+    user.save(update_fields=["is_active"])
+    catat_audit(
+        action="student_account_activated" if active else "student_account_deactivated",
+        object_type="accounts.User",
+        object_id=user.pk,
+        organization=student.organization,
+        actor=actor,
+        metadata={"email": user.email, "student_number": student.student_number},
+    )
+    return user
+
+
+def reset_student_password(*, student, actor):
+    """Reset password akun siswa; password acak dikembalikan SEKALI, tak disimpan."""
+    if student.user is None:
+        raise ValueError("Siswa ini tidak punya akun.")
+    user = student.user
+    new_password = generate_temp_password()
+    user.set_password(new_password)
+    user.save(update_fields=["password"])
+    catat_audit(
+        action="student_password_reset",
+        object_type="accounts.User",
+        object_id=user.pk,
+        organization=student.organization,
+        actor=actor,
+        metadata={"email": user.email, "student_number": student.student_number},
+    )
+    return new_password
+
+
+def change_student_email(*, student, new_email, actor):
+    """Ubah email akun siswa; validasi unik platform-wide + audit."""
+    if student.user is None:
+        raise ValueError("Siswa ini tidak punya akun.")
+    user = student.user
+    new_email = _validate_unique_email(new_email)
+    old_email = user.email
+    user.email = new_email
+    user.email_verified_at = None
+    user.save(update_fields=["email", "email_verified_at"])
+    catat_audit(
+        action="student_email_changed",
+        object_type="accounts.User",
+        object_id=user.pk,
+        organization=student.organization,
+        actor=actor,
+        metadata={
+            "old_email": old_email,
+            "new_email": new_email,
+            "student_number": student.student_number,
+        },
+    )
+    return user
+
+
+def assign_student_shift(*, student, shift, actor):
+    """Tetapkan shift satu siswa (shift boleh None = fallback policy org)."""
+    org = student.organization
+    if shift is not None:
+        if shift.organization_id != org.pk:
+            raise ValueError("Shift bukan milik organisasi ini.")
+        if not shift.is_active:
+            raise ValueError("Shift tidak aktif.")
+    old_shift = student.shift
+    student.shift = shift
+    student.save(update_fields=["shift", "updated_at"])
+    catat_audit(
+        action="student_shift_assigned",
+        object_type="attendance.StudentProfile",
+        object_id=student.pk,
+        organization=org,
+        actor=actor,
+        metadata={
+            "student_number": student.student_number,
+            "shift": shift.name if shift else None,
+            "previous_shift": old_shift.name if old_shift else None,
+        },
+    )
+    return student
+
+
+def bulk_assign_shift(*, organization, queryset, shift, actor):
+    """Tetapkan shift untuk banyak siswa sekaligus (bulk per grup/kelas)."""
+    count = 0
+    for student in queryset:
+        assign_student_shift(student=student, shift=shift, actor=actor)
+        count += 1
+    return count
+
+
+def self_assign_shift(*, student, shift, actor):
+    """Siswa pilih sendiri shift (bila allow_self_shift aktif di org settings)."""
+    org = student.organization
+    if not org.settings.get("allow_self_shift", False):
+        raise PermissionError("Organisasi tidak mengizinkan pemilihan shift mandiri.")
+    if student.shift_id:
+        raise ValueError("Anda sudah punya shift.")
+    if shift.organization_id != org.pk or not shift.is_active:
+        raise ValueError("Shift tidak tersedia.")
+    student.shift = shift
+    student.save(update_fields=["shift", "updated_at"])
+    catat_audit(
+        action="student_self_shift",
+        object_type="attendance.StudentProfile",
+        object_id=student.pk,
+        organization=org,
+        actor=actor,
+        metadata={
+            "student_number": student.student_number,
+            "shift": shift.name,
+        },
+    )
+    return student
+
+
+# =====================================================================
 # Tahap 5 — Attendance Engine (TDIP v1.2 §10.2, §16 Tahap 5)
 # =====================================================================
 
@@ -106,6 +244,7 @@ from .models import (  # noqa: E402
     AttendanceLocation,
     AttendancePolicy,
     IdempotencyRecord,
+    Shift,
     StudentProfile,
 )
 
@@ -203,22 +342,41 @@ def _store_photo(*, organization, user, django_file):
     )
 
 
+def _get_rule(*, student):
+    """Aturan absensi siswa: shift miliknya (aktif) atau fallback policy org.
+
+    Return objek dengan atribut days_active / check_in_* / check_out_* /
+    late_tolerance_min / locations; raise AttendanceError bila tidak ada.
+    """
+    org = student.organization
+    shift = None
+    if student.shift_id:
+        shift = Shift.objects.filter(pk=student.shift_id, is_active=True).first()
+    if shift is not None and shift.organization_id != org.pk:
+        # Siswa hanya boleh divalidasi terhadap shift di organisasinya.
+        shift = None
+    if shift is not None:
+        return shift
+    policy = AttendancePolicy.objects.filter(organization=org).first()
+    if policy is None:
+        raise AttendanceError(POLICY_NOT_CONFIGURED)
+    return policy
+
+
 def _get_policy_and_location(*, student, lat, lng):
-    """Validasi policy + pilih lokasi geofence. Raise AttendanceError terkode."""
+    """Validasi rule (shift/policy) + pilih lokasi geofence. Raise AttendanceError."""
     org = student.organization
     if org.status != "active" or not student.is_active:
         raise AttendanceError(VALIDATION_ERROR, "Organisasi/siswa tidak aktif.")
 
-    policy = AttendancePolicy.objects.filter(organization=org).first()
-    if policy is None:
-        raise AttendanceError(POLICY_NOT_CONFIGURED)
+    rule = _get_rule(student=student)
 
     now = _now_wib()
-    if now.weekday() not in policy.days_active:
+    if now.weekday() not in rule.days_active:
         raise AttendanceError(OUTSIDE_CHECKIN_WINDOW, "Hari ini bukan hari aktif.")
 
-    # Lokasi berlaku: M2M policy bila diisi; selain itu semua lokasi aktif org.
-    allowed = policy.locations.filter(is_active=True) or org.attendance_locations.filter(
+    # Lokasi berlaku: M2M rule bila diisi; selain itu semua lokasi aktif org.
+    allowed = rule.locations.filter(is_active=True) or org.attendance_locations.filter(
         is_active=True
     )
     allowed = list(allowed)
@@ -234,11 +392,15 @@ def _get_policy_and_location(*, student, lat, lng):
     if matched is None:
         raise AttendanceError(OUTSIDE_GEOFENCE)
     loc, dist = matched
-    return policy, loc, dist, now
+    return rule, loc, dist, now
 
 
 def _check_window(kind, policy, now):
-    """Validasi window jam untuk kind; return (start, end) waktu window."""
+    """Validasi window jam untuk kind; return (start, end) waktu window.
+
+    Dukung window melewati tengah malam (mis. 22:00-01:00): bila end <= start,
+    window dianggap wrap; valid: t >= start ATAU t <= end.
+    """
     if kind == AttendanceAttempt.Kind.CHECK_IN:
         end = (
             datetime.combine(now.date(), policy.check_in_end, tzinfo=now.tzinfo)
@@ -251,7 +413,11 @@ def _check_window(kind, policy, now):
         code = OUTSIDE_CHECKOUT_WINDOW
     start, end = window
     t = now.time()
-    if not (start <= t <= end):
+    if start <= end:
+        ok = start <= t <= end
+    else:
+        ok = t >= start or t <= end  # wrap tengah malam
+    if not ok:
         raise AttendanceError(code)
     return window
 

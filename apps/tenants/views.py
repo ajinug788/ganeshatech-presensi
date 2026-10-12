@@ -143,7 +143,7 @@ def dashboard_siswa(request):
 
 
 @login_required
-@role_required("pembina")
+@role_required("admin", "pembina")
 def dashboard_pembina(request):
     """Dashboard pembina nyata (Tahap 6) di endpoint lama /dashboard/pembina/."""
     ctx = build_pembina_context(request.membership, request.organization)

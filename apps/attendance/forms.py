@@ -1,7 +1,7 @@
 """Forms master data Tahap 3 (siswa, lokasi, kebijakan)."""
 from django import forms
 
-from .models import AttendanceLocation, AttendancePolicy, StudentProfile
+from .models import AttendanceLocation, AttendancePolicy, Shift, StudentProfile
 
 DAYS = [
     (0, "Senin"), (1, "Selasa"), (2, "Rabu"), (3, "Kamis"),
@@ -70,3 +70,85 @@ class AttendancePolicyForm(forms.ModelForm):
 
     def clean_days_active(self):
         return sorted(int(d) for d in self.cleaned_data["days_active"])
+
+
+class ShiftForm(forms.ModelForm):
+    """Form shift: unik per organisasi (nama) + lokasi dibatasi organisasi."""
+
+    days_active = forms.MultipleChoiceField(
+        choices=DAYS, widget=forms.CheckboxSelectMultiple, label="Hari aktif"
+    )
+    reason = forms.CharField(required=False, widget=forms.HiddenInput)
+
+    class Meta:
+        model = Shift
+        fields = [
+            "name", "days_active", "check_in_start", "check_in_end",
+            "check_out_start", "check_out_end", "late_tolerance_min",
+            "locations", "is_active",
+        ]
+
+    def __init__(self, *args, organization=None, **kwargs):
+        self.organization = organization
+        super().__init__(*args, **kwargs)
+        if organization is not None:
+            self.fields["locations"].queryset = organization.attendance_locations.all()
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+        if self.organization is None:
+            return name
+        qs = Shift.objects.filter(organization=self.organization, name=name)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Nama shift sudah dipakai di organisasi ini.")
+        return name
+
+    def clean_days_active(self):
+        return sorted(int(d) for d in self.cleaned_data["days_active"])
+
+
+class StudentGroupShiftForm(forms.Form):
+    """Bulk: pilih grup/kelas → set shift (kosong shift = hapus penetapan)."""
+
+    group = forms.ChoiceField(label="Kelas/kelompok")
+    shift = forms.ModelChoiceField(
+        queryset=Shift.objects.none(),
+        required=False,
+        empty_label="(tanpa shift — fallback kebijakan organisasi)",
+    )
+
+    def __init__(self, *args, organization=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if organization is not None:
+            groups = (
+                organization.students.exclude(group__isnull=True)
+                .exclude(group="")
+                .order_by("group")
+                .values_list("group", flat=True)
+                .distinct()
+            )
+            self.fields["group"].choices = [("", "— pilih kelas —")] + [
+                (g, g) for g in groups
+            ]
+            self.fields["shift"].queryset = organization.shifts.filter(
+                is_active=True
+            )
+
+
+class StudentEmailForm(forms.Form):
+    """Ubah email akun siswa (validasi unik di view/service)."""
+
+    email = forms.EmailField(label="Email baru")
+
+
+class StudentSelfShiftForm(forms.Form):
+    """Siswa pilih sendiri shift aktif organisasi."""
+
+    shift = forms.ModelChoiceField(queryset=Shift.objects.none())
+
+    def __init__(self, *args, organization=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if organization is not None:
+            self.fields["shift"].queryset = organization.shifts.filter(is_active=True)

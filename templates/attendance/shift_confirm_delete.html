@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Hapus Shift{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Multi-shift</p><h1>Nonaktifkan Shift</h1></div><a class="btn btn--secondary" href="{% url 'attendance:shift_list' %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  <p>Nonaktifkan shift <strong>{{ object.name }}</strong>? Siswa yang memakai shift ini akan beralih ke kebijakan absensi organisasi.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+      <button class="btn" type="submit">Nonaktifkan</button>
+      <a class="btn btn--secondary" href="{% url 'attendance:shift_list' %}">Batal</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
