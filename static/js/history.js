@@ -2,7 +2,8 @@ const pageRoot = document.querySelector('#student-history-page');
 if (pageRoot) {
   const listView = document.querySelector('#history-list-view');
   const detailView = document.querySelector('#history-detail-view');
-  const monthInput = document.querySelector('#history-month');
+  const typeInput = document.querySelector('#history-kind');
+  const periodInput = document.querySelector('#history-period');
   const sortInput = document.querySelector('#history-sort');
   const listStatus = document.querySelector('#history-list-status');
   const detailStatusLine = document.querySelector('#history-detail-status-line');
@@ -38,8 +39,99 @@ if (pageRoot) {
     return `${values.year}-${values.month}`;
   }
 
-  function monthFromDate(dateString) {
-    return dateString ? dateString.slice(0, 7) : currentMonthInJakarta();
+  function currentDateInJakarta() {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Jakarta',
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  }
+
+  function utcDate(dateString) {
+    return new Date(`${dateString}T00:00:00Z`);
+  }
+
+  function isoDate(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function addDays(dateString, days) {
+    const date = utcDate(dateString);
+    date.setUTCDate(date.getUTCDate() + days);
+    return isoDate(date);
+  }
+
+  function dateLabel(dateString) {
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta',
+    }).format(dateAtNoon(dateString)).replace('.', '');
+  }
+
+  function availablePeriods(type) {
+    const currentMonth = currentMonthInJakarta();
+    const [year, month] = currentMonth.split('-').map(Number);
+    if (type === 'monthly') {
+      return [0, 1, 2].map((offset) => {
+        const first = new Date(Date.UTC(year, month - 1 - offset, 1));
+        const value = `${first.getUTCFullYear()}-${String(first.getUTCMonth() + 1).padStart(2, '0')}`;
+        const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0));
+        return {
+          value,
+          start: `${value}-01`,
+          end: isoDate(last),
+          label: `${monthFormatter.format(dateAtNoon(`${value}-01`))} ${first.getUTCFullYear()}`,
+        };
+      });
+    }
+
+    const cutoff = new Date(Date.UTC(year, month - 3, 1));
+    const cutoffDay = cutoff.getUTCDay();
+    const daysUntilMonday = (8 - cutoffDay) % 7;
+    cutoff.setUTCDate(cutoff.getUTCDate() + daysUntilMonday);
+    const today = utcDate(currentDateInJakarta());
+    const todayDay = today.getUTCDay();
+    today.setUTCDate(today.getUTCDate() - ((todayDay + 6) % 7));
+
+    const periods = [];
+    for (const start = new Date(cutoff); start <= today; start.setUTCDate(start.getUTCDate() + 7)) {
+      const startDate = isoDate(start);
+      const endDate = addDays(startDate, 6);
+      periods.push({
+        value: startDate,
+        start: startDate,
+        end: endDate,
+        label: `${dateLabel(startDate)}–${dateLabel(endDate)} ${endDate.slice(0, 4)}`,
+      });
+    }
+    return periods.reverse();
+  }
+
+  function populatePeriods(type, preferredValue = '', anchorDate = '') {
+    const periods = availablePeriods(type);
+    periodInput.replaceChildren();
+    for (const period of periods) {
+      const option = document.createElement('option');
+      option.value = period.value;
+      option.textContent = period.label;
+      option.dataset.start = period.start;
+      option.dataset.end = period.end;
+      periodInput.append(option);
+    }
+
+    let selected = periods.find((period) => period.value === preferredValue);
+    if (!selected && anchorDate) {
+      selected = periods.find((period) => period.start <= anchorDate && anchorDate <= period.end);
+      if (!selected && type === 'weekly') {
+        selected = periods.find((period) => period.start.slice(0, 7) === anchorDate.slice(0, 7));
+      }
+    }
+    selected ||= periods[0];
+    periodInput.value = selected?.value || '';
+  }
+
+  function periodRange() {
+    const option = periodInput.selectedOptions[0];
+    return option ? { start: option.dataset.start, end: option.dataset.end } : null;
   }
 
   function formatTime(isoDate) {
@@ -72,7 +164,8 @@ if (pageRoot) {
 
   function updateListUrl() {
     const url = new URL(historyUrl, window.location.origin);
-    url.searchParams.set('month', monthInput.value);
+    url.searchParams.set('type', typeInput.value);
+    url.searchParams.set('period', periodInput.value);
     url.searchParams.set('sort', sortInput.value);
     window.history.replaceState({}, '', `${url.pathname}${url.search}`);
   }
@@ -87,7 +180,8 @@ if (pageRoot) {
     if (record) {
       const detailUrl = new URL(historyUrl, window.location.origin);
       detailUrl.searchParams.set('date', dateString);
-      detailUrl.searchParams.set('month', monthInput.value);
+      detailUrl.searchParams.set('type', typeInput.value);
+      detailUrl.searchParams.set('period', periodInput.value);
       detailUrl.searchParams.set('sort', sortInput.value);
       card.href = `${detailUrl.pathname}${detailUrl.search}`;
       card.setAttribute('aria-label', `Detail ${longDateFormatter.format(date)}${label ? `, ${label.short}` : ''}`);
@@ -139,45 +233,55 @@ if (pageRoot) {
     return card;
   }
 
-  function renderMonth(records) {
-    const [year, month] = monthInput.value.split('-').map(Number);
+  function renderPeriod(records) {
+    const range = periodRange();
+    if (!range) {
+      listStatus.textContent = 'Pilih periode laporan.';
+      return;
+    }
     const recordsByDate = new Map(records.map((record) => [record.work_date, record]));
     const sortedRecords = [...records].sort((left, right) => left.work_date.localeCompare(right.work_date));
     const dates = [];
 
     if (sortedRecords.length) {
-      const first = dateAtNoon(sortedRecords[0].work_date);
-      const last = dateAtNoon(sortedRecords[sortedRecords.length - 1].work_date);
-      const monthEnd = new Date(year, month, 0).getDate();
-      const firstDay = Math.max(1, first.getDate() - first.getDay());
-      const todayMonth = currentMonthInJakarta();
-      const todayParts = new Intl.DateTimeFormat('en-CA', {
-        day: '2-digit', timeZone: 'Asia/Jakarta',
-      }).formatToParts(new Date());
-      const todayDay = Number(todayParts.find((part) => part.type === 'day')?.value || 1);
-      const lastDay = monthInput.value === todayMonth
-        ? Math.min(todayDay, monthEnd)
-        : Math.min(monthEnd, last.getDate() + (6 - last.getDay()));
-      for (let day = firstDay; day <= lastDay; day += 1) {
-        dates.push(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+      let startDate = range.start;
+      let endDate = range.end;
+      if (typeInput.value === 'monthly') {
+        const firstDate = sortedRecords[0].work_date;
+        const lastDate = sortedRecords[sortedRecords.length - 1].work_date;
+        const firstWeekStart = addDays(firstDate, -utcDate(firstDate).getUTCDay());
+        const lastWeekEnd = addDays(lastDate, 6 - utcDate(lastDate).getUTCDay());
+        startDate = firstWeekStart < range.start ? range.start : firstWeekStart;
+        endDate = lastWeekEnd > range.end ? range.end : lastWeekEnd;
+        if (periodInput.value === currentMonthInJakarta()) {
+          const today = currentDateInJakarta();
+          if (today < endDate) endDate = today;
+        }
+      }
+      for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
+        dates.push(date);
       }
       if (sortInput.value === 'newest') dates.reverse();
     }
 
     dayList.replaceChildren(...dates.map((dateString) => createDayCard(dateString, recordsByDate.get(dateString))));
     if (dates.length) {
-      listStatus.textContent = `${monthFormatter.format(dateAtNoon(`${monthInput.value}-01`)).toLocaleUpperCase('id-ID')} ${year}`;
+      listStatus.textContent = periodInput.selectedOptions[0].textContent;
     } else {
       listStatus.textContent = 'Belum ada catatan presensi pada periode ini.';
     }
   }
 
-  async function loadMonth() {
+  async function loadPeriod() {
     listStatus.textContent = 'Memuat riwayat…';
     dayList.replaceChildren();
     try {
-      const data = await fetchRecords({ month: monthInput.value, sort: sortInput.value });
-      if (data) renderMonth(data.results || []);
+      const range = periodRange();
+      const params = typeInput.value === 'monthly'
+        ? { month: periodInput.value, sort: sortInput.value }
+        : { start_date: range.start, end_date: range.end, sort: sortInput.value };
+      const data = await fetchRecords(params);
+      if (data) renderPeriod(data.results || []);
     } catch (error) {
       listStatus.textContent = `Riwayat belum dapat dimuat. ${error.message || 'Periksa koneksi lalu coba lagi.'}`;
     }
@@ -225,7 +329,9 @@ if (pageRoot) {
     listView.hidden = true;
     detailView.hidden = false;
     const backUrl = new URL(historyUrl, window.location.origin);
-    if (query.get('month')) backUrl.searchParams.set('month', query.get('month'));
+    if (query.get('type')) backUrl.searchParams.set('type', query.get('type'));
+    if (query.get('period')) backUrl.searchParams.set('period', query.get('period'));
+    else if (query.get('month')) backUrl.searchParams.set('period', query.get('month'));
     if (query.get('sort')) backUrl.searchParams.set('sort', query.get('sort'));
     document.querySelector('#history-detail-back').href = `${backUrl.pathname}${backUrl.search}`;
     detailStatusLine.textContent = 'Memuat rincian presensi…';
@@ -240,18 +346,19 @@ if (pageRoot) {
   }
 
   async function initializeList() {
-    monthInput.value = query.get('month') || '';
+    typeInput.value = query.get('type') === 'weekly' ? 'weekly' : 'monthly';
     sortInput.value = query.get('sort') === 'newest' ? 'newest' : 'oldest';
-    if (!monthInput.value) {
+    const requestedPeriod = query.get('period') || query.get('month') || '';
+    let latestDate = '';
+    if (!requestedPeriod) {
       try {
         const latest = await fetchRecords({ page_size: '1', sort: 'newest' });
-        monthInput.value = monthFromDate(latest?.results?.[0]?.work_date);
-      } catch {
-        monthInput.value = currentMonthInJakarta();
-      }
+        latestDate = latest?.results?.[0]?.work_date || '';
+      } catch { /* Keep the most recent available period as the default. */ }
     }
+    populatePeriods(typeInput.value, requestedPeriod, latestDate);
     updateListUrl();
-    await loadMonth();
+    await loadPeriod();
   }
 
   const selectedDate = query.get('date');
@@ -259,14 +366,20 @@ if (pageRoot) {
     loadDetail(selectedDate);
   } else {
     initializeList();
-    monthInput.addEventListener('change', () => {
-      if (!monthInput.value) return;
+    typeInput.addEventListener('change', () => {
+      const anchorDate = periodRange()?.start || '';
+      populatePeriods(typeInput.value, '', anchorDate);
       updateListUrl();
-      loadMonth();
+      loadPeriod();
+    });
+    periodInput.addEventListener('change', () => {
+      if (!periodInput.value) return;
+      updateListUrl();
+      loadPeriod();
     });
     sortInput.addEventListener('change', () => {
       updateListUrl();
-      loadMonth();
+      loadPeriod();
     });
   }
 }

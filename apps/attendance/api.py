@@ -150,6 +150,25 @@ class MyHistoryView(APIView):
         qs = AttendanceDay.objects.filter(
             student=student, organization=membership.organization
         )
+        start_value = request.GET.get("start_date", "").strip()
+        end_value = request.GET.get("end_date", "").strip()
+        if start_value or end_value:
+            if not start_value or not end_value:
+                return _error_response("INVALID_PERIOD", http_status.HTTP_400_BAD_REQUEST)
+            try:
+                period_start = date.fromisoformat(start_value)
+                period_end = date.fromisoformat(end_value)
+            except ValueError:
+                return _error_response("INVALID_PERIOD", http_status.HTTP_400_BAD_REQUEST)
+            if (
+                period_start.isoformat() != start_value
+                or period_end.isoformat() != end_value
+                or period_start.weekday() != 0
+                or (period_end - period_start).days != 6
+            ):
+                return _error_response("INVALID_PERIOD", http_status.HTTP_400_BAD_REQUEST)
+            qs = qs.filter(work_date__gte=period_start, work_date__lte=period_end)
+
         month = request.GET.get("month", "").strip()
         if month:
             if not re.fullmatch(r"\d{4}-\d{2}", month):

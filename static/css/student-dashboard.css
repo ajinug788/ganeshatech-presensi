@@ -505,8 +505,6 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .history-filter-row { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 14px; color: #66717e; font-size: 14px; }
 .history-filter-control { position: relative; width: min(54%, 230px); min-height: 48px; display: flex; align-items: center; border: 1px solid #e6e7ea; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgb(20 35 50 / 3%); }
 .history-filter-control select, .history-filter-control input { width: 100%; min-width: 0; min-height: 46px; padding: 0 39px 0 13px; appearance: none; border: 0; border-radius: inherit; outline: 0; color: #30485f; background: transparent; font: inherit; font-size: 14px; }
-.history-filter-control input[type="month"] { color-scheme: light; }
-.history-filter-control input::-webkit-calendar-picker-indicator { position: absolute; right: 12px; width: 24px; height: 24px; opacity: 0; cursor: pointer; }
 .history-filter-control > .msym { position: absolute; right: 9px; color: #9aa2aa; font-size: 22px; pointer-events: none; }
 .history-sort-row { min-height: 52px; display: flex; align-items: center; gap: 13px; margin-top: 20px; padding: 0 5px 12px; border-bottom: 1px solid #d9dde2; color: #5a6674; }
 .history-sort-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #1682c3; background: #e7f3fc; font-size: 23px; }

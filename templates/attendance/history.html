@@ -13,14 +13,19 @@
       <label class="history-filter-row" for="history-kind">
         <span>Jenis</span>
         <span class="history-filter-control">
-          <select id="history-kind" aria-label="Jenis laporan"><option value="monthly">Laporan Bulanan</option></select>
+          <select id="history-kind" aria-label="Jenis laporan">
+            <option value="monthly">Laporan Bulanan</option>
+            <option value="weekly">Laporan Mingguan</option>
+          </select>
           <span class="msym" aria-hidden="true">expand_more</span>
         </span>
       </label>
-      <label class="history-filter-row" for="history-month">
+      <label class="history-filter-row" for="history-period">
         <span>Periode</span>
-        <span class="history-filter-control history-month-control">
-          <input id="history-month" type="month" aria-label="Pilih periode bulan">
+        <span class="history-filter-control history-period-control">
+          <select id="history-period" aria-label="Pilih periode laporan">
+            <option value="">Memuat periode…</option>
+          </select>
           <span class="msym" aria-hidden="true">expand_more</span>
         </span>
       </label>
