@@ -184,6 +184,7 @@ body.student-page {
 .history-action { justify-content: center; min-height: 34px; }
 .history-action .action-arrow { margin-left: 0; }
 .student-profile-card { display: flex; align-items: center; gap: 9px; scroll-margin-top: 72px; padding: 10px; border: 1px solid #e7eaf1; border-radius: 10px; background: #fff; }
+.student-profile-card > div { min-width: 0; }
 .profile-avatar { width: 30px; height: 30px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 8px; color: var(--student-primary); background: #edf0ff; font-size: 16px; }
 .student-profile-card h2 { margin: 2px 0; color: #25334d; font-size: 10px; }
 .student-profile-card p { overflow: hidden; margin: 0; color: #697386; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }

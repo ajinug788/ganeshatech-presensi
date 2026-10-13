@@ -7,7 +7,7 @@
     </div>
     <h1 id="student-greeting">{{ greeting }}, {{ student_name }}</h1>
     <p class="student-classline"><span class="msym" aria-hidden="true">precision_manufacturing</span>
-      <span>{% if student_group %}{{ student_group }}{% else %}Siswa TeFa{% endif %}{% if shift_label %} · Shift {{ shift_label }}{% endif %}</span>
+      <span>{% if student_group %}{{ student_group }}{% else %}Siswa TeFa{% endif %}{% if shift_label %} · {{ shift_label }}{% endif %}</span>
     </p>
     <p class="student-dateline"><span class="msym" aria-hidden="true">calendar_today</span>{{ today|date:"l, d F Y" }}</p>
   </section>
@@ -29,7 +29,7 @@
 
     {% if policy_check_in %}
     <div class="shift-summary" aria-label="Jam kerja dan toleransi shift">
-      {% if shift_label %}<div class="shift-summary-row"><span><span class="msym" aria-hidden="true">workspaces</span>Shift</span><strong>Shift {{ shift_label }}</strong></div>{% endif %}
+      {% if shift_label %}<div class="shift-summary-row"><span><span class="msym" aria-hidden="true">workspaces</span>Shift:</span> <strong>{{ shift_label }}</strong></div>{% endif %}
       <div class="shift-summary-row"><span><span class="msym" aria-hidden="true">timer</span>Jam kerja shift</span><strong>{{ policy_check_in }}–{{ policy_check_out }} WIB</strong></div>
       <div class="shift-summary-row"><span><span class="msym" aria-hidden="true">alarm</span>Batas toleransi ({{ policy_tolerance }} mnt)</span><strong class="tolerance-time">Pukul {{ policy_tolerance_at }} WIB</strong></div>
     </div>
