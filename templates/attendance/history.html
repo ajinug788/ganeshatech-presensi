@@ -3,12 +3,14 @@
 {% block title %}Riwayat Kehadiran — TeFa Presensi{% endblock %}
 {% block nav %}<a href="/dashboard/siswa/">Beranda</a><a href="/attendance/absen/riwayat/" aria-current="page">Riwayat</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary">Keluar</button></form>{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Catatan kehadiran</p><h1>Riwayat absensi</h1><p class="text-muted">Pantau catatan kehadiranmu di Teaching Factory.</p></div><a class="btn btn--secondary" href="/dashboard/siswa/">← Beranda</a></div>
-<section class="card">
-  <div class="section-head"><div><h2>Catatan terbaru</h2><p class="text-muted">Jam mengikuti waktu setempat sekolah.</p></div></div>
+<div class="student-feature-page student-history-page">
+<div class="student-feature-heading"><div><p class="student-eyebrow">Catatan kehadiran</p><h1>Riwayat absensi</h1><p>Pantau catatan kehadiranmu di Teaching Factory.</p></div><a class="student-feature-back" href="{% url 'tenants:dashboard_siswa' %}"><span class="msym" aria-hidden="true">arrow_back</span>Beranda</a></div>
+<section class="student-feature-card">
+  <div class="student-feature-section-head"><div><h2>Catatan terbaru</h2><p>Jam mengikuti waktu setempat sekolah.</p></div><span class="student-feature-icon msym" aria-hidden="true">history</span></div>
   <p id="hist-status" class="status-line" role="status" aria-live="polite">Memuat riwayat…</p>
   <div class="table-wrap"><table class="table" id="tbl-history"><thead><tr><th>Tanggal</th><th>Absen masuk</th><th>Absen pulang</th><th>Status</th><th>Foto</th></tr></thead><tbody></tbody></table></div>
   <div class="pagination"><span id="hist-count">—</span><div class="pagination__actions"><button class="btn btn--secondary" id="hist-prev" type="button" disabled>← Sebelumnya</button><button class="btn btn--secondary" id="hist-next" type="button" disabled>Berikutnya →</button></div></div>
 </section>
+</div>
 <script type="module" src="{% static 'js/history.js' %}"></script>
 {% endblock %}

@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Pilih Shift{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Absensi</p><h1>Pilih Shift</h1></div></div>
-<section class="card" style="max-width:640px">
+<div class="student-feature-page student-shift-page">
+<div class="student-feature-heading"><div><p class="student-eyebrow">Jadwal kehadiran</p><h1>Pilih Shift</h1><p>Tentukan jadwal praktik yang akan menjadi acuan presensimu.</p></div><span class="student-feature-icon msym" aria-hidden="true">schedule</span></div>
+<section class="student-feature-card student-form-card">
   {% if student.shift %}
   <p>Shift Anda sekarang: <strong>{{ student.shift.name }}</strong>. Untuk mengubahnya, hubungi admin.</p>
   {% else %}
@@ -16,4 +17,5 @@
   </form>
   {% endif %}
 </section>
+</div>
 {% endblock %}

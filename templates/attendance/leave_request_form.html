@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Ajukan Izin{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Absensi</p><h1>Ajukan Izin / Sakit</h1></div></div>
-<section class="card" style="max-width:640px">
+<div class="student-feature-page student-leave-page">
+<div class="student-feature-heading"><div><p class="student-eyebrow">Kehadiran</p><h1>Ajukan Izin / Sakit</h1><p>Kirim permohonan untuk ditinjau oleh admin sekolah.</p></div></div>
+<section class="student-feature-card student-form-card">
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <div class="form-actions"><button class="btn" type="submit">Kirim Pengajuan</button></div>
   </form>
 </section>
-<section class="card">
-  <h2>Pengajuan Saya</h2>
+<section class="student-feature-card">
+  <div class="student-feature-section-head"><div><h2>Pengajuan Saya</h2><p>Periksa status permohonan yang pernah dikirim.</p></div><span class="student-feature-icon msym" aria-hidden="true">edit_note</span></div>
   {% if my_requests %}
-  <table><thead><tr><th>Jenis</th><th>Dari</th><th>Sampai</th><th>Status</th><th>Catatan</th></tr></thead><tbody>
+  <div class="student-feature-table-wrap"><table><thead><tr><th>Jenis</th><th>Dari</th><th>Sampai</th><th>Status</th><th>Catatan</th></tr></thead><tbody>
   {% for r in my_requests %}
   <tr><td>{{ r.get_kind_display }}</td><td>{{ r.date_from }}</td><td>{{ r.date_to }}</td><td>{{ r.get_status_display }}</td><td>{{ r.review_note }}</td></tr>
   {% endfor %}
-  </tbody></table>
+  </tbody></table></div>
   {% else %}<p>Belum ada pengajuan.</p>{% endif %}
 </section>
+</div>
 {% endblock %}

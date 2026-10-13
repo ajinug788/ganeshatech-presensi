@@ -600,6 +600,8 @@ def shift_self_select(request):
     membership = get_active_membership(request.user)
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
+    request.membership = membership
+    request.organization = membership.organization
     org = membership.organization
     if not org.settings.get("allow_self_shift", False):
         raise PermissionDenied(
@@ -639,6 +641,8 @@ def capture_page(request):
     membership = get_active_membership(request.user)
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
+    request.membership = membership
+    request.organization = membership.organization
     kind = "check_out" if request.GET.get("type") == "checkout" else "check_in"
     return render(request, "attendance/capture.html", {"kind": kind})
 
@@ -651,6 +655,8 @@ def history_page(request):
     membership = get_active_membership(request.user)
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
+    request.membership = membership
+    request.organization = membership.organization
     return render(request, "attendance/history.html")
 
 

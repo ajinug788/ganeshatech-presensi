@@ -137,6 +137,8 @@ def dashboard_siswa(request):
     membership = get_active_membership(request.user)
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
+    request.membership = membership
+    request.organization = membership.organization
     ctx = build_student_dashboard_context(membership)
     ctx["role_label"] = "Siswa"
     return render(request, "dashboard/siswa.html", ctx)
