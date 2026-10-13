@@ -5,13 +5,13 @@
 <div class="student-feature-page student-profile-page">
   <section class="student-feature-card student-profile-identity">
     <div class="student-profile-visual">
-    {% if student.profile_photo %}
-      <a class="student-profile-photo-link" href="{% url 'photos:photo' student.profile_photo_id %}" target="_blank" rel="noopener" aria-label="Lihat foto profil ukuran penuh">
+      <button class="student-profile-photo-trigger" id="student-profile-photo-open" type="button" aria-haspopup="dialog" aria-label="Lihat dan kelola foto profil">
+      {% if student.profile_photo %}
         <img class="student-profile-photo" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
-      </a>
-    {% else %}
-      <span class="student-profile-photo student-profile-photo--empty msym" aria-hidden="true">person</span>
-    {% endif %}
+      {% else %}
+        <span class="student-profile-photo student-profile-photo--empty msym" aria-hidden="true">person</span>
+      {% endif %}
+      </button>
       <span class="student-profile-role"><span class="msym" aria-hidden="true">school</span>Siswa</span>
     </div>
     <div class="student-profile-identity-copy">
@@ -56,12 +56,6 @@
       <p class="student-photo-feedback" id="student-photo-form-feedback" role="status" aria-live="polite" hidden></p>
       <div class="student-profile-form-actions"><button class="btn" type="submit">Simpan foto</button></div>
     </form>
-    {% if student.profile_photo %}
-    <form method="post" class="student-profile-remove-form">
-      {% csrf_token %}<input type="hidden" name="action" value="remove_photo">
-      <button class="student-profile-remove" type="submit"><span class="msym" aria-hidden="true">delete</span>Hapus foto profil</button>
-    </form>
-    {% endif %}
   </section>
 
   <section class="student-feature-card student-profile-password-form">
@@ -74,5 +68,27 @@
     </form>
   </section>
 </div>
-<script src="{% static 'js/student-profile.js' %}?v=4" defer></script>
+<dialog class="student-profile-photo-dialog" id="student-profile-photo-dialog" aria-labelledby="student-profile-photo-dialog-title">
+  <div class="student-profile-photo-dialog-content">
+    <header class="student-profile-photo-dialog-header">
+      <h2 id="student-profile-photo-dialog-title">Foto profil</h2>
+      <button class="student-profile-photo-dialog-close" id="student-profile-photo-close" type="button" aria-label="Tutup">×</button>
+    </header>
+    {% if student.profile_photo %}
+      <img class="student-profile-photo-preview" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
+    {% else %}
+      <div class="student-profile-photo-preview student-profile-photo-preview--empty"><span class="msym" aria-hidden="true">person</span><span>Belum ada foto profil</span></div>
+    {% endif %}
+    <div class="student-profile-photo-dialog-actions">
+      <button class="btn" id="student-profile-photo-change" type="button"><span class="msym" aria-hidden="true">photo_camera</span>Ganti foto profil</button>
+      {% if student.profile_photo %}
+      <form method="post" id="student-profile-photo-remove-form">
+        {% csrf_token %}<input type="hidden" name="action" value="remove_photo">
+        <button class="btn student-profile-photo-delete" type="submit"><span class="msym" aria-hidden="true">delete</span>Hapus foto profil</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</dialog>
+<script src="{% static 'js/student-profile.js' %}?v=5" defer></script>
 {% endblock %}

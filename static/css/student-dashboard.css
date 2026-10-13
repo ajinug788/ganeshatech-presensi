@@ -399,8 +399,8 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-profile-page { max-width: 900px; }
 .student-profile-identity { display: flex; align-items: center; gap: 16px; }
 .student-profile-visual { display: grid; flex: 0 0 auto; justify-items: center; gap: 9px; }
-.student-profile-photo-link { display: block; border-radius: 18px; cursor: zoom-in; }
-.student-profile-photo-link:focus-visible { outline: 3px solid #8ba1e0; outline-offset: 3px; }
+.student-profile-photo-trigger { display: block; padding: 0; border: 0; border-radius: 18px; background: transparent; cursor: zoom-in; }
+.student-profile-photo-trigger:focus-visible { outline: 3px solid #8ba1e0; outline-offset: 3px; }
 .student-profile-photo { width: 78px; height: 78px; flex: 0 0 auto; object-fit: cover; border-radius: 18px; background: #e9edff; }
 .student-profile-photo--empty { display: grid; place-items: center; color: var(--student-primary); font-size: 36px; }
 .student-profile-identity-copy { min-width: 0; }
@@ -418,9 +418,19 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-profile-file-field > small { color: var(--student-muted); font-size: 11px; }
 .student-profile-file-field > .student-profile-error { color: #b4233f; }
 .student-profile-form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-.student-profile-remove-form { margin-top: 8px; }
-.student-profile-remove { display: inline-flex; min-height: 40px; align-items: center; gap: 6px; padding: 8px 0; border: 0; color: #ad2c44; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
-.student-profile-remove .msym { font-size: 17px; }
+.student-profile-photo-dialog { width: min(92vw, 420px); max-width: none; max-height: 90vh; padding: 0; overflow: auto; border: 1px solid #e4e8f0; border-radius: 18px; color: var(--student-ink); background: #fff; box-shadow: 0 24px 80px #101a2d55; }
+.student-profile-photo-dialog::backdrop { background: #11182799; backdrop-filter: blur(3px); }
+.student-profile-photo-dialog-content { display: grid; gap: 16px; padding: 18px; }
+.student-profile-photo-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.student-profile-photo-dialog-header h2 { margin: 0; font: 700 16px/1.3 "Plus Jakarta Sans", Inter, sans-serif; }
+.student-profile-photo-dialog-close { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; color: #48546a; background: #f1f3f8; font-size: 24px; cursor: pointer; }
+.student-profile-photo-preview { display: block; width: min(100%, 320px); aspect-ratio: 1; justify-self: center; object-fit: contain; border-radius: 14px; background: #f2f4f9; }
+.student-profile-photo-preview--empty { display: grid; place-content: center; gap: 8px; color: #69758a; text-align: center; }
+.student-profile-photo-preview--empty .msym { color: var(--student-primary); font-size: 48px; }
+.student-profile-photo-dialog-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.student-profile-photo-dialog-actions form { margin: 0; }
+.student-profile-photo-dialog-actions .msym { margin-right: 6px; vertical-align: middle; font-size: 17px; }
+.student-profile-photo-delete { border-color: #f2c1cb; color: #a72f46; background: #fff5f6; }
 .student-profile-password-form ul { margin: 3px 0 0; padding-left: 18px; color: #778196; font-size: 10px; font-weight: 400; }
 .student-profile-password-form .errorlist { color: #b4233f !important; }
 .student-profile-page .student-feature-card form p { margin-bottom: 14px; }
@@ -431,7 +441,7 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-profile-photo { width: 62px; height: 62px; border-radius: 15px; }
   .student-profile-identity-copy h2 { font-size: 17px; }
   .student-profile-visual { gap: 8px; }
-  .student-profile-photo-link { border-radius: 15px; }
+  .student-profile-photo-trigger { border-radius: 15px; }
   .student-profile-role { padding: 6px 9px; }
   .student-profile-detail-grid { grid-template-columns: 1fr; gap: 8px; }
   .student-profile-detail { padding: 11px 12px; }

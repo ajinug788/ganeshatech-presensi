@@ -8,7 +8,27 @@
   const cancelButton = document.getElementById("student-photo-cancel");
   const compressedNote = document.getElementById("student-photo-compressed-note");
   const formFeedback = document.getElementById("student-photo-form-feedback");
+  const photoDialog = document.getElementById("student-profile-photo-dialog");
+  const photoOpenButton = document.getElementById("student-profile-photo-open");
+  const photoCloseButton = document.getElementById("student-profile-photo-close");
+  const photoChangeButton = document.getElementById("student-profile-photo-change");
+  const photoRemoveForm = document.getElementById("student-profile-photo-remove-form");
   if (!input || !editor || !canvas || !zoomInput) return;
+
+  photoOpenButton.addEventListener("click", () => photoDialog.showModal());
+  photoCloseButton.addEventListener("click", () => photoDialog.close());
+  photoDialog.addEventListener("click", (event) => {
+    if (event.target === photoDialog) photoDialog.close();
+  });
+  photoChangeButton.addEventListener("click", () => {
+    photoDialog.close();
+    input.click();
+  });
+  if (photoRemoveForm) {
+    photoRemoveForm.addEventListener("submit", (event) => {
+      if (!window.confirm("Hapus foto profil sekarang?")) event.preventDefault();
+    });
+  }
 
   const form = input.closest("form");
   const context = canvas.getContext("2d", { alpha: false });
@@ -69,6 +89,7 @@
       editor.hidden = false;
       status.textContent = `Foto asli ${formatSize(file.size)}. Geser dan crop sebelum disimpan.`;
       drawCrop();
+      editor.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     sourceImage.onerror = () => {
       editor.hidden = false;
