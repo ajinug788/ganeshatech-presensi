@@ -508,9 +508,9 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .history-filter-control > .msym { position: absolute; top: 50%; right: 8px; width: 22px; height: 22px; display: grid; place-items: center; transform: translateY(-50%); color: #9aa2aa; font-size: 22px; line-height: 1; pointer-events: none; }
 .history-sort-row { min-height: 52px; display: flex; align-items: center; gap: 7px; margin-top: 20px; padding: 0 5px 12px; border-bottom: 1px solid #d9dde2; color: #5a6674; }
 .history-sort-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #1682c3; background: #e7f3fc; font-size: 23px; }
-.history-sort-row select { width: max-content; max-width: calc(100% - 48px); min-width: 0; min-height: 0; height: auto; margin: 0; padding: 0; appearance: none; border: 0; border-radius: 0; outline: 0; color: #5a6674; background: transparent; box-shadow: none; font: inherit; font-size: 14px; cursor: pointer; }
-.history-sort-row select:focus { border: 0; outline: 0; box-shadow: none; }
-.history-sort-row select:focus-visible { border-radius: 4px; outline: 2px solid rgb(22 163 74 / 35%); outline-offset: 3px; }
+.history-sort-row select { width: max-content; max-width: calc(100% - 48px); min-width: 0; min-height: 0; height: auto; margin: 0; padding: 7px 11px; appearance: none; border: 1px solid #dfe5eb; border-radius: 8px; outline: 0; color: #5a6674; background: #fff; box-shadow: none; font: inherit; font-size: 14px; cursor: pointer; }
+.history-sort-row select:focus { border-color: #a8bfd2; outline: 0; box-shadow: none; }
+.history-sort-row select:focus-visible { outline: 2px solid rgb(22 163 74 / 35%); outline-offset: 2px; }
 .history-live-status { min-height: 18px; margin: -8px 2px 0; color: #7d8792; font-size: 12px; }
 .history-day-list { display: grid; gap: 14px; }
 .history-day-card { position: relative; min-height: 82px; display: grid; grid-template-columns: 62px minmax(0, 1fr) minmax(90px, auto); align-items: center; gap: 14px; padding: 10px 15px 10px 18px; overflow: hidden; border: 1px solid #dedfe2; border-radius: 14px; color: #263e55 !important; background: #fff; box-shadow: 0 1px 2px rgb(25 35 60 / 3%); text-decoration: none; }
