@@ -1,9 +1,10 @@
 """View streaming foto terotorisasi (TDIP v1.2 §9.1, IMG-07).
 
 Tidak ada akses publik: cek login + tenant (membership aktif) + role.
-Siswa hanya melihat foto profil miliknya; 404 bila aset bukan milik
-tenant/pengguna.
+Siswa melihat foto profil ATAU foto absen miliknya sendiri; 404 bila aset
+bukan milik tenant/pengguna.
 """
+from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.views.generic import View
 
@@ -39,9 +40,19 @@ class ProtectedPhotoView(View):
         if membership.role not in _ALLOWED_ROLES and membership.role != "siswa":
             raise Http404()
         if membership.role == "siswa":
+            # Siswa boleh melihat foto profilnya sendiri ATAU foto absen
+            # dirinya sendiri (check-in/check-out) — riwayat tautkan ini.
+            from apps.attendance.models import AttendanceDay
+
             owns_photo = membership.organization.students.filter(
                 user=request.user, profile_photo=asset
             ).exists()
+            if not owns_photo:
+                owns_photo = AttendanceDay.objects.filter(
+                    Q(check_in_media=asset) | Q(check_out_media=asset),
+                    student__user=request.user,
+                    organization=membership.organization,
+                ).exists()
             if not owns_photo:
                 raise Http404()
 
