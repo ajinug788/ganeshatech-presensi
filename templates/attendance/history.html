@@ -1,15 +1,73 @@
 {% extends "base.html" %}
 {% load static static_v %}
-{% block title %}Riwayat Kehadiran — TeFa Presensi{% endblock %}
+{% block title %}Riwayat Presensi — TeFa Presensi{% endblock %}
 {% block content %}
-<div class="student-feature-page student-history-page">
-<div class="student-feature-heading"><div><h1>Riwayat absensi</h1><p>Pantau catatan kehadiranmu di Teaching Factory.</p></div></div>
-<section class="student-feature-card">
-  <div class="student-feature-section-head"><div><h2>Catatan terbaru</h2><p>Jam mengikuti waktu setempat sekolah.</p></div><span class="student-feature-icon msym" aria-hidden="true">history</span></div>
-  <p id="hist-status" class="status-line" role="status" aria-live="polite">Memuat riwayat…</p>
-  <div class="table-wrap"><table class="table" id="tbl-history"><thead><tr><th>Tanggal</th><th>Absen masuk</th><th>Absen pulang</th><th>Status</th><th>Foto</th></tr></thead><tbody></tbody></table></div>
-  <div class="pagination"><span id="hist-count">—</span><div class="pagination__actions"><button class="btn btn--secondary" id="hist-prev" type="button" disabled>← Sebelumnya</button><button class="btn btn--secondary" id="hist-next" type="button" disabled>Berikutnya →</button></div></div>
-</section>
+<div class="student-history-page" id="student-history-page" data-history-url="{% url 'attendance:history_page' %}">
+  <section id="history-list-view" class="history-list-view">
+    <header class="history-pagebar">
+      <a class="history-back" href="{% url 'tenants:dashboard_siswa' %}" aria-label="Kembali ke beranda"><span class="msym" aria-hidden="true">arrow_back</span></a>
+      <h1>Laporan Presensi</h1>
+    </header>
+
+    <div class="history-filter-card" aria-label="Filter riwayat presensi">
+      <label class="history-filter-row" for="history-kind">
+        <span>Jenis</span>
+        <span class="history-filter-control">
+          <select id="history-kind" aria-label="Jenis laporan"><option value="monthly">Laporan Bulanan</option></select>
+          <span class="msym" aria-hidden="true">expand_more</span>
+        </span>
+      </label>
+      <label class="history-filter-row" for="history-month">
+        <span>Periode</span>
+        <span class="history-filter-control history-month-control">
+          <input id="history-month" type="month" aria-label="Pilih periode bulan">
+          <span class="msym" aria-hidden="true">expand_more</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="history-sort-row">
+      <span class="history-sort-icon msym" aria-hidden="true">filter_list</span>
+      <label for="history-sort" class="history-visually-hidden">Urutan riwayat</label>
+      <select id="history-sort" aria-label="Urutan riwayat">
+        <option value="oldest">Terlama-terbaru</option>
+        <option value="newest">Terbaru-terlama</option>
+      </select>
+    </div>
+
+    <p class="history-live-status" id="history-list-status" role="status" aria-live="polite">Memuat riwayat…</p>
+    <div class="history-day-list" id="history-day-list" aria-live="polite"></div>
+  </section>
+
+  <section id="history-detail-view" class="history-detail-view" hidden>
+    <header class="history-pagebar">
+      <a class="history-back" id="history-detail-back" href="{% url 'attendance:history_page' %}" aria-label="Kembali ke daftar riwayat"><span class="msym" aria-hidden="true">arrow_back</span></a>
+      <h1>Riwayat Presensi</h1>
+    </header>
+    <p class="history-detail-date" id="history-detail-date"></p>
+
+    <div class="history-summary-grid" aria-label="Ringkasan presensi">
+      <article class="history-summary-card"><span>Status</span><strong id="history-detail-status">—</strong></article>
+      <article class="history-summary-card"><span>Terlambat</span><strong id="history-detail-late">—</strong></article>
+      <article class="history-summary-card"><span>Durasi kerja</span><strong id="history-detail-duration">—</strong></article>
+    </div>
+
+    <section class="history-detail-panel" aria-label="Rincian waktu presensi">
+      <div class="history-timeline" id="history-timeline">
+        <article class="history-timeline-item" id="history-check-in-row">
+          <div class="history-timeline-time"><span class="history-timeline-dot history-timeline-dot--in">✓</span><strong id="history-check-in-time">—</strong><small>Jam Masuk</small></div>
+          <div class="history-event-card"><span><strong>Jam Masuk</strong><small>Sesi 1</small></span><span class="history-event-arrow history-event-arrow--in msym" aria-hidden="true">arrow_forward</span></div>
+        </article>
+        <article class="history-timeline-item" id="history-check-out-row">
+          <div class="history-timeline-time"><span class="history-timeline-dot history-timeline-dot--out">✓</span><strong id="history-check-out-time">—</strong><small>Jam Keluar</small></div>
+          <div class="history-event-card"><span><strong>Jam Keluar</strong><small>Sesi 1</small></span><span class="history-event-arrow history-event-arrow--out msym" aria-hidden="true">arrow_back</span></div>
+        </article>
+      </div>
+      <div class="history-duration-card"><span><small>Total Durasi</small><strong id="history-duration-label">Belum lengkap</strong></span><span class="history-duration-icon msym" aria-hidden="true">schedule</span></div>
+      <div class="history-detail-photos" id="history-detail-photos"></div>
+    </section>
+    <p class="history-live-status" id="history-detail-status-line" role="status" aria-live="polite"></p>
+  </section>
 </div>
 <script type="module" src="{% static 'js/history.js' %}?v={% static_v 'js/history.js' %}"></script>
 {% endblock %}

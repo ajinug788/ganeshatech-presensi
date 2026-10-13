@@ -4,6 +4,8 @@ Session auth, role siswa. Error JSON {code, message} sesuai §9:
 409 untuk konflik/duplikasi, 422 untuk validasi gagal.
 """
 import json
+import re
+from datetime import date
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -147,7 +149,36 @@ class MyHistoryView(APIView):
 
         qs = AttendanceDay.objects.filter(
             student=student, organization=membership.organization
-        ).order_by("-work_date")
+        )
+        month = request.GET.get("month", "").strip()
+        if month:
+            if not re.fullmatch(r"\d{4}-\d{2}", month):
+                return _error_response("INVALID_MONTH", http_status.HTTP_400_BAD_REQUEST)
+            try:
+                month_start = date.fromisoformat(f"{month}-01")
+            except ValueError:
+                return _error_response("INVALID_MONTH", http_status.HTTP_400_BAD_REQUEST)
+            if month_start.strftime("%Y-%m") != month:
+                return _error_response("INVALID_MONTH", http_status.HTTP_400_BAD_REQUEST)
+            next_month = (
+                date(month_start.year + 1, 1, 1)
+                if month_start.month == 12
+                else date(month_start.year, month_start.month + 1, 1)
+            )
+            qs = qs.filter(work_date__gte=month_start, work_date__lt=next_month)
+
+        day_value = request.GET.get("date", "").strip()
+        if day_value:
+            try:
+                selected_date = date.fromisoformat(day_value)
+            except ValueError:
+                return _error_response("INVALID_DATE", http_status.HTTP_400_BAD_REQUEST)
+            if selected_date.isoformat() != day_value:
+                return _error_response("INVALID_DATE", http_status.HTTP_400_BAD_REQUEST)
+            qs = qs.filter(work_date=selected_date)
+
+        ordering = "work_date" if request.GET.get("sort") == "oldest" else "-work_date"
+        qs = qs.order_by(ordering)
         start = (page - 1) * page_size
         # The student page only needs to know whether another page exists.
         # Counting every attendance row on each visit gets progressively slower
