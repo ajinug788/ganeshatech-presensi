@@ -408,7 +408,7 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-profile-manage:hover { background: #f2f5ff; }
 .student-profile-manage .msym { font-size: 16px; }
 .student-profile-page { max-width: 900px; }
-.student-profile-identity { display: flex; align-items: center; gap: 16px; }
+.student-profile-identity { display: flex; align-items: flex-start; gap: 16px; }
 .student-profile-visual { display: grid; flex: 0 0 auto; justify-items: center; gap: 9px; }
 .student-profile-photo-trigger { display: block; padding: 0; border: 0; border-radius: 18px; background: transparent; cursor: zoom-in; }
 .student-profile-photo-trigger:focus-visible { outline: 3px solid #8ba1e0; outline-offset: 3px; }
