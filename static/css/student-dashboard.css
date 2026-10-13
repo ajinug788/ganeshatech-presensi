@@ -304,6 +304,8 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-feature-back { display: inline-flex; min-height: 42px; align-items: center; gap: 7px; padding: 0 13px; border: 1px solid var(--student-line); border-radius: 10px; color: var(--student-primary) !important; background: #fff; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .student-feature-back:hover { background: #f2f5ff; }
 .student-feature-card { min-width: 0; padding: 22px; border: 1px solid #e7eaf1; border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgb(25 35 60 / 5%); }
+.student-history-page > .student-feature-card,
+.student-leave-page > .student-feature-card { padding: 22px; }
 .student-feature-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .student-feature-section-head h2, .student-feature-card h2 { margin: 0; color: #18253c; font: 700 17px/1.35 "Plus Jakarta Sans", Inter, sans-serif; }
 .student-feature-section-head p { margin: 4px 0 0; color: var(--student-muted); font-size: 12px; }
@@ -391,6 +393,8 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-feature-heading p:not(.student-eyebrow) { font-size: 12px; }
   .student-feature-back { min-height: 38px; padding-inline: 10px; font-size: 11px; }
   .student-feature-card { padding: 15px; border-radius: 13px; }
+  .student-history-page > .student-feature-card,
+  .student-leave-page > .student-feature-card { padding: 15px; }
   .student-feature-section-head h2, .student-feature-card h2 { font-size: 15px; }
   .student-feature-card th, .student-feature-card td { padding: 10px; }
   .student-history-page .pagination { align-items: flex-start; flex-direction: column; }
