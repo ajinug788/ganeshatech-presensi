@@ -4,10 +4,7 @@
 {% block content %}
 <div class="student-history-page" id="student-history-page" data-history-url="{% url 'attendance:history_page' %}">
   <section id="history-list-view" class="history-list-view">
-    <header class="history-pagebar">
-      <a class="history-back" href="{% url 'tenants:dashboard_siswa' %}" aria-label="Kembali ke beranda"><span class="msym" aria-hidden="true">arrow_back</span></a>
-      <h1>Laporan Presensi</h1>
-    </header>
+    <header class="student-feature-heading"><div><h1>Laporan Presensi</h1></div></header>
 
     <div class="history-filter-card" aria-label="Filter riwayat presensi">
       <label class="history-filter-row" for="history-kind">
