@@ -26,11 +26,9 @@
     <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v={% static_v 'css/student-dashboard.css' %}">
   {% endif %}
   {% block extra_head %}{% endblock %}
-  <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
   <script src="{% static 'js/auto-dismiss-messages.js' %}?v=1" defer></script>
   <script src="{% static 'js/student-account-menu.js' %}?v=1" defer></script>
   <style>
-    .turbo-progress-bar { height: 3px; background: linear-gradient(90deg,#14B8A6,#0ea5e9); box-shadow: 0 0 8px rgb(20 184 166 / 60%); }
   </style>
 </head>
 <body class="{% if request.membership.role == 'admin' %}admin-page{% elif request.membership.role == 'siswa' %}student-page{% endif %} {% block body_class %}{% endblock %}">
@@ -157,7 +155,6 @@
     if (closeBtn) closeBtn.addEventListener('click', function () { set(false); });
     sidebar.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
-    document.addEventListener('turbo:load', function () { set(false); });
   })();
 </script>
 </body>
