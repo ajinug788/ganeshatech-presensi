@@ -6,8 +6,7 @@ const btnPrev = document.querySelector('#hist-prev');
 const btnNext = document.querySelector('#hist-next');
 
 let page = 1;
-let totalPages = 1;
-let total = 0;
+let hasNext = false;
 
 const STATUS = {
   present: ['Hadir', 'badge--hadir'],
@@ -16,13 +15,16 @@ const STATUS = {
   excused: ['Izin / sakit', 'badge--tidak'],
 };
 
+const jamFormatter = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+const tanggalFormatter = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+
 function fmtJam(iso) {
   if (!iso) return '—';
-  return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(iso));
+  return jamFormatter.format(new Date(iso));
 }
 
 function fmtTanggal(dateStr) {
-  return new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(`${dateStr}T12:00:00+07:00`));
+  return tanggalFormatter.format(new Date(`${dateStr}T12:00:00+07:00`));
 }
 
 function getCookie(name) {
@@ -34,15 +36,14 @@ async function load() {
   status.textContent = 'Memuat riwayat…';
   status.className = 'status-line';
   try {
-    const res = await fetch(`/api/v1/attendance/me/history/?page=${page}&page_size=8`, {
+    const res = await fetch(`/api/v1/attendance/me/history/?page=${page}&page_size=8&include_count=false`, {
       credentials: 'same-origin',
       headers: { Accept: 'application/json' },
     });
     if (res.status === 401) { window.location.href = '/accounts/login/'; return; }
     if (!res.ok) throw new Error('Server menolak permintaan (' + res.status + ')');
     const data = await res.json();
-    total = data.count ?? 0;
-    totalPages = Math.max(1, Math.ceil(total / (data.page_size ?? 8)));
+    hasNext = Boolean(data.has_next);
     tbody.replaceChildren();
     for (const r of data.results || []) {
       const row = document.createElement('tr');
@@ -76,11 +77,13 @@ async function load() {
       row.append(foto);
       tbody.append(row);
     }
-    const start = total ? (page - 1) * (data.page_size ?? 8) + 1 : 0;
-    const end = Math.min(page * (data.page_size ?? 8), total);
-    count.textContent = total ? `Menampilkan ${start}–${end} dari ${total} catatan` : 'Belum ada catatan';
+    const pageSize = data.page_size ?? 8;
+    const shown = (data.results || []).length;
+    const start = shown ? (page - 1) * pageSize + 1 : 0;
+    const end = start + shown - 1;
+    count.textContent = shown ? `Menampilkan ${start}–${end} catatan` : (page === 1 ? 'Belum ada catatan' : 'Tidak ada catatan pada halaman ini');
     btnPrev.disabled = page <= 1;
-    btnNext.disabled = page >= totalPages;
+    btnNext.disabled = !hasNext;
     status.textContent = '';
   } catch (error) {
     status.className = 'status status--error';
@@ -90,5 +93,5 @@ async function load() {
 }
 
 btnPrev.addEventListener('click', () => { if (page > 1) { page -= 1; load(); } });
-btnNext.addEventListener('click', () => { if (page < totalPages) { page += 1; load(); } });
+btnNext.addEventListener('click', () => { if (hasNext) { page += 1; load(); } });
 load();
