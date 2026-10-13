@@ -90,7 +90,7 @@ def test_shift_siswa_tampil_bukan_policy(org_a, client):
     assert ctx["policy_check_out"] == "13:00"
     assert ctx["policy_tolerance"] == 10
     content = client.get(reverse("tenants:dashboard_siswa")).content.decode()
-    assert "Shift: Shift Pagi Khusus" in content
+    assert "Shift:</span> <strong>Shift Pagi Khusus</strong>" in content
 
 
 def test_fallback_policy_bila_shift_null(org_a, client):

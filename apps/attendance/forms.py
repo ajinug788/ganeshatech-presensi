@@ -206,7 +206,7 @@ class LeaveRequestForm(forms.ModelForm):
 
     date_from = forms.DateField(
         label="Tanggal mulai",
-        input_formats=["%d/%m/%Y"],
+        input_formats=["%d/%m/%Y", "%Y-%m-%d"],
         widget=forms.DateInput(
             format="%d/%m/%Y",
             attrs={
@@ -219,7 +219,7 @@ class LeaveRequestForm(forms.ModelForm):
     )
     date_to = forms.DateField(
         label="Tanggal selesai",
-        input_formats=["%d/%m/%Y"],
+        input_formats=["%d/%m/%Y", "%Y-%m-%d"],
         widget=forms.DateInput(
             format="%d/%m/%Y",
             attrs={
