@@ -53,7 +53,7 @@
         </div>
       </div>
       <p class="student-photo-compressed-note" id="student-photo-compressed-note" hidden></p>
-      <div class="student-profile-form-actions"><button class="btn" type="submit">Simpan foto</button></div>
+      <div class="student-profile-form-actions"><button class="btn" id="student-photo-save" type="submit" disabled>Simpan foto</button></div>
     </form>
     {% if student.profile_photo %}
     <form method="post" class="student-profile-remove-form">
@@ -73,5 +73,5 @@
     </form>
   </section>
 </div>
-<script src="{% static 'js/student-profile.js' %}?v=2" defer></script>
+<script src="{% static 'js/student-profile.js' %}?v=3" defer></script>
 {% endblock %}

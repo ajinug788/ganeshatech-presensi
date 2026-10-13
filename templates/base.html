@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}">
   {% elif request.membership.role == 'siswa' %}
-    <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=2">
   {% endif %}
   {% block extra_head %}{% endblock %}
 </head>

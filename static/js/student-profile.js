@@ -6,6 +6,7 @@
   const status = document.getElementById("student-photo-editor-status");
   const applyButton = document.getElementById("student-photo-apply");
   const cancelButton = document.getElementById("student-photo-cancel");
+  const saveButton = document.getElementById("student-photo-save");
   const compressedNote = document.getElementById("student-photo-compressed-note");
   if (!input || !editor || !canvas || !zoomInput) return;
 
@@ -18,6 +19,10 @@
   let crop = null;
   let dragPoint = null;
   let readyToSubmit = false;
+
+  document.querySelectorAll(".student-message--success").forEach((message) => {
+    window.setTimeout(() => message.remove(), 5000);
+  });
 
   const formatSize = (bytes) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   const clampCrop = () => {
@@ -46,6 +51,7 @@
 
   function beginEditing(file) {
     readyToSubmit = false;
+    saveButton.disabled = true;
     compressedNote.hidden = true;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
     if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -154,6 +160,7 @@
       transfer.items.add(outputFile);
       input.files = transfer.files;
       readyToSubmit = true;
+      saveButton.disabled = false;
       editor.hidden = true;
       resultUrl = URL.createObjectURL(outputFile);
       compressedNote.textContent = `Siap diunggah: ${formatSize(outputFile.size)} (hasil crop otomatis dikompres).`;
@@ -169,6 +176,7 @@
   cancelButton.addEventListener("click", () => {
     input.value = "";
     readyToSubmit = false;
+    saveButton.disabled = true;
     editor.hidden = true;
     compressedNote.hidden = true;
     sourceImage = null;
