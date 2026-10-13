@@ -30,6 +30,7 @@
   {% if request.membership.role == 'admin' %}
   <div class="admin-shell">
     <aside class="sidebar" aria-label="Navigasi utama">
+        <button type="button" class="drawer-close" aria-label="Tutup menu navigasi">&times;</button>
       <a class="brand" href="{% url 'tenants:dashboard_admin' %}">
         <span class="brand-mark" aria-hidden="true">PT</span>
         <span><strong>Presensi TeFa</strong><small>Teaching Factory System</small></span>
@@ -146,6 +147,8 @@
     }
     btn.addEventListener('click', function () { set(!document.body.classList.contains('nav-open')); });
     overlay.addEventListener('click', function () { set(false); });
+    var closeBtn = document.querySelector('.drawer-close');
+    if (closeBtn) closeBtn.addEventListener('click', function () { set(false); });
     sidebar.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
     document.addEventListener('turbo:load', function () { set(false); });
