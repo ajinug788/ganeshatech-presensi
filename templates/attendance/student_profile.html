@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Profil Siswa — {{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="student-feature-page student-profile-page">
+  <div class="student-feature-heading">
+    <div><p class="student-eyebrow">Akun siswa</p><h1>Profil Saya</h1><p>Lihat informasi akun dan perbarui foto atau kata sandi.</p></div>
+    <a class="student-feature-back" href="{% url 'tenants:dashboard_siswa' %}"><span class="msym" aria-hidden="true">arrow_back</span>Dashboard</a>
+  </div>
+
+  <section class="student-feature-card student-profile-identity">
+    {% if student.profile_photo %}
+      <img class="student-profile-photo" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
+    {% else %}
+      <span class="student-profile-photo student-profile-photo--empty msym" aria-hidden="true">person</span>
+    {% endif %}
+    <div class="student-profile-identity-copy">
+      <span class="student-eyebrow">Profil siswa</span>
+      <h2>{{ student.full_name }}</h2>
+      <p>{{ student.group|default:"Kelas belum diatur" }} · {{ request.organization.name }}</p>
+    </div>
+    <span class="student-profile-role"><span class="msym" aria-hidden="true">school</span>Siswa</span>
+  </section>
+
+  <section class="student-feature-card student-profile-details">
+    <div class="student-feature-section-head"><div><h2>Informasi akun</h2><p>Email dipakai untuk masuk ke Presensi TeFa.</p></div><span class="student-feature-icon msym" aria-hidden="true">verified_user</span></div>
+    <div class="student-profile-detail-grid">
+      <div class="student-profile-detail"><span>Alamat email</span><strong>{{ request.user.email }}</strong><small>Email dikelola bersama akun sekolah.</small></div>
+      <div class="student-profile-detail"><span>Kata sandi</span><strong aria-label="Kata sandi disimpan aman">••••••••••</strong><small>Kata sandi saat ini tidak dapat ditampilkan.</small></div>
+      <div class="student-profile-detail"><span>Nomor induk siswa</span><strong>{{ student.student_number }}</strong></div>
+      <div class="student-profile-detail"><span>Jadwal shift</span><strong>{{ student.shift.name|default:"Mengikuti kebijakan sekolah" }}</strong></div>
+    </div>
+  </section>
+
+  <section class="student-feature-card student-profile-photo-form">
+    <div class="student-feature-section-head"><div><h2>Foto profil</h2><p>Gunakan foto yang jelas agar akun mudah dikenali.</p></div><span class="student-feature-icon msym" aria-hidden="true">add_a_photo</span></div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_photo">
+      <div class="student-profile-file-field">
+        <label for="id_photo">Pilih foto baru</label>
+        {{ photo_form.photo }}
+        {% if photo_form.photo.help_text %}<small>{{ photo_form.photo.help_text }}</small>{% endif %}
+        {% for error in photo_form.photo.errors %}<small class="student-profile-error">{{ error }}</small>{% endfor %}
+      </div>
+      <div class="student-profile-form-actions"><button class="btn" type="submit">Simpan foto</button></div>
+    </form>
+    {% if student.profile_photo %}
+    <form method="post" class="student-profile-remove-form">
+      {% csrf_token %}<input type="hidden" name="action" value="remove_photo">
+      <button class="student-profile-remove" type="submit"><span class="msym" aria-hidden="true">delete</span>Hapus foto profil</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section class="student-feature-card student-profile-password-form">
+    <div class="student-feature-section-head"><div><h2>Ubah kata sandi</h2><p>Masukkan kata sandi saat ini untuk membuat kata sandi baru.</p></div><span class="student-feature-icon msym" aria-hidden="true">lock_reset</span></div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="change_password">
+      {{ password_form.as_p }}
+      <div class="student-profile-form-actions"><button class="btn" type="submit">Perbarui kata sandi</button></div>
+    </form>
+  </section>
+</div>
+{% endblock %}

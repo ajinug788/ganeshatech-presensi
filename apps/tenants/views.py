@@ -140,6 +140,9 @@ def dashboard_siswa(request):
     request.membership = membership
     request.organization = membership.organization
     ctx = build_student_dashboard_context(membership)
+    ctx["student_profile"] = membership.organization.students.filter(
+        user=request.user
+    ).select_related("profile_photo").first()
     ctx["role_label"] = "Siswa"
     return render(request, "dashboard/siswa.html", ctx)
 

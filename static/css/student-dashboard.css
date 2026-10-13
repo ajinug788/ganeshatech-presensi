@@ -389,3 +389,47 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 @media (prefers-reduced-motion: reduce) {
   .student-page *, .student-page *::before, .student-page *::after { scroll-behavior: auto; transition-duration: .01ms !important; }
 }
+
+.profile-avatar-photo { width: 42px; height: 42px; object-fit: cover; border-radius: 10px; }
+.student-avatar-photo { object-fit: cover; }
+.student-account img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.student-profile-manage { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; margin-left: auto; padding: 9px 12px; border: 1px solid #e0e5f0; border-radius: 9px; color: var(--student-primary) !important; background: #fff; font-size: 11px; font-weight: 700; }
+.student-profile-manage:hover { background: #f2f5ff; }
+.student-profile-manage .msym { font-size: 16px; }
+.student-profile-page { max-width: 900px; }
+.student-profile-identity { display: flex; align-items: center; gap: 16px; }
+.student-profile-photo { width: 78px; height: 78px; flex: 0 0 auto; object-fit: cover; border-radius: 18px; background: #e9edff; }
+.student-profile-photo--empty { display: grid; place-items: center; color: var(--student-primary); font-size: 36px; }
+.student-profile-identity-copy { min-width: 0; }
+.student-profile-identity-copy h2 { margin: 5px 0 3px; color: #18253c; font: 700 20px/1.3 "Plus Jakarta Sans", Inter, sans-serif; }
+.student-profile-identity-copy p { margin: 0; color: var(--student-muted); font-size: 12px; }
+.student-profile-role { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 10px; border-radius: 999px; color: var(--student-primary); background: #eef2ff; font-size: 11px; font-weight: 700; }
+.student-profile-role .msym { font-size: 16px; }
+.student-profile-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.student-profile-detail { display: grid; gap: 5px; min-width: 0; padding: 14px; border: 1px solid #edf0f5; border-radius: 11px; background: #fafbfe; }
+.student-profile-detail > span { color: #687184; font-size: 11px; }
+.student-profile-detail strong { overflow-wrap: anywhere; color: #243149; font-size: 14px; }
+.student-profile-detail small { color: #8791a2; font-size: 10px; }
+.student-profile-file-field { display: grid; gap: 7px; }
+.student-profile-file-field > label { color: #3e4b61; font-size: 12px; font-weight: 700; }
+.student-profile-file-field > small { color: var(--student-muted); font-size: 11px; }
+.student-profile-file-field > .student-profile-error { color: #b4233f; }
+.student-profile-form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.student-profile-remove-form { margin-top: 8px; }
+.student-profile-remove { display: inline-flex; min-height: 40px; align-items: center; gap: 6px; padding: 8px 0; border: 0; color: #ad2c44; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
+.student-profile-remove .msym { font-size: 17px; }
+.student-profile-password-form ul { margin: 3px 0 0; padding-left: 18px; color: #778196; font-size: 10px; font-weight: 400; }
+.student-profile-password-form .errorlist { color: #b4233f !important; }
+.student-profile-page .student-feature-card form p { margin-bottom: 14px; }
+.student-profile-page .student-feature-card form p label { color: #3e4b61; font-size: 12px; font-weight: 700; }
+.student-profile-page .student-profile-file-field input[type="file"] { min-height: auto; padding: 10px; background: #fafbfe; }
+@media (max-width: 767px) {
+  .student-profile-identity { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .student-profile-photo { width: 62px; height: 62px; border-radius: 15px; }
+  .student-profile-identity-copy h2 { font-size: 17px; }
+  .student-profile-role { margin-left: 74px; margin-top: -4px; }
+  .student-profile-detail-grid { grid-template-columns: 1fr; gap: 8px; }
+  .student-profile-detail { padding: 11px 12px; }
+  .student-profile-manage { padding: 8px; font-size: 0; }
+  .student-profile-manage .msym { font-size: 19px; }
+}

@@ -45,6 +45,14 @@ class StudentProfile(models.Model):
         verbose_name=_("akun pengguna"),
         help_text=_("Kosong bila siswa belum punya akun (provisioning nanti)."),
     )
+    profile_photo = models.OneToOneField(
+        MediaAsset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_profile_photo",
+        verbose_name=_("foto profil"),
+    )
     student_number = models.CharField(_("nomor induk siswa"), max_length=50)
     full_name = models.CharField(_("nama lengkap"), max_length=200)
     group = models.CharField(_("kelas/kelompok"), max_length=100, null=True, blank=True)

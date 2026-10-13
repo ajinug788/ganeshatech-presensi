@@ -1,8 +1,8 @@
 """View streaming foto terotorisasi (TDIP v1.2 §9.1, IMG-07).
 
-Tidak ada akses publik: cek login + tenant (membership aktif) + role +
-kepemilikan foto terhadap tenant sebelum streaming file. 404 bila bukan
-milik tenant (tanpa membocorkan keberadaan aset).
+Tidak ada akses publik: cek login + tenant (membership aktif) + role.
+Siswa hanya melihat foto profil miliknya; 404 bila aset bukan milik
+tenant/pengguna.
 """
 from django.http import FileResponse, Http404
 from django.views.generic import View
@@ -25,7 +25,7 @@ class ProtectedPhotoView(View):
             return redirect_to_login(request.get_full_path())
 
         membership = get_active_membership(request.user)
-        if membership is None or membership.role not in _ALLOWED_ROLES:
+        if membership is None:
             raise Http404()
 
         # Queryset ter-scope tenant: aset tenant lain tidak terlihat → 404.
@@ -35,6 +35,15 @@ class ProtectedPhotoView(View):
             )
         except (MediaAsset.DoesNotExist, ValueError):
             raise Http404()
+
+        if membership.role not in _ALLOWED_ROLES and membership.role != "siswa":
+            raise Http404()
+        if membership.role == "siswa":
+            owns_photo = membership.organization.students.filter(
+                user=request.user, profile_photo=asset
+            ).exists()
+            if not owns_photo:
+                raise Http404()
 
         path = _key_to_path(asset.storage_key)
         if not path.is_file():

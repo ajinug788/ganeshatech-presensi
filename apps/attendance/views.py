@@ -5,9 +5,11 @@ Semua queryset ter-scope organization dari membership aktif
 """
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -22,6 +24,7 @@ from django.views.generic import (
 )
 
 from apps.audit.services import catat_audit
+from apps.media_assets.services import hapus_file
 from apps.tenants.context import RoleRequiredMixin
 
 from .forms import (
@@ -31,10 +34,20 @@ from .forms import (
     StudentEmailForm,
     StudentForm,
     StudentGroupShiftForm,
+    StudentPasswordChangeForm,
+    StudentProfilePhotoForm,
     StudentSelfShiftForm,
 )
-from .models import AttendanceLocation, AttendancePolicy, Shift, StudentProfile
+from .models import (
+    AttendanceDay,
+    AttendanceLocation,
+    AttendancePolicy,
+    Shift,
+    StudentProfile,
+)
 from .services import (
+    AttendanceError,
+    _store_photo,
     assign_student_shift,
     bulk_assign_shift,
     change_student_email,
@@ -591,6 +604,105 @@ class StudentShiftView(AdminRequiredMixin, UpdateView):
 
 
 # ---------------------------------------------------------------- Halaman siswa
+
+
+class StudentProfileView(RoleRequiredMixin, View):
+    """Profil akun siswa: email baca-saja, foto profil, dan ubah password."""
+
+    allowed_roles = ("siswa",)
+    template_name = "attendance/student_profile.html"
+
+    def get_student(self):
+        return get_object_or_404(
+            StudentProfile.objects.select_related("profile_photo", "shift"),
+            organization=self.organization,
+            user=self.request.user,
+        )
+
+    def get_context(self, student, *, photo_form=None, password_form=None):
+        return {
+            "student": student,
+            "photo_form": photo_form or StudentProfilePhotoForm(),
+            "password_form": password_form
+            or StudentPasswordChangeForm(self.request.user),
+        }
+
+    def get(self, request, *args, **kwargs):
+        student = self.get_student()
+        return render(request, self.template_name, self.get_context(student))
+
+    def post(self, request, *args, **kwargs):
+        student = self.get_student()
+        action = request.POST.get("action")
+
+        if action == "change_password":
+            form = StudentPasswordChangeForm(request.user, request.POST)
+            if form.is_valid():
+                form.save()
+                update_session_auth_hash(request, request.user)
+                messages.success(request, "Kata sandi berhasil diperbarui.")
+                return redirect("attendance:student_profile")
+            return render(
+                request,
+                self.template_name,
+                self.get_context(student, password_form=form),
+            )
+
+        if action == "remove_photo":
+            old_photo = student.profile_photo
+            student.profile_photo = None
+            student.save(update_fields=["profile_photo", "updated_at"])
+            self.cleanup_photo(old_photo)
+            messages.success(request, "Foto profil berhasil dihapus.")
+            return redirect("attendance:student_profile")
+
+        form = StudentProfilePhotoForm(request.POST, request.FILES)
+        if form.is_valid() and form.cleaned_data.get("photo"):
+            old_photo = student.profile_photo
+            try:
+                new_photo = _store_photo(
+                    organization=self.organization,
+                    user=request.user,
+                    django_file=form.cleaned_data["photo"],
+                )
+            except AttendanceError as exc:
+                error_text = {
+                    "PHOTO_TOO_LARGE": "Ukuran foto maksimal 2 MB.",
+                    "PHOTO_REQUIRED": "Pilih foto yang akan diunggah.",
+                    "INVALID_PHOTO": "File harus berupa gambar JPG, PNG, atau WebP yang valid.",
+                }.get(exc.code, "Foto tidak dapat diproses.")
+                form.add_error("photo", error_text)
+            else:
+                student.profile_photo = new_photo
+                student.save(update_fields=["profile_photo", "updated_at"])
+                self.cleanup_photo(old_photo)
+                messages.success(request, "Foto profil berhasil diperbarui.")
+                return redirect("attendance:student_profile")
+        elif form.is_valid():
+            form.add_error("photo", "Pilih foto terlebih dahulu.")
+
+        return render(
+            request,
+            self.template_name,
+            self.get_context(student, photo_form=form),
+        )
+
+    @staticmethod
+    def cleanup_photo(asset):
+        if asset is None:
+            return
+        if AttendanceDay.objects.filter(
+            Q(check_in_media=asset) | Q(check_out_media=asset)
+        ).exists():
+            return
+        if StudentProfile.objects.filter(profile_photo=asset).exists():
+            return
+        try:
+            hapus_file(asset.storage_key)
+        except FileNotFoundError:
+            pass
+        asset.delete()
+
 
 @login_required
 def shift_self_select(request):

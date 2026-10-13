@@ -96,9 +96,9 @@
   </section>
 
   <section class="student-profile-card" id="student-info" aria-labelledby="profile-heading">
-    <span class="profile-avatar msym" aria-hidden="true">badge</span>
+    {% if student_profile.profile_photo %}<img class="profile-avatar profile-avatar-photo" src="{% url 'photos:photo' student_profile.profile_photo_id %}" alt="Foto profil {{ student_name }}">{% else %}<span class="profile-avatar msym" aria-hidden="true">badge</span>{% endif %}
     <div><span class="student-eyebrow">Profil siswa</span><h2 id="profile-heading">{{ student_name }}</h2><p>{{ membership.user.email }}{% if student_group %} · {{ student_group }}{% endif %}</p></div>
-    <form method="post" action="{% url 'accounts:logout' %}" class="student-logout">{% csrf_token %}<button type="submit"><span class="msym" aria-hidden="true">logout</span>Keluar</button></form>
+    <a href="{% url 'attendance:student_profile' %}" class="student-profile-manage"><span class="msym" aria-hidden="true">manage_accounts</span>Kelola profil</a>
   </section>
 
   <p class="student-security"><span class="msym" aria-hidden="true">lock</span>Data kehadiran terhubung ke akun siswa aktif</p>

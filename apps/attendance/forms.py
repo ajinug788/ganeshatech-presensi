@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from django import forms
+from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 
 from apps.tenants.models import Membership
@@ -47,6 +48,23 @@ class StudentForm(forms.ModelForm):
             # Akun sudah ada: tampilkan email, tidak boleh diubah via form.
             self.fields["email"].disabled = True
             self.fields["email"].initial = self.instance.user.email
+
+
+class StudentProfilePhotoForm(forms.Form):
+    photo = forms.ImageField(
+        label="Foto profil",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        help_text="JPG, PNG, atau WebP. Maksimal 2 MB.",
+    )
+
+
+class StudentPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["old_password"].label = "Kata sandi saat ini"
+        self.fields["new_password1"].label = "Kata sandi baru"
+        self.fields["new_password2"].label = "Ulangi kata sandi baru"
 
 
 class AttendanceLocationForm(forms.ModelForm):

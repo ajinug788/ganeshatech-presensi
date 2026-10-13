@@ -60,10 +60,10 @@
         <a class="student-side-link{% if request.resolver_match.url_name == 'dashboard_siswa' or request.resolver_match.url_name == 'capture' %} is-active{% endif %}" href="{% url 'tenants:dashboard_siswa' %}"><span class="msym" aria-hidden="true">dashboard</span>Presensi</a>
         <a class="student-side-link{% if request.resolver_match.url_name == 'history_page' %} is-active{% endif %}" href="{% url 'attendance:history_page' %}"><span class="msym" aria-hidden="true">history</span>Riwayat</a>
         <a class="student-side-link{% if request.resolver_match.url_name == 'leave_request_create' %} is-active{% endif %}" href="{% url 'attendance:leave_request_create' %}"><span class="msym" aria-hidden="true">edit_note</span>Izin / Sakit</a>
-        <a class="student-side-link" href="{% url 'tenants:dashboard_siswa' %}#student-info"><span class="msym" aria-hidden="true">badge</span>Profil Siswa</a>
+        <a class="student-side-link{% if request.resolver_match.url_name == 'student_profile' %} is-active{% endif %}" href="{% url 'attendance:student_profile' %}"{% if request.resolver_match.url_name == 'student_profile' %} aria-current="page"{% endif %}><span class="msym" aria-hidden="true">account_circle</span>Profil Siswa</a>
       </nav>
       <div class="student-sidebar-bottom">
-        <div class="student-sidebar-user"><span class="student-avatar">{{ request.user.get_short_name|default:request.user.email|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.email }}</strong><small>Siswa</small></span></div>
+        <div class="student-sidebar-user">{% if request.user.student_profiles.profile_photo %}<img class="student-avatar student-avatar-photo" src="{% url 'photos:photo' request.user.student_profiles.profile_photo_id %}" alt="">{% else %}<span class="student-avatar">{{ request.user.get_short_name|default:request.user.email|slice:":1"|upper }}</span>{% endif %}<span><strong>{{ request.user.get_full_name|default:request.user.email }}</strong><small>Siswa</small></span></div>
         <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="student-side-logout" type="submit"><span class="msym" aria-hidden="true">logout</span>Keluar</button></form>
       </div>
     </aside>
@@ -74,7 +74,7 @@
           <span class="student-brand-copy"><strong>{{ request.organization.name }}</strong><small>TeFa Presensi · Dashboard Kehadiran</small></span>
         </a>
         <div class="student-desktop-breadcrumb"><strong>Presensi TeFa</strong><span>/</span><span>{{ request.organization.name }}</span></div>
-        <a class="student-account" href="{% url 'tenants:dashboard_siswa' %}#student-info" aria-label="Lihat profil siswa"><span class="msym" aria-hidden="true">person</span></a>
+        <a class="student-account" href="{% url 'attendance:student_profile' %}" aria-label="Kelola profil siswa">{% if request.user.student_profiles.profile_photo %}<img src="{% url 'photos:photo' request.user.student_profiles.profile_photo_id %}" alt="">{% else %}<span class="msym" aria-hidden="true">person</span>{% endif %}</a>
       </header>
       <main class="student-page-content">
         {% if messages %}<div class="student-messages" aria-live="polite">{% for message in messages %}<div class="student-message student-message--{{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
@@ -109,7 +109,7 @@
       <a class="student-nav-item{% if request.resolver_match.url_name == 'dashboard_siswa' or request.resolver_match.url_name == 'capture' %} is-active{% endif %}" href="{% url 'tenants:dashboard_siswa' %}"{% if request.resolver_match.url_name == 'dashboard_siswa' or request.resolver_match.url_name == 'capture' %} aria-current="page"{% endif %}><span class="msym" aria-hidden="true">dashboard</span><span>Presensi</span></a>
       <a class="student-nav-item{% if request.resolver_match.url_name == 'history_page' %} is-active{% endif %}" href="{% url 'attendance:history_page' %}"{% if request.resolver_match.url_name == 'history_page' %} aria-current="page"{% endif %}><span class="msym" aria-hidden="true">history</span><span>Riwayat</span></a>
       <a class="student-nav-item{% if request.resolver_match.url_name == 'leave_request_create' %} is-active{% endif %}" href="{% url 'attendance:leave_request_create' %}"{% if request.resolver_match.url_name == 'leave_request_create' %} aria-current="page"{% endif %}><span class="msym" aria-hidden="true">edit_note</span><span>Izin</span></a>
-      <a class="student-nav-item" href="{% url 'tenants:dashboard_siswa' %}#student-info"><span class="msym" aria-hidden="true">badge</span><span>Siswa</span></a>
+      <a class="student-nav-item{% if request.resolver_match.url_name == 'student_profile' %} is-active{% endif %}" href="{% url 'attendance:student_profile' %}"{% if request.resolver_match.url_name == 'student_profile' %} aria-current="page"{% endif %}><span class="msym" aria-hidden="true">person</span><span>Profil</span></a>
     </nav>
   </div>
   {% else %}

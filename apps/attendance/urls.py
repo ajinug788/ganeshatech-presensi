@@ -5,6 +5,7 @@ app_name = "attendance"
 
 urlpatterns = [
     # Siswa
+    path("profil/", views.StudentProfileView.as_view(), name="student_profile"),
     path("students/", views.StudentListView.as_view(), name="student_list"),
     path("students/baru/", views.StudentCreateView.as_view(), name="student_create"),
     path("students/<uuid:pk>/", views.StudentDetailView.as_view(), name="student_detail"),
