@@ -3,17 +3,21 @@
 {% block content %}
 <div class="student-feature-page student-profile-page">
   <section class="student-feature-card student-profile-identity">
+    <div class="student-profile-visual">
     {% if student.profile_photo %}
-      <img class="student-profile-photo" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
+      <a class="student-profile-photo-link" href="{% url 'photos:photo' student.profile_photo_id %}" target="_blank" rel="noopener" aria-label="Lihat foto profil ukuran penuh">
+        <img class="student-profile-photo" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
+      </a>
     {% else %}
       <span class="student-profile-photo student-profile-photo--empty msym" aria-hidden="true">person</span>
     {% endif %}
+      <span class="student-profile-role"><span class="msym" aria-hidden="true">school</span>Siswa</span>
+    </div>
     <div class="student-profile-identity-copy">
       <span class="student-eyebrow">Profil siswa</span>
       <h2>{{ student.full_name }}</h2>
       <p>{{ student.group|default:"Kelas belum diatur" }} · {{ request.organization.name }}</p>
     </div>
-    <span class="student-profile-role"><span class="msym" aria-hidden="true">school</span>Siswa</span>
   </section>
 
   <section class="student-feature-card student-profile-details">

@@ -398,12 +398,15 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-profile-manage .msym { font-size: 16px; }
 .student-profile-page { max-width: 900px; }
 .student-profile-identity { display: flex; align-items: center; gap: 16px; }
+.student-profile-visual { display: grid; flex: 0 0 auto; justify-items: center; gap: 9px; }
+.student-profile-photo-link { display: block; border-radius: 18px; cursor: zoom-in; }
+.student-profile-photo-link:focus-visible { outline: 3px solid #8ba1e0; outline-offset: 3px; }
 .student-profile-photo { width: 78px; height: 78px; flex: 0 0 auto; object-fit: cover; border-radius: 18px; background: #e9edff; }
 .student-profile-photo--empty { display: grid; place-items: center; color: var(--student-primary); font-size: 36px; }
 .student-profile-identity-copy { min-width: 0; }
 .student-profile-identity-copy h2 { margin: 5px 0 3px; color: #18253c; font: 700 20px/1.3 "Plus Jakarta Sans", Inter, sans-serif; }
 .student-profile-identity-copy p { margin: 0; color: var(--student-muted); font-size: 12px; }
-.student-profile-role { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 10px; border-radius: 999px; color: var(--student-primary); background: #eef2ff; font-size: 11px; font-weight: 700; }
+.student-profile-role { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 999px; color: var(--student-primary); background: #eef2ff; font-size: 11px; font-weight: 700; }
 .student-profile-role .msym { font-size: 16px; }
 .student-profile-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .student-profile-detail { display: grid; gap: 5px; min-width: 0; padding: 14px; border: 1px solid #edf0f5; border-radius: 11px; background: #fafbfe; }
@@ -427,7 +430,9 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-profile-identity { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
   .student-profile-photo { width: 62px; height: 62px; border-radius: 15px; }
   .student-profile-identity-copy h2 { font-size: 17px; }
-  .student-profile-role { margin-left: 74px; margin-top: -4px; }
+  .student-profile-visual { gap: 8px; }
+  .student-profile-photo-link { border-radius: 15px; }
+  .student-profile-role { padding: 6px 9px; }
   .student-profile-detail-grid { grid-template-columns: 1fr; gap: 8px; }
   .student-profile-detail { padding: 11px 12px; }
   .student-profile-manage { padding: 8px; font-size: 0; }
