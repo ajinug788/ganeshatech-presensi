@@ -10,7 +10,6 @@
   if (!input || !editor || !canvas || !zoomInput) return;
 
   const form = input.closest("form");
-  const saveButton = form.querySelector('button[type="submit"]');
   const context = canvas.getContext("2d", { alpha: false });
   const targetBytes = 1.5 * 1024 * 1024;
   let sourceImage = null;
@@ -19,8 +18,6 @@
   let crop = null;
   let dragPoint = null;
   let readyToSubmit = false;
-
-  saveButton.disabled = true;
 
   const formatSize = (bytes) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   const clampCrop = () => {
@@ -49,7 +46,6 @@
 
   function beginEditing(file) {
     readyToSubmit = false;
-    saveButton.disabled = true;
     compressedNote.hidden = true;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
     if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -158,7 +154,6 @@
       transfer.items.add(outputFile);
       input.files = transfer.files;
       readyToSubmit = true;
-      saveButton.disabled = false;
       editor.hidden = true;
       resultUrl = URL.createObjectURL(outputFile);
       compressedNote.textContent = `Siap diunggah: ${formatSize(outputFile.size)} (hasil crop otomatis dikompres).`;
@@ -174,7 +169,6 @@
   cancelButton.addEventListener("click", () => {
     input.value = "";
     readyToSubmit = false;
-    saveButton.disabled = true;
     editor.hidden = true;
     compressedNote.hidden = true;
     sourceImage = null;
@@ -188,8 +182,12 @@
   form.addEventListener("submit", (event) => {
     if (!readyToSubmit) {
       event.preventDefault();
-      status.textContent = "Pilih foto, atur crop, lalu gunakan hasil crop sebelum menyimpan.";
+      status.textContent = input.files && input.files.length
+        ? "Atur crop, lalu klik Gunakan hasil crop sebelum menyimpan."
+        : "Pilih foto terlebih dahulu. Setelah itu atur crop dan gunakan hasilnya.";
       editor.hidden = false;
+      if (!input.files || !input.files.length) input.focus();
+      else editor.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   });
 })();
