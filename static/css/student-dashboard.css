@@ -313,6 +313,13 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-feature-card input, .student-feature-card select, .student-feature-card textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #dce1eb; border-radius: 9px; color: #202c42; background: #fff; font: inherit; font-size: 13px; }
 .student-feature-card textarea { min-height: 110px; resize: vertical; }
 .student-leave-page textarea { min-height: 76px; }
+.student-date-control { position: relative; display: flex; align-items: stretch; gap: 8px; }
+.student-date-control > input[type="text"] { min-width: 0; flex: 1; margin: 0; }
+.student-date-picker-button { display: grid; width: 46px; flex: 0 0 46px; place-items: center; border: 1px solid #dce1eb; border-radius: 9px; color: var(--student-primary); background: #f7f8fc; cursor: pointer; }
+.student-date-picker-button:hover { background: #eef2ff; }
+.student-date-picker-button:focus-visible { outline: 3px solid rgb(8 44 122 / 16%); border-color: #7a91d1; }
+.student-date-picker-button .msym { font-size: 20px; }
+.student-date-native-picker { position: absolute !important; left: 0 !important; bottom: 0 !important; width: 1px !important; height: 1px !important; min-height: 1px !important; padding: 0 !important; border: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 .student-feature-card input:focus, .student-feature-card select:focus, .student-feature-card textarea:focus { outline: 3px solid rgb(8 44 122 / 12%); border-color: #7a91d1; }
 .student-feature-card .helptext, .student-feature-card .help-text { color: var(--student-muted); font-size: 11px; font-weight: 400; }
 .student-feature-card ul.errorlist { margin: 0; padding: 0; color: #b4233f; font-size: 11px; font-weight: 500; list-style: none; }

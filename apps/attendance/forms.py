@@ -206,11 +206,29 @@ class LeaveRequestForm(forms.ModelForm):
 
     date_from = forms.DateField(
         label="Tanggal mulai",
-        widget=forms.DateInput(attrs={"type": "date", "lang": "id"}),
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "type": "text",
+                "placeholder": "DD/MM/YYYY",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            },
+        ),
     )
     date_to = forms.DateField(
         label="Tanggal selesai",
-        widget=forms.DateInput(attrs={"type": "date", "lang": "id"}),
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "type": "text",
+                "placeholder": "DD/MM/YYYY",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            },
+        ),
     )
     reason = forms.CharField(
         label="Alasan",

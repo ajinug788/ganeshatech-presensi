@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Ajukan Izin{% endblock %}
 {% block content %}
 <div class="student-feature-page student-leave-page">
@@ -21,4 +22,5 @@
   {% else %}<p>Belum ada pengajuan.</p>{% endif %}
 </section>
 </div>
+<script src="{% static 'js/student-leave-date-picker.js' %}?v=1" defer></script>
 {% endblock %}
