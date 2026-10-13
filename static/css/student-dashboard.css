@@ -17,7 +17,7 @@
 }
 
 * { box-sizing: border-box; }
-html { min-height: 100%; scroll-behavior: smooth; }
+html { min-height: 100%; scroll-behavior: smooth; scrollbar-gutter: stable; }
 body.student-page {
   min-height: 100vh;
   margin: 0;
