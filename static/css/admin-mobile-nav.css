@@ -1,0 +1,72 @@
+/* ============================================================
+   Hamburger sidebar untuk HP (<760px)
+   - Sidebar off-canvas (slide dari kiri, fixed)
+   - Logo "Presensi TeFa" = trigger hamburger
+   - Overlay gelap, ESC & klik overlay menutup
+   - body.sidebar-open mengunci scroll
+   ============================================================ */
+
+@media (max-width: 760px) {
+  /* --- Sidebar jadi off-canvas --- */
+  .sidebar {
+    position: fixed;
+    z-index: 40;
+    top: 0; left: 0; bottom: 0;
+    width: min(80vw, 280px);
+    height: 100vh;
+    min-height: 0;
+    padding: 16px 12px;
+    background: var(--white);
+    border-right: 1px solid var(--line);
+    box-shadow: 0 12px 40px rgb(8 21 49 / 25%);
+    transform: translateX(-102%);
+    transition: transform .28s ease;
+    overflow-y: auto;
+  }
+  body.sidebar-open .sidebar { transform: translateX(0); }
+
+  /* chip organisasi kembali tampil di dalam sidebar */
+  .school-chip { display: flex; }
+
+  /* nav kembali vertikal */
+  .side-nav { display: grid; gap: 4px; margin-top: 12px; overflow: visible; }
+  .nav-link { min-height: 42px; font-size: 13px; }
+  .nav-link > span { font-size: 16px; }
+
+  /* sidebar-bottom tampil lagi di dalam drawer */
+  .sidebar-bottom { display: block; margin-top: 18px; }
+
+  /* --- Overlay --- */
+  .sidebar-overlay {
+    position: fixed; z-index: 39; inset: 0;
+    background: rgb(10 20 40 / 45%);
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
+
+  /* --- Brand = hamburger trigger --- */
+  .brand { cursor: pointer; min-height: 44px; position: relative; }
+  .brand .brand-mark { pointer-events: none; }
+
+  /* Ikon hamburger muncul di kanan logo (hanya mobile) */
+  .brand::after {
+    content: "☰";
+    margin-left: auto;
+    font-size: 18px;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+
+  /* Saat drawer terbuka, ikon jadi tanda tutup */
+  body.sidebar-open .brand::after { content: "×"; font-size: 22px; }
+
+  /* Pastikan konten utama full width di HP */
+  .admin-shell { grid-template-columns: 1fr; }
+}
+
+/* Desktop: overlay & perilaku JS tidak berlaku */
+@media (min-width: 761px) {
+  .sidebar-overlay { display: none; }
+}
