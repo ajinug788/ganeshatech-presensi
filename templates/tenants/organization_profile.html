@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Profil Organisasi{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Organisasi</p><h1>Profil Organisasi</h1></div></div>
+<section class="card" style="max-width:640px">
+  <p><strong>Slug:</strong> {{ organization.slug }} · <strong>Status:</strong> {{ organization.get_status_display }}</p>
+  {% if can_edit %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions"><button class="btn" type="submit">Simpan</button></div>
+  </form>
+  {% else %}
+  <p><strong>Nama:</strong> {{ organization.name }}</p>
+  <p><strong>Zona waktu:</strong> {{ organization.timezone }}</p>
+  <p><strong>Siswa pilih shift sendiri:</strong> {{ organization.settings.allow_self_shift|yesno:"Aktif,Tidak aktif" }}</p>
+  <p class="muted">Hanya admin organisasi yang dapat mengubah profil.</p>
+  {% endif %}
+</section>
+{% endblock %}

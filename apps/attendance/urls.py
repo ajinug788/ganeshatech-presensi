@@ -56,4 +56,14 @@ urlpatterns = [
     # Halaman siswa: wizard absen & riwayat
     path("absen/capture/", views.capture_page, name="capture"),
     path("absen/riwayat/", views.history_page, name="history_page"),
+    # Impor siswa (USER-03)
+    path("students/impor/", views.StudentImportView.as_view(), name="student_import"),
+    path("students/impor/hasil/", views.StudentImportResultView.as_view(), name="student_import_result"),
+    # Pengajuan izin/sakit (ATT-11)
+    path("izin/ajukan/", views.LeaveRequestCreateView.as_view(), name="leave_request_create"),
+    path("izin/tinjau/", views.LeaveReviewListView.as_view(), name="leave_review_list"),
+    path("izin/<uuid:pk>/tinjau/", views.LeaveReviewActionView.as_view(), name="leave_review_action"),
+    # Penugasan pembina (USER-04)
+    path("pembina-penjaga/", views.SupervisorManageView.as_view(), name="supervisor_manage"),
+
 ]

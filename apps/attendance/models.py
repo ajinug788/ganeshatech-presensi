@@ -5,6 +5,7 @@ tenant punya organization FK (ARC-05).
 """
 import uuid
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -454,3 +455,111 @@ class IdempotencyRecord(models.Model):
         return f"{self.endpoint} {self.key}"
 
 
+
+
+class LeaveRequest(models.Model):
+    """Pengajuan izin/sakit siswa (PRD ATT-11)."""
+
+    class Kind(models.TextChoices):
+        SAKIT = "sakit", _("Sakit")
+        IZIN = "izin", _("Izin")
+        DISPENSASI = "dispensasi", _("Dispensasi")
+
+    class Status(models.TextChoices):
+        PENDING = "pending", _("Menunggu")
+        APPROVED = "approved", _("Disetujui")
+        REJECTED = "rejected", _("Ditolak")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="leave_requests",
+        verbose_name=_("organisasi"),
+    )
+    student = models.ForeignKey(
+        StudentProfile,
+        on_delete=models.CASCADE,
+        related_name="leave_requests",
+        verbose_name=_("siswa"),
+    )
+    kind = models.CharField(_("jenis"), max_length=20, choices=Kind.choices)
+    date_from = models.DateField(_("dari tanggal"))
+    date_to = models.DateField(_("sampai tanggal"))
+    reason = models.TextField(_("alasan"))
+    status = models.CharField(
+        _("status"), max_length=20, choices=Status.choices, default=Status.PENDING
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="leave_requests_reviewed",
+        verbose_name=_("ditinjau oleh"),
+    )
+    reviewed_at = models.DateTimeField(_("ditinjau pada"), null=True, blank=True)
+    review_note = models.TextField(_("catatan tinjauan"), blank=True, default="")
+    created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("pengajuan izin")
+        verbose_name_plural = _("pengajuan izin")
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["organization", "status"]),
+            models.Index(fields=["organization", "date_from", "date_to"]),
+        ]
+
+    def __str__(self):
+        return f"{self.student} {self.kind} {self.date_from}..{self.date_to} ({self.status})"
+
+    def clean(self):
+        super().clean()
+        if self.date_from and self.date_to and self.date_from > self.date_to:
+            raise ValidationError(
+                {"date_to": _("Tanggal selesai tidak boleh sebelum tanggal mulai.")}
+            )
+
+
+class SupervisorAssignment(models.Model):
+    """Penugasan pembina menjaga lokasi absensi (PRD USER-04)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="supervisor_assignments",
+        verbose_name=_("organisasi"),
+    )
+    membership = models.ForeignKey(
+        "tenants.Membership",
+        on_delete=models.CASCADE,
+        related_name="supervisor_assignments",
+        verbose_name=_("pembina"),
+        limit_choices_to={"role": "pembina"},
+    )
+    location = models.ForeignKey(
+        AttendanceLocation,
+        on_delete=models.CASCADE,
+        related_name="supervisor_assignments",
+        verbose_name=_("lokasi"),
+    )
+    created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("penugasan pembina")
+        verbose_name_plural = _("penugasan pembina")
+        ordering = ["location__name", "created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["membership", "location"],
+                name="uniq_supervisor_membership_location",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["organization", "location"]),
+        ]
+
+    def __str__(self):
+        return f"{self.membership} @ {self.location}"

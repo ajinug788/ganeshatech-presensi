@@ -244,8 +244,10 @@ from .models import (  # noqa: E402
     AttendanceLocation,
     AttendancePolicy,
     IdempotencyRecord,
+    LeaveRequest,
     Shift,
     StudentProfile,
+    SupervisorAssignment,
 )
 
 # Error code stabil (kontrak API §9/§9.4 — konsisten frontend).
@@ -675,3 +677,317 @@ def attendance_day_snapshot(day):
             str(day.check_out_location_id) if day.check_out_location_id else None
         ),
     }
+
+
+# =====================================================================
+# PRD gaps — impor siswa (USER-03), izin/sakit (ATT-11), penugasan
+# pembina (USER-04), profil organisasi (TEN-06).
+# =====================================================================
+
+import csv  # noqa: E402
+import io  # noqa: E402
+from datetime import date, timedelta  # noqa: E402
+
+IMPORT_FILE_MAX_BYTES = 1 * 1024 * 1024  # 1 MB (USER-03)
+LEAVE_MAX_RANGE_DAYS = 30
+
+
+def parse_student_rows_csv(file_bytes: bytes):
+    """Parse CSV bytes → list of dict baris (1-based) untuk import_students."""
+    text = file_bytes.decode("utf-8-sig", errors="replace")
+    reader = csv.DictReader(io.StringIO(text))
+    rows = []
+    for idx, row in enumerate(reader, start=2):  # baris 1 = header
+        cleaned = {
+            (k or "").strip().lower(): (v or "").strip()
+            for k, v in row.items()
+            if k is not None
+        }
+        rows.append((idx, cleaned))
+    return rows
+
+
+def parse_student_rows_xlsx(file_bytes: bytes):
+    """Parse XLSX via openpyxl bila tersedia; raise ImportError bila tidak."""
+    try:
+        import openpyxl
+    except ImportError as exc:  # pragma: no cover - tergantung env
+        raise ImportError("openpyxl tidak tersedia.") from exc
+    wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
+    ws = wb.active
+    rows_iter = ws.iter_rows(values_only=True)
+    header = None
+    rows = []
+    for idx, values in enumerate(rows_iter, start=1):
+        if header is None:
+            header = [str(v or "").strip().lower() for v in values]
+            continue
+        row = dict(zip(header, values))
+        rows.append((idx, {k: ("" if v is None else str(v).strip()) for k, v in row.items()}))
+    return rows
+
+
+def import_students(*, organization, file_bytes, filename="", actor=None):
+    """Impor siswa dari CSV/XLSX (USER-03). All-or-nothing dalam satu transaksi.
+
+    Return dict ringkasan: created, skipped, errors [{row, message}],
+    accounts_created. Duplikat student_number (dalam file & DB org) dan
+    email duplikat platform-wide → baris dilewati. Bila ada error fatal
+    (header tidak valid, dsb.) seluruh transaksi dibatalkan.
+    """
+    file_bytes = file_bytes or b""
+    if len(file_bytes) > IMPORT_FILE_MAX_BYTES:
+        raise ValueError("Ukuran file melebihi 1 MB.")
+
+    lower = (filename or "").lower()
+    if lower.endswith(".xlsx"):
+        try:
+            rows = parse_student_rows_xlsx(file_bytes)
+        except ImportError:
+            raise ValueError("Impor XLSX tidak tersedia; gunakan CSV.")
+    else:
+        rows = parse_student_rows_csv(file_bytes)
+
+    if not rows:
+        raise ValueError("File kosong atau tidak dapat dibaca.")
+    header = set(rows[0][1].keys())
+    if not {"student_number", "full_name"}.issubset(header):
+        raise ValueError(
+            "Header wajib memuat kolom student_number dan full_name "
+            "(kolom opsional: group, email)."
+        )
+
+    summary = {"created": 0, "skipped": 0, "errors": [], "accounts_created": 0}
+    seen_numbers = set()
+    seen_emails = set()
+
+    with transaction.atomic():
+        existing_numbers = set(
+            organization.students.values_list("student_number", flat=True)
+        )
+        for line_no, row in rows:
+            number = (row.get("student_number") or "").strip()
+            full_name = (row.get("full_name") or "").strip()
+            group = (row.get("group") or "").strip() or None
+            email = (row.get("email") or "").strip().lower() or None
+
+            if not number and not full_name and not email:
+                summary["skipped"] += 1  # baris kosong
+                continue
+            if not number or not full_name:
+                summary["errors"].append(
+                    {"row": line_no, "message": "student_number dan full_name wajib diisi."}
+                )
+                summary["skipped"] += 1
+                continue
+            if number in seen_numbers or number in existing_numbers:
+                summary["errors"].append(
+                    {"row": line_no, "message": f"Nomor induk {number} duplikat."}
+                )
+                summary["skipped"] += 1
+                continue
+            if email:
+                if email in seen_emails or User.objects.filter(email=email).exists():
+                    summary["errors"].append(
+                        {"row": line_no, "message": f"Email {email} sudah terdaftar."}
+                    )
+                    summary["skipped"] += 1
+                    continue
+            # Baris valid → buat (transaksi all-or-nothing dipaksa view).
+            user = None
+            if email:
+                seen_emails.add(email)
+                temp_password = generate_temp_password()
+                user = User.objects.create_user(email, temp_password, email_verified_at=None)
+                Membership.objects.create(
+                    organization=organization, user=user, role=Membership.Role.SISWA
+                )
+                summary["accounts_created"] += 1
+            seen_numbers.add(number)
+            organization.students.create(
+                student_number=number,
+                full_name=full_name,
+                group=group,
+                user=user,
+            )
+            summary["created"] += 1
+
+        catat_audit(
+            action="students_imported",
+            object_type="attendance.StudentProfile",
+            object_id="",
+            organization=organization,
+            actor=actor,
+            metadata={
+                "created": summary["created"],
+                "skipped": summary["skipped"],
+                "accounts_created": summary["accounts_created"],
+                "filename": filename or "",
+            },
+        )
+    return summary
+
+
+def apply_leave_approval(*, leave_request, actor):
+    """Setujui pengajuan izin: tandai AttendanceDay 'excused' (idempoten).
+
+    Satu AttendanceDay per tanggal dalam rentang (maks LEAVE_MAX_RANGE_DAYS),
+    hanya tanggal yang belum punya check-in (tidak menimpa kehadiran nyata).
+    """
+    leave = leave_request
+    leave.status = LeaveRequest.Status.APPROVED
+    leave.reviewed_by = actor
+    leave.reviewed_at = dj_timezone.now()
+    leave.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+
+    org = leave.organization
+    start, end = leave.date_from, leave.date_to
+    if (end - start).days > LEAVE_MAX_RANGE_DAYS:
+        end = start + timedelta(days=LEAVE_MAX_RANGE_DAYS)
+    made_excused = 0
+    d = start
+    while d <= end:
+        day = AttendanceDay.objects.filter(student=leave.student, work_date=d).first()
+        if day is None:
+            AttendanceDay.objects.create(
+                organization=org,
+                student=leave.student,
+                work_date=d,
+                status=AttendanceDay.Status.EXCUSED,
+            )
+            made_excused += 1
+        elif day.check_in_at is None and day.status != AttendanceDay.Status.EXCUSED:
+            day.status = AttendanceDay.Status.EXCUSED
+            day.save(update_fields=["status", "updated_at"])
+            made_excused += 1
+        d += timedelta(days=1)
+
+    catat_audit(
+        action="leave_approved",
+        object_type="attendance.LeaveRequest",
+        object_id=leave.pk,
+        organization=org,
+        actor=actor,
+        metadata={
+            "student_number": leave.student.student_number,
+            "date_from": start.isoformat(),
+            "date_to": end.isoformat(),
+            "kind": leave.kind,
+            "days_excused": made_excused,
+        },
+    )
+    return leave
+
+
+def reject_leave(*, leave_request, actor, review_note=""):
+    """Tolak pengajuan izin; note wajib (divalidasi view/service)."""
+    if not (review_note or "").strip():
+        raise ValueError("Catatan penolakan wajib diisi.")
+    leave = leave_request
+    leave.status = LeaveRequest.Status.REJECTED
+    leave.reviewed_by = actor
+    leave.reviewed_at = dj_timezone.now()
+    leave.review_note = review_note.strip()
+    leave.save(update_fields=["status", "reviewed_by", "reviewed_at", "review_note"])
+    catat_audit(
+        action="leave_rejected",
+        object_type="attendance.LeaveRequest",
+        object_id=leave.pk,
+        organization=leave.organization,
+        actor=actor,
+        metadata={
+            "student_number": leave.student.student_number,
+            "date_from": leave.date_from.isoformat(),
+            "date_to": leave.date_to.isoformat(),
+        },
+        reason=review_note.strip(),
+    )
+    return leave
+
+
+def assign_supervisor(*, organization, membership, location, actor):
+    """Tugaskan pembina (membership role=pembina) ke lokasi (USER-04)."""
+    if membership.organization_id != organization.pk:
+        raise ValueError("Pembina bukan anggota organisasi ini.")
+    if membership.role != Membership.Role.PEMBINA:
+        raise ValueError("Hanya membership ber-role pembina yang bisa ditugaskan.")
+    if location.organization_id != organization.pk:
+        raise ValueError("Lokasi bukan milik organisasi ini.")
+    assignment, created = SupervisorAssignment.objects.get_or_create(
+        organization=organization, membership=membership, location=location
+    )
+    if created:
+        catat_audit(
+            action="supervisor_assigned",
+            object_type="attendance.SupervisorAssignment",
+            object_id=assignment.pk,
+            organization=organization,
+            actor=actor,
+            metadata={
+                "membership_id": str(membership.pk),
+                "user_email": membership.user.email,
+                "location": location.name,
+            },
+        )
+    return assignment, created
+
+
+def unassign_supervisor(*, organization, assignment, actor):
+    """Lepas penugasan pembina dari lokasi."""
+    location_name = assignment.location.name
+    membership = assignment.membership
+    assignment.delete()
+    catat_audit(
+        action="supervisor_unassigned",
+        object_type="attendance.SupervisorAssignment",
+        object_id="",
+        organization=organization,
+        actor=actor,
+        metadata={
+            "membership_id": str(membership.pk),
+            "user_email": membership.user.email,
+            "location": location_name,
+        },
+    )
+
+
+ORG_TIMEZONE_CHOICES = ["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"]
+
+
+def update_organization_profile(*, organization, actor, name=None, timezone=None,
+                                allow_self_shift=None):
+    """Perbarui profil organisasi (TEN-06) + audit field yang berubah."""
+    changed = {}
+    if name is not None:
+        name = (name or "").strip()
+        if not name:
+            raise ValueError("Nama organisasi tidak boleh kosong.")
+        if name != organization.name:
+            changed["name"] = {"old": organization.name, "new": name}
+            organization.name = name
+    if timezone is not None:
+        if timezone not in ORG_TIMEZONE_CHOICES:
+            raise ValueError("Zona waktu tidak valid.")
+        if timezone != organization.timezone:
+            changed["timezone"] = {"old": organization.timezone, "new": timezone}
+            organization.timezone = timezone
+    if allow_self_shift is not None:
+        current = bool(organization.settings.get("allow_self_shift", False))
+        if bool(allow_self_shift) != current:
+            settings_obj = dict(organization.settings or {})
+            settings_obj["allow_self_shift"] = bool(allow_self_shift)
+            organization.settings = settings_obj
+            changed["allow_self_shift"] = {
+                "old": current, "new": bool(allow_self_shift)
+            }
+    if changed:
+        organization.save()
+        catat_audit(
+            action="organization_updated",
+            object_type="tenants.Organization",
+            object_id=organization.pk,
+            organization=organization,
+            actor=actor,
+            metadata={"changed": changed},
+        )
+    return organization, changed

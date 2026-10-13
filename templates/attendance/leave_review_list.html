@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Tinjau Pengajuan Izin{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Absensi</p><h1>Tinjau Pengajuan Izin</h1></div></div>
+<section class="card">
+  <p>Filter:
+    <a href="?">Semua</a> · <a href="?status=pending">Menunggu</a> ·
+    <a href="?status=approved">Disetujui</a> · <a href="?status=rejected">Ditolak</a>
+  </p>
+  {% if object_list %}
+  <table><thead><tr><th>Siswa</th><th>Jenis</th><th>Dari</th><th>Sampai</th><th>Alasan</th><th>Status</th><th>Keputusan</th></tr></thead><tbody>
+  {% for r in object_list %}
+  <tr>
+    <td>{{ r.student.full_name }}</td><td>{{ r.get_kind_display }}</td>
+    <td>{{ r.date_from }}</td><td>{{ r.date_to }}</td><td>{{ r.reason|truncatechars:60 }}</td>
+    <td>{{ r.get_status_display }}{% if r.review_note %} — {{ r.review_note }}{% endif %}</td>
+    <td>
+      {% if r.status == 'pending' %}
+      <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="decision" value="approve">
+        <button class="btn" type="submit">Setujui</button>
+      </form>
+      <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="decision" value="reject">
+        <input type="text" name="review_note" placeholder="Catatan penolakan (wajib)">
+        <button class="btn btn--secondary" type="submit">Tolak</button>
+      </form>
+      {% else %}—{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody></table>
+  {% else %}<p>Belum ada pengajuan.</p>{% endif %}
+</section>
+{% include "attendance/_pagination.html" %}
+{% endblock %}

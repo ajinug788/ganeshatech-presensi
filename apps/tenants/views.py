@@ -183,3 +183,44 @@ class TenantExampleListView(TenantRequiredMixin):
             self.template_name,
             {"membership": self.membership, "role_label": self.membership.get_role_display()},
         )
+
+
+@login_required
+@role_required("admin", "billing", "pembina", "siswa")
+def organization_profile(request):
+    """Profil organisasi (TEN-06): semua role lihat, hanya admin edit."""
+    from apps.attendance.forms import OrganizationProfileForm
+    from apps.attendance.services import update_organization_profile
+
+    org = request.organization
+    editing = request.membership.role == "admin"
+    form = None
+    if editing:
+        initial = {
+            "name": org.name,
+            "timezone": org.timezone,
+            "allow_self_shift": bool(org.settings.get("allow_self_shift", False)),
+        }
+        if request.method == "POST":
+            form = OrganizationProfileForm(request.POST)
+            if form.is_valid():
+                try:
+                    update_organization_profile(
+                        organization=org,
+                        actor=request.user,
+                        name=form.cleaned_data["name"],
+                        timezone=form.cleaned_data["timezone"],
+                        allow_self_shift=form.cleaned_data["allow_self_shift"],
+                    )
+                except ValueError as exc:
+                    form.add_error(None, str(exc))
+                else:
+                    messages.success(request, "Profil organisasi diperbarui.")
+                    return redirect("tenants:organization_profile")
+        else:
+            form = OrganizationProfileForm(initial=initial)
+    return render(
+        request,
+        "tenants/organization_profile.html",
+        {"organization": org, "form": form, "can_edit": editing},
+    )

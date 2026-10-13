@@ -13,4 +13,5 @@ urlpatterns = [
     path("dashboard/pembina/", views.dashboard_pembina, name="dashboard_pembina"),
     path("dashboard/admin/", views.dashboard_admin, name="dashboard_admin"),
     path("tanpa-membership/", views.no_membership, name="no_membership"),
+    path("profil/", views.organization_profile, name="organization_profile"),
 ]

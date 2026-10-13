@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Impor Siswa{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Master siswa</p><h1>Impor Siswa (CSV/XLSX)</h1></div><a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  <p>Kolom wajib: <code>student_number</code>, <code>full_name</code>. Opsional: <code>group</code>, <code>email</code>. Maksimal 1 MB. Baris dengan nomor induk/email duplikat akan dilewati.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions">
+      <button class="btn" type="submit">Unggah</button>
+      <a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">Batal</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

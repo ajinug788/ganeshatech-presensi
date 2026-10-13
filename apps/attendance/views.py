@@ -16,7 +16,9 @@ from django.views.generic import (
     DetailView,
     FormView,
     ListView,
+    TemplateView,
     UpdateView,
+    View,
 )
 
 from apps.audit.services import catat_audit
@@ -40,6 +42,7 @@ from .services import (
     reset_student_password,
     self_assign_shift,
     set_student_account_active,
+    unassign_supervisor,
 )
 
 
@@ -649,3 +652,196 @@ def history_page(request):
     if membership is None:
         return render(request, "tenants/no_membership.html", status=403)
     return render(request, "attendance/history.html")
+
+
+# =====================================================================
+# PRD gaps: impor siswa (USER-03), izin/sakit (ATT-11),
+# penugasan pembina (USER-04).
+# =====================================================================
+
+from .forms import (  # noqa: E402
+    LeaveRequestForm,
+    LeaveReviewForm,
+    StudentImportForm,
+    SupervisorAssignForm,
+)
+from .models import LeaveRequest, SupervisorAssignment  # noqa: E402
+from .services import (  # noqa: E402
+    apply_leave_approval,
+    import_students,
+    reject_leave,
+)
+
+
+class StudentImportView(AdminRequiredMixin, FormView):
+    """Impor siswa CSV/XLSX (USER-03): all-or-nothing + ringkasan hasil."""
+
+    form_class = StudentImportForm
+    template_name = "attendance/student_import.html"
+
+    def get_success_url(self):
+        from django.urls import reverse
+
+        return reverse("attendance:student_import_result")
+
+    def form_valid(self, form):
+        upload = form.cleaned_data["file"]
+        upload.seek(0)
+        file_bytes = upload.read()
+        try:
+            summary = import_students(
+                organization=self.organization,
+                file_bytes=file_bytes,
+                filename=upload.name or "",
+                actor=self.request.user,
+            )
+        except ValueError as exc:
+            form.add_error(None, str(exc))
+            return self.form_invalid(form)
+        self.request.session["import_summary"] = summary
+        return redirect(self.get_success_url())
+
+
+class StudentImportResultView(AdminRequiredMixin, TemplateView):
+    """Halaman ringkasan hasil impor terakhir (dari session)."""
+
+    template_name = "attendance/student_import_result.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        summary = self.request.session.pop("import_summary", None)
+        ctx["summary"] = summary
+        ctx["accounts_note"] = (
+            "Password akun tidak ditampilkan massal; reset password per siswa "
+            "dari halaman detail siswa."
+        )
+        return ctx
+
+
+class LeaveRequestCreateView(RoleRequiredMixin, CreateView):
+    """Siswa mengajukan izin/sakit (ATT-11) — hanya untuk dirinya."""
+
+    allowed_roles = ("siswa", "admin")
+    model = LeaveRequest
+    form_class = LeaveRequestForm
+    template_name = "attendance/leave_request_form.html"
+
+    def get_student(self):
+        student = self.organization.students.filter(user=self.request.user).first()
+        if student is None and self.membership.role == "admin":
+            return None
+        return student
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["my_requests"] = LeaveRequest.objects.filter(
+            organization=self.organization,
+            student__user=self.request.user,
+        ).order_by("-created_at")
+        return ctx
+
+    def form_valid(self, form):
+        student = self.organization.students.filter(user=self.request.user).first()
+        if student is None:
+            raise PermissionDenied("Anda bukan siswa di organisasi ini.")
+        leave = form.save(commit=False)
+        leave.organization = self.organization
+        leave.student = student
+        leave.save()
+        messages.success(self.request, "Pengajuan izin terkirim, menunggu persetujuan.")
+        return redirect("attendance:leave_request_create")
+
+
+class LeaveReviewListView(RoleRequiredMixin, ListView):
+    """Daftar pengajuan izin org (admin/pembina), filter status."""
+
+    allowed_roles = ("admin", "pembina")
+    template_name = "attendance/leave_review_list.html"
+    paginate_by = 20
+
+    def get_queryset(self):
+        qs = LeaveRequest.objects.filter(
+            organization=self.organization
+        ).select_related("student", "reviewed_by")
+        status = self.request.GET.get("status", "").strip()
+        if status in ("pending", "approved", "rejected"):
+            qs = qs.filter(status=status)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["status"] = self.request.GET.get("status", "")
+        return ctx
+
+
+class LeaveReviewActionView(RoleRequiredMixin, View):
+    """APPROVE/REJECT satu pengajuan (POST); siswa tidak bisa (role gate)."""
+
+    allowed_roles = ("admin", "pembina")
+
+    def post(self, request, *args, **kwargs):
+        leave = get_object_or_404(
+            LeaveRequest, pk=kwargs["pk"], organization=self.organization
+        )
+        form = LeaveReviewForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, "; ".join(form.non_field_errors()))
+            return redirect("attendance:leave_review_list")
+        decision = form.cleaned_data["decision"]
+        try:
+            if decision == "approve":
+                apply_leave_approval(leave_request=leave, actor=request.user)
+                messages.success(request, "Pengajuan izin disetujui.")
+            else:
+                reject_leave(
+                    leave_request=leave,
+                    actor=request.user,
+                    review_note=form.cleaned_data["review_note"],
+                )
+                messages.success(request, "Pengajuan izin ditolak.")
+        except ValueError as exc:
+            messages.error(request, str(exc))
+        return redirect("attendance:leave_review_list")
+
+
+class SupervisorManageView(AdminRequiredMixin, TemplateView):
+    """Kelola penugasan pembina per lokasi (USER-04)."""
+
+    template_name = "attendance/supervisor_manage.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["assignments"] = SupervisorAssignment.objects.filter(
+            organization=self.organization
+        ).select_related("membership__user", "location")
+        ctx["form"] = SupervisorAssignForm(organization=self.organization)
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action", "assign")
+        if action == "unassign":
+            assignment = get_object_or_404(
+                SupervisorAssignment, pk=request.POST.get("assignment_pk", ""),
+                organization=self.organization,
+            )
+            unassign_supervisor(
+                organization=self.organization, assignment=assignment, actor=request.user
+            )
+            messages.success(request, "Penugasan pembina dilepas.")
+        else:
+            form = SupervisorAssignForm(request.POST, organization=self.organization)
+            if form.is_valid():
+                try:
+                    assign_supervisor(
+                        organization=self.organization,
+                        membership=form.cleaned_data["membership"],
+                        location=form.cleaned_data["location"],
+                        actor=request.user,
+                    )
+                except ValueError as exc:
+                    messages.error(request, str(exc))
+                else:
+                    messages.success(request, "Pembina ditugaskan ke lokasi.")
+            else:
+                messages.error(request, "Data penugasan tidak valid.")
+        return redirect("attendance:supervisor_manage")

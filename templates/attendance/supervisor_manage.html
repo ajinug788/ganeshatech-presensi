@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Pembina Penjaga{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Pengaturan absensi</p><h1>Pembina Penjaga Lokasi</h1></div><a class="btn btn--secondary" href="{% url 'attendance:location_list' %}">← Kembali</a></div>
+<section class="card" style="max-width:640px">
+  <h2>Tugaskan Pembina</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions"><button class="btn" type="submit">Tugaskan</button></div>
+  </form>
+</section>
+<section class="card">
+  <h2>Penugasan Aktif</h2>
+  {% if assignments %}
+  <table><thead><tr><th>Pembina</th><th>Lokasi</th><th></th></tr></thead><tbody>
+  {% for a in assignments %}
+  <tr><td>{{ a.membership.user.email }}</td><td>{{ a.location.name }}</td>
+    <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="unassign"><input type="hidden" name="assignment_pk" value="{{ a.pk }}"><button class="btn btn--secondary" type="submit">Lepas</button></form></td></tr>
+  {% endfor %}
+  </tbody></table>
+  {% else %}<p>Belum ada penugasan.</p>{% endif %}
+</section>
+{% endblock %}

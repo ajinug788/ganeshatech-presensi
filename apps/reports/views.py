@@ -20,7 +20,12 @@ from django.utils import timezone as dj_timezone
 
 from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
-from apps.attendance.models import AttendanceDay, AttendancePolicy, StudentProfile
+from apps.attendance.models import (
+    AttendanceDay,
+    AttendanceLocation,
+    AttendancePolicy,
+    StudentProfile,
+)
 from apps.tenants.context import RoleRequiredMixin, role_required
 from .forms import AttendanceStatusForm
 
@@ -83,6 +88,13 @@ def build_pembina_context(membership, organization):
     return {
         "membership": membership,
         "today": today,
+        "assigned_locations": (
+            AttendanceLocation.objects.filter(
+                supervisor_assignments__membership=membership
+            ).distinct()
+            if membership.role == "pembina"
+            else AttendanceLocation.objects.none()
+        ),
         "total_siswa": total_siswa,
         "hadir": hadir,
         "terlambat": terlambat,

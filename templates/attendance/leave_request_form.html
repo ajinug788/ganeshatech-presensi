@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Ajukan Izin{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">Absensi</p><h1>Ajukan Izin / Sakit</h1></div></div>
+<section class="card" style="max-width:640px">
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-actions"><button class="btn" type="submit">Kirim Pengajuan</button></div>
+  </form>
+</section>
+<section class="card">
+  <h2>Pengajuan Saya</h2>
+  {% if my_requests %}
+  <table><thead><tr><th>Jenis</th><th>Dari</th><th>Sampai</th><th>Status</th><th>Catatan</th></tr></thead><tbody>
+  {% for r in my_requests %}
+  <tr><td>{{ r.get_kind_display }}</td><td>{{ r.date_from }}</td><td>{{ r.date_to }}</td><td>{{ r.get_status_display }}</td><td>{{ r.review_note }}</td></tr>
+  {% endfor %}
+  </tbody></table>
+  {% else %}<p>Belum ada pengajuan.</p>{% endif %}
+</section>
+{% endblock %}
