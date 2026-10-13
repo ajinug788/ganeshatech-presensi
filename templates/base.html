@@ -9,9 +9,50 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% if request.membership.role == 'admin' %}
+    <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}">
+  {% endif %}
   {% block extra_head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% if request.membership.role == 'admin' %}admin-page {% endif %}{% block body_class %}{% endblock %}">
+  {% if request.membership.role == 'admin' %}
+  <div class="admin-shell">
+    <aside class="sidebar" aria-label="Navigasi utama">
+      <a class="brand" href="{% url 'tenants:dashboard_admin' %}">
+        <span class="brand-mark" aria-hidden="true">PT</span>
+        <span><strong>Presensi TeFa</strong><small>Teaching Factory System</small></span>
+      </a>
+      <div class="school-chip"><span class="status-dot" aria-hidden="true"></span><div><strong>{{ request.organization.name }}</strong><small>Organisasi aktif</small></div></div>
+      <nav class="side-nav" aria-label="Menu admin sekolah">
+        <a class="nav-link{% if request.resolver_match.url_name == 'dashboard_admin' %} is-current{% endif %}" href="{% url 'tenants:dashboard_admin' %}"{% if request.resolver_match.url_name == 'dashboard_admin' %} aria-current="page"{% endif %}><span aria-hidden="true">▦</span>Ringkasan</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'rekap' or request.resolver_match.url_name == 'koreksi' %} is-current{% endif %}" href="{% url 'reports:rekap' %}"{% if request.resolver_match.url_name == 'rekap' or request.resolver_match.url_name == 'koreksi' %} aria-current="page"{% endif %}><span aria-hidden="true">✓</span>Rekap absensi</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_create' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' or request.resolver_match.url_name == 'student_delete' or request.resolver_match.url_name == 'student_account_active' or request.resolver_match.url_name == 'student_reset_password' or request.resolver_match.url_name == 'student_change_email' or request.resolver_match.url_name == 'student_shift' %} is-current{% endif %}" href="{% url 'attendance:student_list' %}"{% if request.resolver_match.url_name == 'student_list' or request.resolver_match.url_name == 'student_create' or request.resolver_match.url_name == 'student_detail' or request.resolver_match.url_name == 'student_update' or request.resolver_match.url_name == 'student_delete' or request.resolver_match.url_name == 'student_account_active' or request.resolver_match.url_name == 'student_reset_password' or request.resolver_match.url_name == 'student_change_email' or request.resolver_match.url_name == 'student_shift' %} aria-current="page"{% endif %}><span aria-hidden="true">♧</span>Master siswa</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'location_list' or request.resolver_match.url_name == 'location_create' or request.resolver_match.url_name == 'location_update' or request.resolver_match.url_name == 'location_delete' %} is-current{% endif %}" href="{% url 'attendance:location_list' %}"{% if request.resolver_match.url_name == 'location_list' or request.resolver_match.url_name == 'location_create' or request.resolver_match.url_name == 'location_update' or request.resolver_match.url_name == 'location_delete' %} aria-current="page"{% endif %}><span aria-hidden="true">⌖</span>Titik geofence</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'riwayat_koreksi' %} is-current{% endif %}" href="{% url 'reports:riwayat_koreksi' %}"{% if request.resolver_match.url_name == 'riwayat_koreksi' %} aria-current="page"{% endif %}><span aria-hidden="true">↶</span>Riwayat koreksi &amp; audit</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'rekap_csv' %} is-current{% endif %}" href="{% url 'reports:rekap_csv' %}"{% if request.resolver_match.url_name == 'rekap_csv' %} aria-current="page"{% endif %}><span aria-hidden="true">⇩</span>Laporan &amp; ekspor CSV</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'shift_list' or request.resolver_match.url_name == 'shift_create' or request.resolver_match.url_name == 'shift_update' or request.resolver_match.url_name == 'shift_delete' or request.resolver_match.url_name == 'student_group_shift' %} is-current{% endif %}" href="{% url 'attendance:shift_list' %}"{% if request.resolver_match.url_name == 'shift_list' or request.resolver_match.url_name == 'shift_create' or request.resolver_match.url_name == 'shift_update' or request.resolver_match.url_name == 'shift_delete' or request.resolver_match.url_name == 'student_group_shift' %} aria-current="page"{% endif %}><span aria-hidden="true">⚙</span>Pengaturan shift</a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'policy' %} is-current{% endif %}" href="{% url 'attendance:policy' %}"{% if request.resolver_match.url_name == 'policy' %} aria-current="page"{% endif %}><span aria-hidden="true">◷</span>Kebijakan organisasi</a>
+      </nav>
+      <div class="sidebar-bottom"><span class="eyebrow">Organisasi</span><strong class="tenant-code">{{ request.organization.slug }}</strong><div class="sidebar-count"><span>Area kerja</span><strong>Admin</strong></div></div>
+    </aside>
+    <div class="page-column">
+      <header class="topbar">
+        <div class="breadcrumb"><strong>Presensi TeFa</strong><span>/</span><span>{{ request.organization.name }}</span></div>
+        <div class="topbar-tools">
+          <div class="clock-chip"><span class="clock-dot" aria-hidden="true"></span><time>{% now "H:i" %} WIB</time></div>
+          <div class="account-chip"><span class="avatar">{{ request.user.get_short_name|default:request.user.email|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.email }}</strong><small>Admin Sekolah</small></span></div>
+          <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="button button-light button-compact" type="submit">Keluar</button></form>
+        </div>
+      </header>
+      <main class="admin-workspace">
+        {% if messages %}<div class="messages" aria-live="polite">{% for message in messages %}<div class="message {{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+        {% block content %}{% endblock %}
+        <footer class="page-footer">Presensi TeFa <span>•</span> Sistem Teaching Factory</footer>
+      </main>
+    </div>
+  </div>
+  {% else %}
   <header class="site-header">
     <a class="brand" href="{% if membership.role == 'siswa' %}/dashboard/siswa/{% elif membership.role == 'pembina' %}/dashboard/pembina/{% elif membership %}/dashboard/admin/{% else %}{{ request.path }}{% endif %}"><span class="brand__mark" aria-hidden="true">T</span>TeFa <span class="text-muted">Presensi</span></a>
     {% if user.is_authenticated %}
@@ -29,5 +70,6 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+  {% endif %}
 </body>
 </html>

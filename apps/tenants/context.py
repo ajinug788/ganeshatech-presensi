@@ -89,6 +89,8 @@ class RoleRequiredMixin(TenantRequiredMixin):
         if self.membership is None:
             raise PermissionDenied("Anda tidak punya keanggotaan organisasi aktif.")
         self.organization = self.membership.organization
+        request.membership = self.membership
+        request.organization = self.organization
         if self.allowed_roles and self.membership.role not in self.allowed_roles:
             raise PermissionDenied("Role Anda tidak memiliki akses ke halaman ini.")
         return super().dispatch(request, *args, **kwargs)
