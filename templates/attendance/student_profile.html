@@ -2,11 +2,6 @@
 {% block title %}Profil Siswa — {{ student.full_name }}{% endblock %}
 {% block content %}
 <div class="student-feature-page student-profile-page">
-  <div class="student-feature-heading">
-    <div><p class="student-eyebrow">Akun siswa</p><h1>Profil Saya</h1><p>Lihat informasi akun dan perbarui foto atau kata sandi.</p></div>
-    <a class="student-feature-back" href="{% url 'tenants:dashboard_siswa' %}"><span class="msym" aria-hidden="true">arrow_back</span>Dashboard</a>
-  </div>
-
   <section class="student-feature-card student-profile-identity">
     {% if student.profile_photo %}
       <img class="student-profile-photo" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
