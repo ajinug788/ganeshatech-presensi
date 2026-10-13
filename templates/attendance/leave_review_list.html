@@ -61,10 +61,10 @@
     {% endif %}
     {% if is_admin and r.status != 'approved' %}
     <div class="lv-archive">
-      <form method="post" action="{% url 'attendance:leave_archive' r.pk %}"
-            onsubmit="return confirm('Arsipkan pengajuan izin ini? Data disembunyikan dari daftar.');">
+      <form method="post" action="{% url 'attendance:leave_delete' r.pk %}"
+            onsubmit="return confirm('Hapus permanen pengajuan izin ini? Data tidak bisa dikembalikan.');">
         {% csrf_token %}
-        <button class="lv-btn lv-btn--archive" type="submit">Hapus (arsip)</button>
+        <button class="lv-btn lv-btn--archive" type="submit">Hapus permanen</button>
       </form>
     </div>
     {% endif %}

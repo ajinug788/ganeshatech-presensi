@@ -879,11 +879,11 @@ def apply_leave_approval(*, leave_request, actor):
     return leave
 
 
-def archive_leave(*, leave_request, actor):
-    """Arsipkan (soft-delete) pengajuan izin — hanya admin, hanya yang belum approved.
+def delete_leave(*, leave_request, actor):
+    """Hapus permanen pengajuan izin — hanya admin, yang belum approved.
 
-    Approved JANGAN diarsipkan: sudah memengaruhi AttendanceDay (excused);
-    batalkan lewat mekanisme tinjauan, bukan arsip.
+    Approved JANGAN dihapus: sudah memengaruhi AttendanceDay (excused);
+    batalkan lewat mekanisme tinjauan, bukan hapus.
     """
     leave = leave_request
     if leave.status == LeaveRequest.Status.APPROVED:
@@ -891,23 +891,24 @@ def archive_leave(*, leave_request, actor):
             "Izin yang sudah disetujui tidak bisa dihapus; "
             "gunakan penolakan/pembatalan tinjauan."
         )
-    leave.archived_at = dj_timezone.now()
-    leave.archived_by = actor
-    leave.save(update_fields=["archived_at", "archived_by"])
+    info = {
+        "student_number": leave.student.student_number,
+        "status": leave.status,
+        "date_from": leave.date_from.isoformat(),
+        "date_to": leave.date_to.isoformat(),
+        "kind": leave.kind,
+        "reason": leave.reason[:200],
+    }
     catat_audit(
-        action="leave_archived",
+        action="leave_deleted",
         object_type="attendance.LeaveRequest",
         object_id=leave.pk,
         organization=leave.organization,
         actor=actor,
-        metadata={
-            "student_number": leave.student.student_number,
-            "status": leave.status,
-            "date_from": leave.date_from.isoformat(),
-            "date_to": leave.date_to.isoformat(),
-        },
+        metadata=info,
     )
-    return leave
+    leave.delete()
+    return info
 
 
 def reject_leave(*, leave_request, actor, review_note=""):

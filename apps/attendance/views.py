@@ -55,7 +55,7 @@ from .services import (
     reset_student_password,
     self_assign_shift,
     set_student_account_active,
-    archive_leave,
+    delete_leave,
     unassign_supervisor,
 )
 
@@ -934,19 +934,19 @@ class LeaveReviewActionView(RoleRequiredMixin, View):
         return redirect("attendance:leave_review_list")
 
 
-class LeaveArchiveView(AdminRequiredMixin, View):
-    """Arsipkan (soft-delete) pengajuan izin — admin saja (POST)."""
+class LeaveDeleteView(AdminRequiredMixin, View):
+    """Hapus permanen pengajuan izin — admin saja (POST)."""
 
     def post(self, request, *args, **kwargs):
         leave = get_object_or_404(
             LeaveRequest, pk=kwargs["pk"], organization=self.organization
         )
         try:
-            archive_leave(leave_request=leave, actor=request.user)
+            delete_leave(leave_request=leave, actor=request.user)
         except ValueError as exc:
             messages.error(request, str(exc))
         else:
-            messages.success(request, "Pengajuan izin diarsipkan (dihapus dari daftar).")
+            messages.success(request, "Pengajuan izin dihapus permanen.")
         return redirect("attendance:leave_review_list")
 
 
