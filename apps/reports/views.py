@@ -21,6 +21,7 @@ from django.utils import timezone as dj_timezone
 from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
 from apps.attendance.models import (
+    AttendanceAttempt,
     AttendanceDay,
     AttendanceLocation,
     AttendancePolicy,
@@ -668,8 +669,47 @@ def _recent_days(org, student, limit=3):
     )
 
 
+def _shift_context(org, ctx, student):
+    """Info shift & toleransi: prioritas SHIFT siswa, fallback policy org.
+
+    ATT-06/GEO-08: bila student.shift aktif, window/toleransi diambil dari
+    shift siswa (bukan policy organisasi). Fallback ke policy bila shift null.
+    """
+    shift = None
+    if student is not None and student.shift_id and student.shift.is_active:
+        shift = student.shift
+    source = shift
+    if shift is None:
+        try:
+            source = org.attendance_policy
+        except Exception:
+            source = None
+    if source is None:
+        ctx["policy_check_in"] = None
+        return ctx
+    ctx["shift_label"] = shift.name if shift else None
+    ctx["policy_check_in"] = source.check_in_start.strftime("%H:%M")
+    ctx["policy_check_out"] = source.check_out_start.strftime("%H:%M")
+    ctx["policy_tolerance"] = source.late_tolerance_min
+    import datetime as _dt
+    base = now_wib().replace(
+        hour=source.check_in_end.hour,
+        minute=source.check_in_end.minute,
+        second=0,
+        microsecond=0,
+    )
+    ctx["policy_tolerance_at"] = (
+        base + _dt.timedelta(minutes=source.late_tolerance_min)
+    ).strftime("%H:%M")
+    return ctx
+
+
 def _policy_context(org, ctx):
-    """Info shift & toleransi dari AttendancePolicy (None-safe)."""
+    """Info shift & toleransi dari AttendancePolicy (None-safe).
+
+    Kompatibilitas lama; build_student_dashboard_context memakai
+    _shift_context yang memprioritaskan shift siswa.
+    """
     try:
         policy = org.attendance_policy
     except Exception:
@@ -714,14 +754,58 @@ def build_student_dashboard_context(membership):
     else:
         ctx["student_name"] = membership.user.get_short_name() or membership.user.email
         ctx["student_group"] = ""
-    ctx = _policy_context(org, ctx)
+    ctx = _shift_context(org, ctx, student)
     if student:
         recent = _recent_days(org, student)
+        # ATT-06: tandai hari yang punya koreksi admin (1 query AuditLog).
+        corrected_ids = set(
+            AuditLog.objects.filter(
+                organization=org,
+                action="attendance_corrected",
+                object_type="attendance.AttendanceDay",
+                object_id__in=[str(d.pk) for d in recent],
+            ).values_list("object_id", flat=True)
+        )
+        for d in recent:
+            d.was_corrected = str(d.pk) in corrected_ids
         ctx["recent_days"] = recent
         ctx["recent_count"] = len(recent)
+        # Kartu pilih shift sendiri (org.settings['allow_self_shift'], tanpa shift).
+        show_self_shift = bool(org.settings.get("allow_self_shift", False)) and not student.shift_id
+        ctx["show_self_shift"] = show_self_shift
+        ctx["self_shift_choices"] = (
+            list(org.shifts.filter(is_active=True)) if show_self_shift else []
+        )
+        # Pengajuan izin/sakit terakhir (ATT-11), maks 3.
+        ctx["my_leave_requests"] = list(
+            student.leave_requests.all().order_by("-created_at")[:3]
+        )
+        # ATT-06: percobaan absen ditolak hari ini (1 query).
+        today = now.date()
+        last_rejected = (
+            AttendanceAttempt.objects.filter(
+                organization=org,
+                student=student,
+                outcome=AttendanceAttempt.Outcome.REJECTED,
+                created_at__gte=today,
+            )
+            .order_by("-created_at")
+            .first()
+        )
+        ctx["rejected_attempt"] = last_rejected
     else:
         ctx["recent_days"] = []
         ctx["recent_count"] = 0
+        ctx["show_self_shift"] = False
+        ctx["self_shift_choices"] = []
+        ctx["my_leave_requests"] = []
+        ctx["rejected_attempt"] = None
+    if student is None:
+        ctx["student_name"] = membership.user.get_short_name() or membership.user.email
+        ctx["student_group"] = ""
+    else:
+        ctx["student_name"] = student.full_name
+        ctx["student_group"] = student.group or ""
     total = ctx["month_present"] + ctx["month_late"] + ctx["month_absent"] + ctx["month_excused"]
     ctx["month_total"] = total
     ctx["discipline_pct"] = round(100 * ctx["month_present"] / total) if total else 100

@@ -83,7 +83,7 @@
   <!-- Sapaan & waktu -->
   <div>
     <div class="flex" style="display:flex;justify-content:space-between;align-items:center;">
-      <span class="chip"><span class="dot"></span> Server Sinkron NTP</span>
+      <span class="chip"><span class="dot"></span> Waktu Server</span>
       <span class="dateline" style="margin:0;"><span class="msym" style="font-size:15px;color:var(--info);">schedule</span> {{ now_time }} WIB</span>
     </div>
     <h2 class="hello">{{ greeting }}, {{ student_name }}</h2>
@@ -109,6 +109,11 @@
 
     {% if policy_check_in %}
     <div class="shift-box">
+      {% if shift_label %}
+      <div class="shift-row">
+        <span class="k"><span class="msym" style="font-size:16px;">workspaces</span> Shift: {{ shift_label }}</span>
+      </div>
+      {% endif %}
       <div class="shift-row">
         <span class="k"><span class="msym" style="font-size:16px;">timer</span> Jam Kerja Shift</span>
         <span class="v">{{ policy_check_in }} – {{ policy_check_out }} WIB</span>
@@ -135,6 +140,63 @@
         <button class="btn-ghost" type="button" disabled><span class="msym">logout</span> Absen Pulang (aktif setelah absen masuk)</button>
       {% endif %}
     </div>
+  </div>
+
+  <!-- Peringatan percobaan absen ditolak (ATT-06) -->
+  {% if rejected_attempt %}
+  <div class="k3" style="background:var(--err-s);">
+    <span class="msym" style="color:var(--err);">warning</span>
+    <p style="margin:0;">Ada percobaan absen perlu perhatian — alasan terakhir: <strong>{{ rejected_attempt.error_code|default:"tidak diketahui" }}</strong></p>
+  </div>
+  {% endif %}
+
+  <!-- Kartu pilih shift sendiri (allow_self_shift) -->
+  {% if show_self_shift and self_shift_choices %}
+  <div class="main-card">
+    <div class="card-head">
+      <div><span class="label">Pilih Shift</span><br>
+        <span style="font-size:.88rem;color:var(--muted);">Kamu belum punya shift. Pilih salah satu:</span></div>
+      <div class="icon-box"><span class="msym" style="font-size:24px;">schedule</span></div>
+    </div>
+    <form method="post" action="{% url 'attendance:shift_self_select' %}">
+      {% csrf_token %}
+      {% for s in self_shift_choices %}
+      <button type="submit" name="shift" value="{{ s.pk }}" class="link-all" style="margin-bottom:8px;">
+        <span>{{ s.name }} ({{ s.check_in_start|time:"H:i" }}–{{ s.check_out_start|time:"H:i" }})</span>
+        <span class="msym" style="font-size:18px;">arrow_forward</span>
+      </button>
+      {% endfor %}
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Izin & Sakit (ATT-11) -->
+  <div class="main-card">
+    <div class="card-head">
+      <div><span class="label">Izin &amp; Sakit</span><br>
+        <span style="font-size:.88rem;color:var(--muted);">Ajukan izin/sakit bila tidak bisa absen.</span></div>
+      <div class="icon-box"><span class="msym" style="font-size:24px;">assignment</span></div>
+    </div>
+    <a class="btn-main" href="{% url 'attendance:leave_request_create' %}"><span class="msym">edit_note</span> Ajukan Izin / Sakit</a>
+    {% if my_leave_requests %}
+    <div class="hist">
+      {% for lr in my_leave_requests %}
+      <div class="hist-item">
+        <div class="hist-top">
+          <span class="date">{{ lr.date_from|date:"d N Y" }}{% if lr.date_to != lr.date_from %} – {{ lr.date_to|date:"d N Y" }}{% endif %}</span>
+          {% if lr.status == "pending" %}
+            <span class="badge badge--belum" style="margin:0;"><span class="dot"></span> Menunggu</span>
+          {% elif lr.status == "approved" %}
+            <span class="badge badge--masuk" style="margin:0;"><span class="dot"></span> Disetujui</span>
+          {% else %}
+            <span class="badge" style="margin:0;background:var(--err-s);color:var(--err);"><span class="dot" style="background:var(--err);"></span> Ditolak</span>
+          {% endif %}
+        </div>
+        <span style="font-size:.8rem;color:var(--muted);">{{ lr.get_kind_display }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
 
   <!-- Rekap bulan berjalan -->
@@ -184,6 +246,9 @@
             <span class="badge badge--masuk" style="margin:0;"><span class="dot"></span> Tepat Waktu</span>
           {% endif %}
         </div>
+        {% if day.was_corrected %}
+        <span class="badge" style="margin:0;background:var(--info-s);color:var(--info);font-size:.72rem;"><span class="dot" style="background:var(--info);"></span> Dikoreksi admin</span>
+        {% endif %}
         <div class="hist-times">
           <span class="{% if day.status == 'late' %}late{% endif %}"><span class="msym" style="font-size:16px;{% if day.status == 'late' %}color:var(--warn);{% else %}color:var(--p);{% endif %}">login</span> {{ day.check_in_at|localtime_wib }} WIB</span>
           <span><span class="msym" style="font-size:16px;color:#757682;">logout</span> {{ day.check_out_at|localtime_wib }} WIB</span>

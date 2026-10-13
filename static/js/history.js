@@ -62,6 +62,18 @@ async function load() {
       badge.textContent = r.status === 'late' && r.late_minutes ? `Terlambat ${r.late_minutes} mnt` : label;
       st.append(badge);
       row.append(st);
+      const foto = document.createElement('td');
+      if (r.check_in_media_id) {
+        const link = document.createElement('a');
+        link.href = `/photos/${r.check_in_media_id}/`;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = 'Lihat foto';
+        foto.append(link);
+      } else {
+        foto.textContent = '—';
+      }
+      row.append(foto);
       tbody.append(row);
     }
     const start = total ? (page - 1) * (data.page_size ?? 8) + 1 : 0;
