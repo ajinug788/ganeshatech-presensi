@@ -47,11 +47,6 @@
       </header>
       <main class="admin-workspace">
         {% if messages %}<div class="messages" aria-live="polite">{% for message in messages %}<div class="message {{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}</div>{% endif %}
-        {% block content %}{% endblock %}
-        <footer class="page-footer">Presensi TeFa <span>•</span> Sistem Teaching Factory</footer>
-      </main>
-    </div>
-  </div>
   {% else %}
   <header class="site-header">
     <a class="brand" href="{% if membership.role == 'siswa' %}/dashboard/siswa/{% elif membership.role == 'pembina' %}/dashboard/pembina/{% elif membership %}/dashboard/admin/{% else %}{{ request.path }}{% endif %}"><span class="brand__mark" aria-hidden="true">T</span>TeFa <span class="text-muted">Presensi</span></a>
@@ -68,7 +63,14 @@
         <div class="message message--{{ message.tags }}" role="status">{{ message }}</div>
       {% endfor %}
     {% endif %}
-    {% block content %}{% endblock %}
+  {% endif %}
+  {% block content %}{% endblock %}
+  {% if request.membership.role == 'admin' %}
+        <footer class="page-footer">Presensi TeFa <span>•</span> Sistem Teaching Factory</footer>
+      </main>
+    </div>
+  </div>
+  {% else %}
   </main>
   {% endif %}
 </body>
