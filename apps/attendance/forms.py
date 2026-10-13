@@ -55,7 +55,7 @@ class StudentProfilePhotoForm(forms.Form):
         label="Foto profil",
         required=False,
         widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
-        help_text="JPG, PNG, atau WebP. Maksimal 2 MB.",
+        help_text="JPG, PNG, atau WebP. Foto akan di-crop dan dikompres otomatis.",
     )
 
 

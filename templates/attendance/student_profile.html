@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Profil Siswa — {{ student.full_name }}{% endblock %}
 {% block content %}
 <div class="student-feature-page student-profile-page">
@@ -41,6 +42,17 @@
         {% if photo_form.photo.help_text %}<small>{{ photo_form.photo.help_text }}</small>{% endif %}
         {% for error in photo_form.photo.errors %}<small class="student-profile-error">{{ error }}</small>{% endfor %}
       </div>
+      <div class="student-photo-editor" id="student-photo-editor" hidden>
+        <div class="student-photo-editor-copy"><strong>Atur potongan foto</strong><small>Geser foto di dalam kotak dan atur perbesarannya. Hasil akan dikompres otomatis.</small></div>
+        <canvas id="student-photo-canvas" width="640" height="640" role="img" aria-label="Pratinjau crop foto profil"></canvas>
+        <label class="student-photo-zoom" for="student-photo-zoom">Perbesaran <input id="student-photo-zoom" type="range" min="1" max="3" step="0.01" value="1"></label>
+        <p class="student-photo-editor-status" id="student-photo-editor-status" role="status" aria-live="polite"></p>
+        <div class="student-profile-form-actions">
+          <button class="btn btn--secondary" id="student-photo-cancel" type="button">Pilih ulang</button>
+          <button class="btn" id="student-photo-apply" type="button">Gunakan hasil crop</button>
+        </div>
+      </div>
+      <p class="student-photo-compressed-note" id="student-photo-compressed-note" hidden></p>
       <div class="student-profile-form-actions"><button class="btn" type="submit">Simpan foto</button></div>
     </form>
     {% if student.profile_photo %}
@@ -61,4 +73,5 @@
     </form>
   </section>
 </div>
+<script src="{% static 'js/student-profile.js' %}" defer></script>
 {% endblock %}

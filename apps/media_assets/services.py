@@ -122,6 +122,9 @@ def normalize_image(django_file, *, max_upload_mb=None, max_pixels=None):
 
     if django_file is None:
         raise ValueError(PHOTO_REQUIRED)
+    # Reject oversized uploads before reading a second full copy into memory.
+    if getattr(django_file, "size", 0) > max_bytes:
+        raise ValueError(PHOTO_TOO_LARGE)
     data = django_file.read()
     if not data:
         raise ValueError(PHOTO_REQUIRED)
