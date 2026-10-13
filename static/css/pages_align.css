@@ -1,0 +1,103 @@
+/* ============================================================
+   pages-align.css — SAMAKAN SEMUA HALAMAN ADMIN DENGAN RINGKASAN
+   Menerapkan design token Ringkasan (v2–v4) ke .admin-workspace
+   yang dipakai halaman selain dashboard: Rekap, Master siswa,
+   Titik geofence, Shift, Kebijakan, Riwayat koreksi, Tinjau izin,
+   form-form detail.
+   ============================================================ */
+:root {
+  --sp-1: 8px; --sp-2: 12px; --sp-3: 16px; --sp-4: 24px;
+  --radius: 12px; --radius-sm: 8px;
+  --line-soft: #e6eaf2;
+  --text-1: #16233c; --text-2: #46536b; --text-3: #6b7790;
+}
+
+/* --- Ritme vertikal halaman: gap seragam seperti Ringkasan --- */
+.admin-workspace { display: flex; flex-direction: column; gap: var(--sp-4); }
+.admin-workspace > .page-heading { margin: 0; }
+.admin-workspace .messages { margin: 0; }
+
+/* --- Satu gaya kartu = gaya panel Ringkasan --- */
+.admin-workspace .card {
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(22 35 60 / 4%);
+}
+
+/* --- Tipografi = Ringkasan --- */
+.admin-workspace .eyebrow { font-size: 10px; letter-spacing: .09em; color: #4d6398; }
+.admin-workspace h1 { font-size: clamp(22px, 2vw, 27px); }
+.admin-workspace h2 { font-size: 18px; }
+.admin-workspace .page-heading .text-muted,
+.admin-workspace .muted { font-size: 12px; color: var(--text-3); }
+
+/* --- Tabel = gaya aktivitas presensi Ringkasan --- */
+.admin-workspace .table,
+.admin-workspace table.w-full { font-size: 13px; min-width: 0; }
+.admin-workspace .table th,
+.admin-workspace table.w-full th { font-size: 10px; padding: 10px 12px; }
+.admin-workspace .table td,
+.admin-workspace table.w-full td { padding: 12px; color: var(--text-2); }
+.admin-workspace .table tbody tr:hover,
+.admin-workspace table.w-full tbody tr:hover { background: #fafbfe; }
+.admin-workspace .table-wrap { border: 1px solid var(--line-soft); border-radius: var(--radius-sm); }
+
+/* --- Form & filter: konsisten radius/ukuran --- */
+.admin-workspace .filters { gap: 10px; margin: 0; align-items: end; }
+.admin-workspace input,
+.admin-workspace select,
+.admin-workspace .filters select,
+.admin-workspace textarea {
+  margin: 0;
+  border: 1px solid #dce2ed;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  min-height: 40px;
+}
+.admin-workspace label { font-size: 11px; color: var(--text-2); }
+.admin-workspace textarea { min-height: 88px; }
+
+/* --- Tombol = .button Ringkasan --- */
+.admin-workspace .btn,
+.admin-workspace button.btn {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-workspace .btn--secondary { border: 1px solid #e2e7ef; color: var(--text-2); background: #fff; }
+.admin-workspace .toolbar { gap: 8px; margin: 0; }
+
+/* --- Badge & pesan --- */
+.admin-workspace .badge { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
+.admin-workspace .message { padding: 10px 13px; border-radius: var(--radius-sm); font-size: 12.5px; }
+
+/* --- Pagination & empty state --- */
+.admin-workspace .pagination { font-size: 12px; }
+.admin-workspace .pagination a,
+.admin-workspace .pagination__actions .btn { min-height: 34px; border-radius: var(--radius-sm); }
+.admin-workspace .empty-state { padding: 24px 12px; border-color: #d5dce8; border-radius: var(--radius-sm); }
+.admin-workspace .empty-state strong { font-size: 13px; }
+
+/* --- Detail page (student_detail dll): grid meta rapi --- */
+.admin-workspace dl,
+.admin-workspace .detail-grid { display: grid; gap: 8px; }
+
+/* --- Avatar foto siswa di tabel Ringkasan-style --- */
+.admin-workspace .initials {
+  display: inline-grid; place-items: center;
+  border-radius: 10px; color: #fff; background: #244b9b;
+  font-size: 12px; font-weight: 800;
+}
+
+/* --- Mobile: ritme sama --- */
+@media (max-width: 840px) {
+  .admin-workspace { padding: 18px 20px; gap: var(--sp-3); }
+}
+@media (max-width: 760px) {
+  .admin-workspace { padding: 16px 13px 18px; gap: var(--sp-3); }
+}

@@ -1,0 +1,28 @@
+/* Hamburger + drawer utk halaman admin non-dashboard (base.html, .topbar) */
+.admin-nav-toggle {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  border: 1px solid #e2e7ef; border-radius: 10px;
+  background: #fff; cursor: pointer;
+}
+.admin-nav-toggle .bars { display: inline-flex; flex-direction: column; gap: 3.5px; }
+.admin-nav-toggle .bars i { width: 16px; height: 2px; border-radius: 2px; background: #102f78; }
+.nav-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 90;
+  background: rgb(15 25 45 / 45%);
+}
+@media (max-width: 840px) {
+  .admin-page .admin-nav-toggle { display: inline-flex; }
+  .admin-page .admin-shell > .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    width: min(78vw, 300px);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+    box-shadow: 0 12px 40px rgb(15 25 45 / 25%);
+  }
+  .admin-page.nav-open .admin-shell > .sidebar { transform: translateX(0); }
+  .admin-page.nav-open .nav-overlay { display: block; }
+}

@@ -12,6 +12,8 @@
   {% if request.membership.role == 'admin' %}
     <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}">
+    <link rel="stylesheet" href="{% static 'css/pages-align.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/base-hamburger.css' %}?v=3">
   {% elif request.membership.role == 'siswa' %}
     <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=10">
   {% endif %}
@@ -47,6 +49,7 @@
       <header class="topbar">
         <div class="breadcrumb"><strong>Presensi TeFa</strong><span>/</span><span>{{ request.organization.name }}</span></div>
         <div class="topbar-tools">
+          <button type="button" class="admin-nav-toggle" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="sidebar-admin"><span class="bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
           <div class="clock-chip"><span class="clock-dot" aria-hidden="true"></span><time>{% now "H:i" %} WIB</time></div>
           <div class="account-chip"><span class="avatar">{{ request.user.get_short_name|default:request.user.email|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.email }}</strong><small>Admin Sekolah</small></span></div>
           <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="button button-light button-compact" type="submit">Keluar</button></form>
@@ -94,7 +97,7 @@
     <a class="brand" href="{% if membership.role == 'siswa' %}/dashboard/siswa/{% elif membership.role == 'pembina' %}/dashboard/pembina/{% elif membership %}/dashboard/admin/{% else %}{{ request.path }}{% endif %}"><span class="brand__mark" aria-hidden="true">T</span>TeFa <span class="text-muted">Presensi</span></a>
     {% if user.is_authenticated %}
       <div class="header-right">
-        <nav class="site-nav" aria-label="Navigasi utama">{% block nav %}{% endblock %}</nav>
+                <nav class="site-nav" aria-label="Navigasi utama">{% block nav %}{% endblock %}</nav>
         <div class="user-chip"><span class="avatar" aria-hidden="true">{{ user.email|first|upper }}</span><span class="user-chip__name">{{ user.email }}</span></div>
       </div>
     {% endif %}
@@ -125,5 +128,25 @@
   {% else %}
   </main>
   {% endif %}
+
+<script>
+  (function () {
+    var btn = document.querySelector('.topbar .admin-nav-toggle');
+    var sidebar = document.querySelector('.admin-shell > .sidebar');
+    if (!btn || !sidebar) return;
+    var overlay = document.createElement('div');
+    overlay.className = 'nav-overlay';
+    document.body.appendChild(overlay);
+    function set(open) {
+      document.body.classList.toggle('nav-open', open);
+      btn.setAttribute('aria-expanded', String(open));
+    }
+    btn.addEventListener('click', function () { set(!document.body.classList.contains('nav-open')); });
+    overlay.addEventListener('click', function () { set(false); });
+    sidebar.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+    document.addEventListener('turbo:load', function () { set(false); });
+  })();
+</script>
 </body>
 </html>
