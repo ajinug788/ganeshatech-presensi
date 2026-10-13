@@ -20,7 +20,8 @@
     background: var(--white, #fff);
     box-shadow: 0 12px 40px rgb(15 25 45 / 25%);
   }
-  .admin-page.nav-open .admin-shell > .sidebar { transform: translateX(0); }
+  .admin-page.nav-open .admin-shell > .sidebar,
+.admin-page.sidebar-open .admin-shell > .sidebar { transform: translateX(0); }
 
   .admin-page .school-chip,
   .admin-page .sidebar-bottom { display: block; }
@@ -71,6 +72,7 @@
 .drawer-close:hover { color: #102f78; background: #f4f6fa; }
 @media (max-width: 760px) {
   .admin-page .admin-shell > .sidebar .drawer-close { display: inline-flex; }
+  .admin-page:not(.nav-open):not(.sidebar-open) .admin-shell > .sidebar .drawer-close { visibility: hidden; }
 }
 
 

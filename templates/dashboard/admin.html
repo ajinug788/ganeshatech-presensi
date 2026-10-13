@@ -13,12 +13,13 @@
   <link rel="stylesheet" href="{% static 'css/admin-mobile-nav.css' %}">
   <link rel="stylesheet" href="{% static 'css/admin-mobile-nav-v2.css' %}">
   <link rel="stylesheet" href="{% static 'css/admin-badge.css' %}">
+  <link rel="stylesheet" href="{% static 'css/drawer-fix.css' %}?v={% static_v 'css/drawer-fix.css' %}">
   <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
   <style>
     .turbo-progress-bar { height: 3px; background: linear-gradient(90deg,#4f8bff,#7fb2ff); box-shadow: 0 0 8px rgb(79 139 255 / 60%); }
   </style>
 </head>
-<body>
+<body class="admin-page">
   <div class="admin-shell">
     <aside class="sidebar" id="admin-sidebar" aria-label="Navigasi utama">
         <button type="button" class="drawer-close" aria-label="Tutup menu navigasi">&times;</button>
