@@ -72,3 +72,13 @@
 @media (max-width: 760px) {
   .admin-page .admin-shell > .sidebar .drawer-close { display: inline-flex; }
 }
+
+
+/* FIX: hover tidak boleh mengubah warna teks menu AKTIF (teks putih
+   berubah navy saat hover → seolah hilang di latar biru) */
+.admin-page .side-nav .nav-link.is-current:hover,
+.admin-page .side-nav .nav-link.is-current:hover > span,
+.admin-page .side-nav .nav-link.is-current:focus-visible {
+  color: var(--white, #fff) !important;
+  background: #102f78;
+}
