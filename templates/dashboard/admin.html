@@ -1,4 +1,4 @@
-{% load static %}
+{% load static static_v %}
 <!doctype html>
 <html lang="id">
 <head>
@@ -209,6 +209,6 @@
     </form>
   </div>
   {% endif %}
-  <script src="{% static 'js/school-admin-dashboard.js' %}" defer></script>
+  <script src="{% static 'js/school-admin-dashboard.js' %}?v={% static_v 'js/school-admin-dashboard.js' %}" defer></script>
 </body>
 </html>

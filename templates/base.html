@@ -1,4 +1,4 @@
-{% load static %}
+{% load static static_v %}
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -8,10 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/icons.css' %}?v={% static_v 'css/icons.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}?v={% static_v 'css/base.css' %}">
   {% if request.membership.role == 'admin' %}
-    <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}">
+    <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}?v={% static_v 'css/school-admin-dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}?v={% static_v 'css/school-admin-pages.css' %}">
   {% endif %}
   {% block extra_head %}{% endblock %}
 </head>
