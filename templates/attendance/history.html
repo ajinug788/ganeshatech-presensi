@@ -12,5 +12,5 @@
   <div class="pagination"><span id="hist-count">—</span><div class="pagination__actions"><button class="btn btn--secondary" id="hist-prev" type="button" disabled>← Sebelumnya</button><button class="btn btn--secondary" id="hist-next" type="button" disabled>Berikutnya →</button></div></div>
 </section>
 </div>
-<script type="module" src="{% static 'js/history.js' %}"></script>
+<script type="module" src="{% static 'js/history.js' %}?v={% static_v 'js/history.js' %}"></script>
 {% endblock %}

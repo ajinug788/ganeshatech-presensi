@@ -69,8 +69,8 @@
   </div>
 </div>
 
-{% load static %}
-<script type="module" src="{% static 'js/dashboard.js' %}"></script>
+{% load static static_v %}
+<script type="module" src="{% static 'js/dashboard.js' %}?v={% static_v 'js/dashboard.js' %}"></script>
 {% endblock %}
 
 <script>
