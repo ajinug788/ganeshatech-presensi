@@ -24,7 +24,7 @@
   <section class="student-feature-card student-profile-details">
     <div class="student-feature-section-head"><div><h2>Informasi akun</h2><p>Email dipakai untuk masuk ke Presensi TeFa.</p></div><span class="student-feature-icon msym" aria-hidden="true">verified_user</span></div>
     <div class="student-profile-detail-grid">
-      <div class="student-profile-detail"><span>Alamat email</span><strong>{{ request.user.email }}</strong><small>Email dikelola bersama akun sekolah.</small></div>
+      <div class="student-profile-detail"><span>Alamat email</span><strong>{{ request.user.email }}</strong></div>
       <div class="student-profile-detail"><span>Nomor induk siswa</span><strong>{{ student.student_number }}</strong></div>
       <div class="student-profile-detail"><span>Jadwal shift</span><strong>{{ student.shift.name|default:"Mengikuti kebijakan sekolah" }}</strong></div>
     </div>
