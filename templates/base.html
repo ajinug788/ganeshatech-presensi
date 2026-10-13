@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}">
   {% elif request.membership.role == 'siswa' %}
-    <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=8">
   {% endif %}
   {% block extra_head %}{% endblock %}
   <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
@@ -112,7 +112,6 @@
     </div>
   </div>
   {% elif request.membership.role == 'siswa' %}
-        <footer class="student-footer">TeFa Presensi <span>•</span> Data kehadiran siswa</footer>
       </main>
     </div>
     <nav class="student-bottom-nav" aria-label="Navigasi siswa">
