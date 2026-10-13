@@ -204,13 +204,40 @@ class StudentImportForm(forms.Form):
 class LeaveRequestForm(forms.ModelForm):
     """Pengajuan izin/sakit siswa (ATT-11); siswa hanya untuk dirinya."""
 
+    date_from = forms.DateField(
+        label="Tanggal mulai",
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "type": "text",
+                "placeholder": "DD/MM/YYYY",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            },
+        ),
+    )
+    date_to = forms.DateField(
+        label="Tanggal selesai",
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "type": "text",
+                "placeholder": "DD/MM/YYYY",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            },
+        ),
+    )
+    reason = forms.CharField(
+        label="Alasan",
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
     class Meta:
         model = LeaveRequest
         fields = ["kind", "date_from", "date_to", "reason"]
-        widgets = {
-            "date_from": forms.DateInput(attrs={"type": "date"}),
-            "date_to": forms.DateInput(attrs={"type": "date"}),
-        }
 
     def clean(self):
         cleaned = super().clean()
