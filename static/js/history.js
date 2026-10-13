@@ -349,14 +349,24 @@ if (pageRoot) {
     typeInput.value = query.get('type') === 'weekly' ? 'weekly' : 'monthly';
     sortInput.value = query.get('sort') === 'newest' ? 'newest' : 'oldest';
     const requestedPeriod = query.get('period') || query.get('month') || '';
-    let latestDate = '';
     if (!requestedPeriod) {
       try {
-        const latest = await fetchRecords({ page_size: '1', sort: 'newest' });
-        latestDate = latest?.results?.[0]?.work_date || '';
-      } catch { /* Keep the most recent available period as the default. */ }
+        const latest = await fetchRecords({ page_size: '50', sort: 'newest' });
+        if (!latest) return;
+        const records = latest.results || [];
+        const latestDate = records[0]?.work_date || '';
+        populatePeriods(typeInput.value, '', latestDate);
+        updateListUrl();
+
+        const range = periodRange();
+        const periodRecords = range
+          ? records.filter((record) => record.work_date >= range.start && record.work_date <= range.end)
+          : [];
+        renderPeriod(periodRecords);
+        return;
+      } catch { /* Fall back to loading the selected period directly. */ }
     }
-    populatePeriods(typeInput.value, requestedPeriod, latestDate);
+    populatePeriods(typeInput.value, requestedPeriod);
     updateListUrl();
     await loadPeriod();
   }
