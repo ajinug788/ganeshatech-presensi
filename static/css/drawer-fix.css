@@ -1,0 +1,58 @@
+/* ============================================================
+   FIX: sidebar drawer mobile — batalkan tab-strip lama
+   (school-admin-dashboard.css @760px membuat .side-nav flex-row
+   + .nav-link flex:0 0 auto → menu aktif menyusut, teks hilang)
+   ============================================================ */
+@media (max-width: 760px) {
+  /* Sidebar sebagai off-canvas drawer: isi tetap vertikal penuh */
+  .admin-page .admin-shell > .sidebar,
+  body.admin-page .admin-shell > .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    width: min(80vw, 300px);
+    height: 100%;
+    min-height: 0;
+    padding: 16px 14px;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform .22s ease;
+    background: var(--white, #fff);
+    box-shadow: 0 12px 40px rgb(15 25 45 / 25%);
+  }
+  .admin-page.nav-open .admin-shell > .sidebar { transform: translateX(0); }
+
+  .admin-page .school-chip,
+  .admin-page .sidebar-bottom { display: block; }
+
+  .admin-page .side-nav {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 3px;
+    overflow: visible;
+    margin-top: 12px;
+    padding-bottom: 0;
+  }
+  .admin-page .side-nav .nav-link {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 10px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    border-radius: 9px;
+  }
+  .admin-page .side-nav .nav-link > span:first-child { font-size: 16px; flex: 0 0 auto; }
+
+  /* Indikator aktif lebih jelas: aksen kiri + bg */
+  .admin-page .side-nav .nav-link.is-current {
+    background: #102f78;
+    box-shadow: inset 3px 0 0 #7ea1ff;
+  }
+
+  /* Sidebar brand & chip rapikan di drawer */
+  .admin-page .sidebar .brand { min-height: 40px; margin-bottom: 8px; }
+}
