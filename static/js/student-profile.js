@@ -41,7 +41,7 @@
   let readyToSubmit = false;
 
   document.querySelectorAll(".student-message--success").forEach((message) => {
-    window.setTimeout(() => message.remove(), 5000);
+    window.setTimeout(() => message.remove(), 3000);
   });
 
   const formatSize = (bytes) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
