@@ -79,7 +79,7 @@
 .lv-reject[open] > summary { background: #fdeceb; border-color: #e5b3b0; }
 .lv-reject[open] > summary .lv-ico { transform: rotate(90deg); }
 .lv-reject-form {
-  grid-column: 1 / -1;
+  flex: 1 1 100%;       /* turun ke baris baru di bawah tombol Setujui/Tolak */
   display: grid; gap: 9px; width: 100%; max-width: 640px;
   padding: 14px; box-sizing: border-box;
   border: 1px solid #eccfcd; border-left: 3px solid #d9645f; border-radius: 10px;

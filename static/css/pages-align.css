@@ -109,6 +109,18 @@
 }
 
 /* Samakan eyebrow & tombol dgn Ringkasan */
-.admin-page .admin-workspace .eyebrow { font-size: 10px; }
+.admin-page .admin-workspace .page-heading .eyebrow,
+.admin-page .admin-workspace .eyebrow { font-size: 10px !important; }
 .admin-page .admin-workspace .btn { font-size: 9.5px; }
 .admin-page .admin-workspace .button { font-size: 9.5px; }
+
+/* Kartu tinjau izin (lv-card) = anatomi .card */
+.admin-page .admin-workspace .lv-card {
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(22 35 60 / 4%);
+}
+.admin-page .admin-workspace .lv-card + .lv-card { margin-top: 12px; }
