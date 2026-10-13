@@ -16,6 +16,10 @@
     <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=4">
   {% endif %}
   {% block extra_head %}{% endblock %}
+  <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
+  <style>
+    .turbo-progress-bar { height: 3px; background: linear-gradient(90deg,#14B8A6,#0ea5e9); box-shadow: 0 0 8px rgb(20 184 166 / 60%); }
+  </style>
 </head>
 <body class="{% if request.membership.role == 'admin' %}admin-page{% elif request.membership.role == 'siswa' %}student-page{% endif %} {% block body_class %}{% endblock %}">
   {% if request.membership.role == 'admin' %}
