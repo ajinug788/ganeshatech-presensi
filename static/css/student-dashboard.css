@@ -458,6 +458,16 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-profile-detail { padding: 11px 12px; }
   .student-profile-manage { padding: 8px; font-size: 0; }
   .student-profile-manage .msym { font-size: 19px; }
+  .student-profile-password-form { padding: 12px; }
+  .student-profile-password-form .student-feature-section-head { gap: 8px; margin-bottom: 8px; }
+  .student-profile-password-form .student-feature-icon { width: 32px; height: 32px; font-size: 18px; }
+  .student-profile-page .student-profile-password-form form p { gap: 4px; margin-bottom: 8px; }
+  .student-profile-page .student-profile-password-form form p label { font-size: 11px; }
+  .student-profile-password-form form input { min-height: 39px; padding: 8px 10px; font-size: 12px; }
+  .student-profile-password-form ul { margin-top: 2px; line-height: 1.3; }
+  .student-profile-password-form ul li + li { margin-top: 1px; }
+  .student-profile-password-form .student-profile-form-actions { margin-top: 8px; }
+  .student-profile-password-form .student-profile-form-actions .btn { min-height: 40px; padding: 8px 12px; font-size: 12px; }
 }
 
 .student-photo-editor { display: grid; justify-items: start; gap: 12px; margin-top: 16px; padding: 16px; border: 1px solid #e2e7f2; border-radius: 12px; background: #f8f9fd; }
