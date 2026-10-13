@@ -65,6 +65,9 @@ class StudentPasswordChangeForm(PasswordChangeForm):
         self.fields["old_password"].label = "Kata sandi saat ini"
         self.fields["new_password1"].label = "Kata sandi baru"
         self.fields["new_password2"].label = "Ulangi kata sandi baru"
+        # Django's PasswordChangeForm focuses this field by default, which
+        # makes browsers jump down to the password card as soon as the page opens.
+        self.fields["old_password"].widget.attrs.pop("autofocus", None)
 
 
 class AttendanceLocationForm(forms.ModelForm):
