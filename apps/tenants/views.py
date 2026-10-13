@@ -139,7 +139,7 @@ def dashboard_siswa(request):
         return render(request, "tenants/no_membership.html", status=403)
     ctx = build_student_dashboard_context(membership)
     ctx["role_label"] = "Siswa"
-    return render(request, "tenants/dashboard.html", ctx)
+    return render(request, "dashboard/siswa.html", ctx)
 
 
 @login_required
