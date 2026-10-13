@@ -1,0 +1,72 @@
+/* Tinjau Pengajuan Izin — card-based review UI (override, dimuat setelah base) */
+.lv-filter { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.lv-chip {
+  display: inline-flex; align-items: center; min-height: 30px; padding: 0 13px;
+  border: 1px solid var(--line, #e2e7ef); border-radius: 999px;
+  color: #4d5a70; background: #fff; font-size: 11px; font-weight: 700;
+  text-decoration: none; transition: background .15s, border-color .15s, color .15s;
+}
+.lv-chip:hover { background: #f4f6fa; }
+.lv-chip.is-active { color: #fff; background: var(--navy, #244eaa); border-color: var(--navy, #244eaa); }
+
+.lv-list { display: grid; gap: 12px; margin-top: 4px; }
+.lv-card {
+  display: grid; gap: 10px; padding: 16px 18px;
+  border: 1px solid var(--line, #e4e9f5); border-radius: 12px; background: #fff;
+  box-shadow: 0 1px 3px rgb(8 21 49 / 6%);
+  border-left: 4px solid #d7dde9;
+}
+.lv-card.is-pending { border-left-color: #e8a13c; }
+.lv-card.is-approved { border-left-color: #3d9a6d; }
+.lv-card.is-rejected { border-left-color: #d9645f; }
+
+.lv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.lv-student { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.lv-avatar {
+  display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 auto;
+  border-radius: 50%; color: #fff; background: var(--navy, #244eaa);
+  font: 700 15px 'Plus Jakarta Sans', sans-serif;
+}
+.lv-student strong { display: block; color: #27354c; font-size: 13px; }
+.lv-student small { display: block; margin-top: 2px; color: #77859a; font-size: 10.5px; }
+.lv-status {
+  flex: 0 0 auto; display: inline-flex; align-items: center; padding: 4px 10px;
+  border-radius: 999px; font-size: 10px; font-weight: 700; white-space: nowrap;
+}
+.is-pending .lv-status { color: #a86c13; background: #fff4df; }
+.is-approved .lv-status { color: #39845f; background: #e8f6ef; }
+.is-rejected .lv-status { color: #b0453f; background: #fdeceb; }
+
+.lv-reason { margin: 0; color: #516078; font-size: 12px; line-height: 1.6; }
+.lv-note {
+  margin: 0; padding: 8px 11px; border-radius: 8px;
+  color: #4e5b72; font-size: 11px; background: #f4f6fa;
+}
+.lv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding-top: 10px; border-top: 1px solid #eef1f7; }
+.lv-actions form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lv-reject-form input[type="text"] {
+  min-width: 0; flex: 1 1 190px; padding: 8px 11px;
+  border: 1px solid #dce2ed; border-radius: 7px; font-size: 11.5px; color: var(--ink, #27354c);
+}
+.lv-reject-form input[type="text"]:focus { border-color: #6a87c7; outline: none; box-shadow: 0 0 0 3px rgb(36 78 170 / 12%); }
+.lv-btn {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 15px;
+  border: 1px solid transparent; border-radius: 7px; cursor: pointer;
+  font-size: 11px; font-weight: 700; transition: background .15s, border-color .15s;
+}
+.lv-btn--approve { color: #fff; background: #3d9a6d; }
+.lv-btn--approve:hover { background: #33845d; }
+.lv-btn--reject { color: #b0453f; border-color: #eccfcd; background: #fff; }
+.lv-btn--reject:hover { background: #fdeceb; }
+.lv-empty { margin: 6px 0; color: #77859a; font-size: 12.5px; text-align: center; }
+
+@media (max-width: 640px) {
+  .lv-filter { justify-content: flex-start; }
+  .lv-card { padding: 14px; }
+  .lv-head { flex-direction: column; gap: 8px; }
+  .lv-actions { flex-direction: column; align-items: stretch; }
+  .lv-actions form { width: 100%; }
+  .lv-btn { justify-content: center; }
+}
+
+.lv-count { margin-left: 4px; font-style: normal; font-weight: 700; opacity: .75; }

@@ -1,38 +1,59 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Tinjau Pengajuan Izin{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/leave-review.css' %}?v=1">
+{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Absensi</p><h1>Tinjau Pengajuan Izin</h1></div></div>
-<section class="card">
-  <p>Filter:
-    <a href="?">Semua</a> · <a href="?status=pending">Menunggu</a> ·
-    <a href="?status=approved">Disetujui</a> · <a href="?status=rejected">Ditolak</a>
-  </p>
-  {% if object_list %}
-  <table><thead><tr><th>Siswa</th><th>Jenis</th><th>Dari</th><th>Sampai</th><th>Alasan</th><th>Status</th><th>Keputusan</th></tr></thead><tbody>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Absensi</p>
+    <h1>Tinjau Pengajuan Izin</h1>
+    <p class="muted">Setujui atau tolak pengajuan izin siswa. Catatan wajib saat menolak.</p>
+  </div>
+  <div class="lv-filter" role="tablist" aria-label="Filter status">
+    <a href="?" class="lv-chip {% if not request.GET.status %}is-active{% endif %}">Semua <em class="lv-count">{{ counts.all }}</em></a>
+    <a href="?status=pending" class="lv-chip {% if request.GET.status == 'pending' %}is-active{% endif %}">Menunggu <em class="lv-count">{{ counts.pending }}</em></a>
+    <a href="?status=approved" class="lv-chip {% if request.GET.status == 'approved' %}is-active{% endif %}">Disetujui <em class="lv-count">{{ counts.approved }}</em></a>
+    <a href="?status=rejected" class="lv-chip {% if request.GET.status == 'rejected' %}is-active{% endif %}">Ditolak <em class="lv-count">{{ counts.rejected }}</em></a>
+  </div>
+</div>
+{% if object_list %}
+<div class="lv-list">
   {% for r in object_list %}
-  <tr>
-    <td>{{ r.student.full_name }}</td><td>{{ r.get_kind_display }}</td>
-    <td>{{ r.date_from }}</td><td>{{ r.date_to }}</td><td>{{ r.reason|truncatechars:60 }}</td>
-    <td>{{ r.get_status_display }}{% if r.review_note %} — {{ r.review_note }}{% endif %}</td>
-    <td>
-      {% if r.status == 'pending' %}
+  <article class="lv-card {% if r.status == 'pending' %}is-pending{% elif r.status == 'approved' %}is-approved{% else %}is-rejected{% endif %}">
+    <header class="lv-head">
+      <div class="lv-student">
+        <span class="lv-avatar" aria-hidden="true">{{ r.student.full_name|slice:":1" }}</span>
+        <div>
+          <strong>{{ r.student.full_name }}</strong>
+          <small>{{ r.get_kind_display }} · {{ r.date_from }}{% if r.date_to and r.date_to != r.date_from %} → {{ r.date_to }}{% endif %}</small>
+        </div>
+      </div>
+      <span class="lv-status">{{ r.get_status_display }}</span>
+    </header>
+    <p class="lv-reason">{{ r.reason }}</p>
+    {% if r.review_note %}<p class="lv-note">Catatan: {{ r.review_note }}</p>{% endif %}
+    {% if r.status == 'pending' %}
+    <div class="lv-actions">
       <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}">
         {% csrf_token %}
         <input type="hidden" name="decision" value="approve">
-        <button class="btn" type="submit">Setujui</button>
+        <button class="lv-btn lv-btn--approve" type="submit"><span aria-hidden="true">✓</span> Setujui</button>
       </form>
-      <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}">
+      <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}" class="lv-reject-form">
         {% csrf_token %}
         <input type="hidden" name="decision" value="reject">
-        <input type="text" name="review_note" placeholder="Catatan penolakan (wajib)">
-        <button class="btn btn--secondary" type="submit">Tolak</button>
+        <input type="text" name="review_note" placeholder="Catatan penolakan (wajib)" required aria-label="Catatan penolakan">
+        <button class="lv-btn lv-btn--reject" type="submit">Tolak</button>
       </form>
-      {% else %}—{% endif %}
-    </td>
-  </tr>
+    </div>
+    {% endif %}
+  </article>
   {% endfor %}
-  </tbody></table>
-  {% else %}<p>Belum ada pengajuan.</p>{% endif %}
-</section>
+</div>
+{% else %}
+<section class="card"><p class="lv-empty">Belum ada pengajuan izin. 🎉</p></section>
+{% endif %}
 {% include "attendance/_pagination.html" %}
 {% endblock %}

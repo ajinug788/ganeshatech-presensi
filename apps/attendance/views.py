@@ -889,6 +889,13 @@ class LeaveReviewListView(RoleRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["status"] = self.request.GET.get("status", "")
+        base = LeaveRequest.objects.filter(organization=self.organization)
+        ctx["counts"] = {
+            "all": base.count(),
+            "pending": base.filter(status="pending").count(),
+            "approved": base.filter(status="approved").count(),
+            "rejected": base.filter(status="rejected").count(),
+        }
         return ctx
 
 

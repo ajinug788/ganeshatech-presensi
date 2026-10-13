@@ -218,12 +218,12 @@ h1, h2, p { margin-top: 0; }
 }
 @media (max-width: 840px) {
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dashboard-grid { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
   .right-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tenant-note { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
-  .admin-shell { grid-template-columns: 1fr; }
+  .admin-shell { grid-template-columns: minmax(0, 1fr); }
   .sidebar { position: static; height: auto; min-height: 0; padding: 10px 14px; border-right: 0; border-bottom: 1px solid var(--line); }
   .brand { min-height: 38px; }
   .school-chip, .sidebar-bottom { display: none; }
@@ -258,7 +258,7 @@ h1, h2, p { margin-top: 0; }
   .panel-heading { align-items: flex-start; flex-direction: column; }
   .table-filters { align-self: stretch; }
   .filter-button { flex: 1; }
-  .right-stack { grid-template-columns: 1fr; }
+  .right-stack { grid-template-columns: minmax(0, 1fr); }
   .tenant-note { grid-column: auto; }
   .location-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .activity-table { min-width: 690px; }
