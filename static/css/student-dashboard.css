@@ -254,6 +254,10 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-mobile-brand { display: none; }
 .student-desktop-breadcrumb { display: flex; align-items: center; gap: 10px; color: #687184; font-size: 12px; }
 .student-desktop-breadcrumb strong { color: var(--student-primary); }
+.student-header-account { min-width: 0; display: flex; flex: 0 0 auto; align-items: center; gap: 10px; }
+.student-header-account-copy { display: none; min-width: 0; max-width: 220px; text-align: right; }
+.student-header-account-copy strong { display: block; overflow: hidden; color: #29364d; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.student-header-account-copy small { display: block; margin-top: 2px; color: var(--student-muted); font-size: 10px; }
 .student-account { width: 36px; height: 36px; }
 .student-page-content { width: 100%; max-width: 1280px; min-height: calc(100vh - 64px); margin: 0 auto; padding: 30px 32px 18px; }
 .student-messages { max-width: 1280px; margin: 0 auto; padding: 16px 32px 0; }
@@ -355,6 +359,7 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-capture-page .status { min-height: 20px; color: #596579; font-size: 12px; }
 
 @media (min-width: 768px) and (max-width: 1023px) {
+  .student-header-account-copy { display: block; }
   .student-sidebar { position: static; width: auto; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 18px; border-right: 0; border-bottom: 1px solid var(--student-line); }
   .student-sidebar .student-brand { flex: 0 0 220px; padding: 0; }
   .student-side-links { display: flex; min-width: 0; flex: 1; justify-content: flex-end; gap: 3px; }
@@ -370,6 +375,9 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .month-section { grid-column: span 4; }
   .student-dashboard > .leave-panel, .recent-section { grid-column: span 4; }
   .student-feature-page { max-width: 900px; }
+}
+@media (min-width: 1024px) {
+  .student-header-account-copy { display: block; }
 }
 @media (max-width: 767px) {
   body.student-page { background: var(--student-canvas); }
