@@ -140,21 +140,34 @@ class MyHistoryView(APIView):
             page = max(1, int(request.GET.get("page", 1)))
         except ValueError:
             page = 1
-        page_size = min(50, max(1, int(request.GET.get("page_size", 20))))
+        try:
+            page_size = min(50, max(1, int(request.GET.get("page_size", 20))))
+        except ValueError:
+            page_size = 20
 
         qs = AttendanceDay.objects.filter(
             student=student, organization=membership.organization
         ).order_by("-work_date")
-        total = qs.count()
         start = (page - 1) * page_size
-        rows = [
-            attendance_day_snapshot(d) for d in qs[start : start + page_size]
-        ]
+        # The student page only needs to know whether another page exists.
+        # Counting every attendance row on each visit gets progressively slower
+        # as the student's history grows, so allow clients to request a bounded
+        # page without the exact total.
+        include_count = request.GET.get("include_count", "true").lower() not in {
+            "0",
+            "false",
+            "no",
+        }
+        selected = list(qs[start : start + page_size + 1])
+        has_next = len(selected) > page_size
+        selected = selected[:page_size]
+        rows = [attendance_day_snapshot(d) for d in selected]
         return JsonResponse(
             {
-                "count": total,
+                "count": qs.count() if include_count else None,
                 "page": page,
                 "page_size": page_size,
+                "has_next": has_next,
                 "results": rows,
             }
         )
