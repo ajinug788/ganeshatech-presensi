@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/school-admin-pages.css' %}">
   {% elif request.membership.role == 'siswa' %}
-    <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/student-dashboard.css' %}?v=5">
   {% endif %}
   {% block extra_head %}{% endblock %}
   <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
@@ -78,7 +78,13 @@
           <span class="student-brand-copy"><strong>{{ request.organization.name }}</strong><small>TeFa Presensi · Dashboard Kehadiran</small></span>
         </a>
         <div class="student-desktop-breadcrumb"><strong>Presensi TeFa</strong><span>/</span><span>{{ request.organization.name }}</span></div>
-        <a class="student-account" href="{% url 'attendance:student_profile' %}" aria-label="Kelola profil siswa">{% if request.user.student_profiles.profile_photo %}<img src="{% url 'photos:photo' request.user.student_profiles.profile_photo_id %}" alt="">{% else %}<span class="msym" aria-hidden="true">person</span>{% endif %}</a>
+        <details class="student-account-menu">
+          <summary class="student-account" aria-label="Buka menu akun siswa">{% if request.user.student_profiles.profile_photo %}<img src="{% url 'photos:photo' request.user.student_profiles.profile_photo_id %}" alt="">{% else %}<span class="msym" aria-hidden="true">person</span>{% endif %}</summary>
+          <div class="student-account-popover">
+            <a href="{% url 'attendance:student_profile' %}"><span class="msym" aria-hidden="true">account_circle</span>Profil siswa</a>
+            <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button type="submit"><span class="msym" aria-hidden="true">logout</span>Keluar</button></form>
+          </div>
+        </details>
       </header>
       <main class="student-page-content">
         {% if messages %}<div class="student-messages" aria-live="polite">{% for message in messages %}<div class="student-message student-message--{{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
