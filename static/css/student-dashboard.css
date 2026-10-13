@@ -84,6 +84,7 @@ body.student-page {
 .student-account-menu > summary::-webkit-details-marker { display: none; }
 .student-account-menu > summary:focus-visible { outline: 3px solid #8ba1e0; outline-offset: 3px; }
 .student-account-popover { position: absolute; z-index: 30; top: calc(100% + 10px); right: 0; width: 180px; display: grid; gap: 4px; padding: 6px; border: 1px solid #e4e8f0; border-radius: 12px; background: #fff; box-shadow: 0 12px 32px rgb(25 35 60 / 16%); }
+.student-account-name { min-width: 0; display: block; padding: 11px 10px; overflow: hidden; color: #354158; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .student-account-popover a, .student-account-popover button { display: flex; width: 100%; min-height: 42px; align-items: center; gap: 9px; padding: 0 10px; border: 0; border-radius: 8px; color: #354158; background: transparent; font: inherit; font-size: 12px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; }
 .student-account-popover a:hover, .student-account-popover button:hover { background: #f2f5ff; }
 .student-account-popover button { color: #a72f46; }
