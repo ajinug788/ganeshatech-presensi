@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v4.css' %}">
   <link rel="stylesheet" href="{% static 'css/admin-mobile-nav.css' %}">
   <link rel="stylesheet" href="{% static 'css/admin-mobile-nav-v2.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-badge.css' %}">
   <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
   <style>
     .turbo-progress-bar { height: 3px; background: linear-gradient(90deg,#4f8bff,#7fb2ff); box-shadow: 0 0 8px rgb(79 139 255 / 60%); }
@@ -37,6 +38,7 @@
         <a class="nav-link" href="{% url 'attendance:student_list' %}"><span aria-hidden="true">♧</span>Master siswa</a>
         <a class="nav-link" href="{% url 'attendance:location_list' %}"><span aria-hidden="true">⌖</span>Titik geofence</a>
         <a class="nav-link" href="{% url 'reports:riwayat_koreksi' %}"><span aria-hidden="true">↶</span>Riwayat koreksi &amp; audit</a>
+        <a class="nav-link" href="{% url 'attendance:leave_review_list' %}"><span aria-hidden="true">✎</span>Tinjau izin{% if pending_leave_count %} <span class="nav-badge">{{ pending_leave_count }}</span>{% endif %}</a>
         <a class="nav-link" href="{% url 'reports:rekap_csv' %}"><span aria-hidden="true">⇩</span>Laporan &amp; ekspor CSV</a>
         <a class="nav-link" href="{% url 'attendance:shift_list' %}"><span aria-hidden="true">⚙</span>Pengaturan shift</a>
         <a class="nav-link" href="{% url 'attendance:policy' %}"><span aria-hidden="true">◷</span>Kebijakan organisasi</a>
@@ -97,6 +99,7 @@
             <div><span>Sesi berjalan</span><strong>{{ sedang_berjalan }}</strong><small>Sudah check-in, belum checkout</small></div>
             <div><span>Shift aktif</span><strong>{{ shift_aktif }}</strong><small>Jadwal berdasarkan penetapan siswa</small></div>
             <div><span>Lokasi aktif</span><strong>{{ lokasi_aktif }}</strong><small>Titik absensi organisasi</small></div>
+            <div><span>Izin menunggu</span><strong>{{ pending_leave_count }}</strong><small>Pengajuan siswa</small></div>
           </div>
         </section>
 
@@ -186,7 +189,13 @@
           <aside class="right-stack">
             <section class="panel attention-panel">
               <div class="panel-heading compact-heading"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Belum ada catatan</h2><p class="muted">{{ belum_absen }} siswa aktif belum tercatat hari ini.</p></div><span class="attention-count {% if belum_absen == 0 %}is-zero{% endif %}">{{ belum_absen }}</span></div>
-              <div class="attention-list">
+              {% if pending_leave_count %}
+                <a class="attention-item" href="{% url 'attendance:leave_review_list' %}?status=pending" style="text-decoration:none">
+                  <div class="attention-person"><strong>{{ pending_leave_count }} pengajuan izin menunggu</strong><span>Siswa mengajukan izin/sakit — perlu ditinjau</span></div>
+                  <span class="tag tag-amber">Tinjau</span>
+                </a>
+                {% endif %}
+                <div class="attention-list">
                 {% for student in belum_list|slice:":6" %}
                 <article class="attention-item"><div class="attention-person"><strong>{{ student.full_name }}</strong><span>{{ student.group|default:"Tanpa kelompok" }} · {{ student.student_number }}</span></div><span class="tag tag-red">Belum tercatat</span>{% if membership.role == 'admin' %}<button type="button" class="button button-primary button-small" data-student-id="{{ student.pk }}" data-student-name="{{ student.full_name|escape }}" data-student-number="{{ student.student_number|escape }}">Catat status</button>{% endif %}</article>
                 {% empty %}<div class="all-recorded"><span aria-hidden="true">✓</span><strong>Semua siswa sudah memiliki catatan hari ini.</strong></div>{% endfor %}

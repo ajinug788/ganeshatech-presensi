@@ -76,7 +76,7 @@ class StudentListView(AdminRequiredMixin, ListView):
     def get_queryset(self):
         from django.db.models import Q
 
-        qs = self.organization.students.select_related("user")
+        qs = self.organization.students.select_related("user", "profile_photo")
         q = self.request.GET.get("q", "").strip()
         group = self.request.GET.get("group", "").strip()
         status = self.request.GET.get("status", "").strip()
