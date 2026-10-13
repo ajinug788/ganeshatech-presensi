@@ -17,6 +17,7 @@
     datePicker.tabIndex = -1;
     datePicker.setAttribute("aria-hidden", "true");
     datePicker.className = "student-date-native-picker";
+    datePicker.min = textInput.dataset.minDate || "";
     control.append(calendarButton, datePicker);
 
     const syncPickerFromText = () => {
@@ -30,10 +31,12 @@
       const month = Number(monthText);
       const year = Number(yearText);
       const candidate = new Date(year, month - 1, day);
+      const isoValue = `${yearText}-${monthText}-${dayText}`;
       datePicker.value = candidate.getFullYear() === year
         && candidate.getMonth() === month - 1
         && candidate.getDate() === day
-        ? `${yearText}-${monthText}-${dayText}`
+        && (!datePicker.min || isoValue >= datePicker.min)
+        ? isoValue
         : "";
     };
 
