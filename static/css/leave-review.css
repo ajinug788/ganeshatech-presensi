@@ -8,6 +8,7 @@
 }
 .lv-chip:hover { background: #f4f6fa; }
 .lv-chip.is-active { color: #fff; background: var(--navy, #244eaa); border-color: var(--navy, #244eaa); }
+.lv-count { margin-left: 4px; font-style: normal; font-weight: 700; opacity: .75; }
 
 .lv-list { display: grid; gap: 12px; margin-top: 4px; }
 .lv-card {
@@ -42,22 +43,50 @@
   margin: 0; padding: 8px 11px; border-radius: 8px;
   color: #4e5b72; font-size: 11px; background: #f4f6fa;
 }
-.lv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding-top: 10px; border-top: 1px solid #eef1f7; }
-.lv-actions form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.lv-reject-form input[type="text"] {
-  min-width: 0; flex: 1 1 190px; padding: 8px 11px;
-  border: 1px solid #dce2ed; border-radius: 7px; font-size: 11.5px; color: var(--ink, #27354c);
+
+/* ---- Area aksi: Setujui / Tolak sejajar, catatan muncul saat Tolak diklik ---- */
+.lv-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
+  padding-top: 11px; border-top: 1px solid #eef1f7;
 }
-.lv-reject-form input[type="text"]:focus { border-color: #6a87c7; outline: none; box-shadow: 0 0 0 3px rgb(36 78 170 / 12%); }
+.lv-actions > form { display: flex; }
 .lv-btn {
-  display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 15px;
-  border: 1px solid transparent; border-radius: 7px; cursor: pointer;
-  font-size: 11px; font-weight: 700; transition: background .15s, border-color .15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 36px; padding: 0 16px; margin: 0;
+  border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+  font: 700 11.5px/1 'Inter', sans-serif; text-decoration: none;
+  transition: background .15s, border-color .15s;
+  user-select: none;
 }
+.lv-ico { font-size: 12px; line-height: 1; }
 .lv-btn--approve { color: #fff; background: #3d9a6d; }
 .lv-btn--approve:hover { background: #33845d; }
 .lv-btn--reject { color: #b0453f; border-color: #eccfcd; background: #fff; }
 .lv-btn--reject:hover { background: #fdeceb; }
+.lv-btn--reject-send { color: #fff; background: #d9645f; }
+.lv-btn--reject-send:hover { background: #c6534e; }
+.lv-btn--ghost { color: #77859a; border-color: #e2e7ef; background: #fff; }
+.lv-btn--ghost:hover { background: #f4f6fa; }
+
+/* Details = panel tolak */
+.lv-reject { position: relative; }
+.lv-reject > summary { list-style: none; }
+.lv-reject > summary::-webkit-details-marker { display: none; }
+.lv-reject > summary.lv-btn--reject[open], .lv-reject[open] > summary.lv-btn--reject { background: #fdeceb; }
+.lv-reject-form {
+  display: grid; gap: 8px; width: min(100%, 460px);
+  margin-top: 9px; padding: 12px;
+  border: 1px solid #eccfcd; border-radius: 10px; background: #fff8f7;
+}
+.lv-label { color: #4e5b72; font-size: 11px; font-weight: 700; }
+.lv-label span { color: #b0453f; font-weight: 500; }
+.lv-reject-form textarea {
+  width: 100%; padding: 9px 11px; resize: vertical; min-height: 58px;
+  border: 1px solid #dce2ed; border-radius: 7px;
+  color: var(--ink, #27354c); font: 400 12px/1.5 'Inter', sans-serif;
+}
+.lv-reject-form textarea:focus { border-color: #6a87c7; outline: none; box-shadow: 0 0 0 3px rgb(36 78 170 / 12%); }
+.lv-reject-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .lv-empty { margin: 6px 0; color: #77859a; font-size: 12.5px; text-align: center; }
 
 @media (max-width: 640px) {
@@ -65,8 +94,7 @@
   .lv-card { padding: 14px; }
   .lv-head { flex-direction: column; gap: 8px; }
   .lv-actions { flex-direction: column; align-items: stretch; }
-  .lv-actions form { width: 100%; }
-  .lv-btn { justify-content: center; }
+  .lv-actions > form, .lv-reject, .lv-reject > summary { width: 100%; }
+  .lv-btn { justify-content: center; min-height: 42px; }
+  .lv-reject-form { width: 100%; }
 }
-
-.lv-count { margin-left: 4px; font-style: normal; font-weight: 700; opacity: .75; }

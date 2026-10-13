@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Tinjau Pengajuan Izin{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/leave-review.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/leave-review.css' %}?v=2">
 {% endblock %}
 {% block content %}
 <div class="page-heading">
@@ -39,14 +39,21 @@
       <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}">
         {% csrf_token %}
         <input type="hidden" name="decision" value="approve">
-        <button class="lv-btn lv-btn--approve" type="submit"><span aria-hidden="true">✓</span> Setujui</button>
+        <button class="lv-btn lv-btn--approve" type="submit"><span class="lv-ico" aria-hidden="true">✓</span> Setujui</button>
       </form>
-      <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}" class="lv-reject-form">
-        {% csrf_token %}
-        <input type="hidden" name="decision" value="reject">
-        <input type="text" name="review_note" placeholder="Catatan penolakan (wajib)" required aria-label="Catatan penolakan">
-        <button class="lv-btn lv-btn--reject" type="submit">Tolak</button>
-      </form>
+      <details class="lv-reject">
+        <summary class="lv-btn lv-btn--reject"><span class="lv-ico" aria-hidden="true">✕</span> Tolak</summary>
+        <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}" class="lv-reject-form">
+          {% csrf_token %}
+          <input type="hidden" name="decision" value="reject">
+          <label class="lv-label" for="note-{{ r.pk }}">Catatan penolakan <span>(wajib)</span></label>
+          <textarea id="note-{{ r.pk }}" name="review_note" rows="2" required placeholder="Contoh: Tidak disetujui karena alasan kurang jelas"></textarea>
+          <div class="lv-reject-actions">
+            <button class="lv-btn lv-btn--reject-send" type="submit">Kirim penolakan</button>
+            <button class="lv-btn lv-btn--ghost" type="button" onclick="this.closest('details').removeAttribute('open')">Batal</button>
+          </div>
+        </form>
+      </details>
     </div>
     {% endif %}
   </article>
