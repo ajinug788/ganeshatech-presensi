@@ -3,7 +3,8 @@
 {% block title %}Absensi — TeFa Presensi{% endblock %}
 {% block nav %}<a href="/dashboard/siswa/">Beranda</a><a href="/attendance/absen/riwayat/">Riwayat</a>{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Pencatatan kehadiran</p><h1 id="capture-title">Absen masuk</h1><p class="text-muted">Ikuti langkah singkat ini untuk mencatat kehadiranmu.</p></div><a class="btn btn--secondary" href="/dashboard/siswa/">← Kembali</a></div>
+<div class="student-feature-page student-capture-page">
+<div class="student-feature-heading"><div><p class="student-eyebrow">Pencatatan kehadiran</p><h1 id="capture-title">Absen masuk</h1><p>Ikuti langkah singkat ini untuk mencatat kehadiranmu.</p></div><a class="student-feature-back" href="{% url 'tenants:dashboard_siswa' %}"><span class="msym" aria-hidden="true">arrow_back</span>Kembali</a></div>
 <ol class="stepper" aria-label="Langkah absensi">
   <li class="stepper__step is-active" data-step="1" aria-current="step">Kamera</li>
   <li class="stepper__step" data-step="2">Foto</li>
@@ -11,7 +12,7 @@
   <li class="stepper__step" data-step="4">Selesai</li>
 </ol>
 <div class="capture-layout">
-  <section class="card capture-main" aria-label="Proses absensi">
+  <section class="student-feature-card capture-main" aria-label="Proses absensi">
     <section data-pane="1">
       <p class="capture-kicker">Posisikan wajah di tengah bingkai, lalu ambil selfie.</p>
       <video id="cam-video" class="cam-box" autoplay playsinline muted aria-label="Pratinjau kamera"></video>
@@ -38,12 +39,13 @@
       <div id="wizard-result" aria-live="polite"></div>
     </section>
   </section>
-  <aside class="card capture-aside"><p class="eyebrow">Sebelum mulai</p><h2>Beberapa hal kecil</h2><div class="capture-tips">
+  <aside class="student-feature-card capture-aside"><p class="student-eyebrow">Sebelum mulai</p><h2>Beberapa hal kecil</h2><div class="capture-tips">
     <div class="tip-row"><span class="tip-check">✓</span><span>Pastikan izin kamera dan lokasi sudah aktif di browser.</span></div>
     <div class="tip-row"><span class="tip-check">✓</span><span>Ambil foto langsung dari kamera. Foto diperkecil sebelum dikirim.</span></div>
     <div class="tip-row"><span class="tip-check">✓</span><span>Berada di sekitar lokasi praktik agar posisi dapat diverifikasi.</span></div>
     <div class="tip-row"><span class="tip-check">✓</span><span>Catatan waktu resmi mengikuti waktu server.</span></div>
   </div><p class="footer-note" style="text-align:left">Data foto dan lokasi digunakan untuk mencatat kehadiran.</p></aside>
+</div>
 </div>
 <script type="module" src="{% static 'js/attendance.js' %}?v={% static_v 'js/attendance.js' %}"></script>
 {% endblock %}

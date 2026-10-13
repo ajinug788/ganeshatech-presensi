@@ -1,0 +1,50 @@
+/* v2 mobile nav — trigger hamburger di TOPBAR (logo + teks Presensi TeFa),
+   sidebar off-canvas tetap. Breadcrumb disembunyikan di HP. */
+
+@media (max-width: 760px) {
+  /* Breadcrumb default: sembunyikan, ganti dengan trigger */
+  .topbar .breadcrumb { display: none; }
+
+  /* Trigger di topbar kiri */
+  .nav-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+    margin-left: -6px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--navy, #10307a);
+    cursor: pointer;
+    font: inherit;
+  }
+  .nav-toggle:active { background: #eef1f8; }
+  .nav-toggle .nav-toggle__bars {
+    width: 20px; height: 16px;
+    display: inline-flex; flex-direction: column; justify-content: space-between;
+    flex: 0 0 auto;
+  }
+  .nav-toggle .nav-toggle__bars i {
+    display: block; height: 2.5px; width: 100%;
+    border-radius: 2px; background: currentColor;
+    transition: transform .25s ease, opacity .2s ease;
+  }
+  /* Saat terbuka: garis atas & bawah menyilang, tengah hilang */
+  body.sidebar-open .nav-toggle .nav-toggle__bars i:nth-child(1) { transform: translateY(6.75px) rotate(45deg); }
+  body.sidebar-open .nav-toggle .nav-toggle__bars i:nth-child(2) { opacity: 0; }
+  body.sidebar-open .nav-toggle .nav-toggle__bars i:nth-child(3) { transform: translateY(-6.75px) rotate(-45deg); }
+
+  .nav-toggle strong { font-size: 14px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; }
+
+  /* Sidebar drawer: brand di dalam drawer tidak jadi trigger lagi */
+  .sidebar .brand { cursor: default; }
+  .sidebar .brand::after { content: none !important; }
+
+  /* Tombol Keluar di topbar lebih ringkas */
+  .topbar .button { min-height: 32px; }
+}
+
+@media (min-width: 761px) {
+  .nav-toggle { display: none; }
+}

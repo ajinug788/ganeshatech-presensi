@@ -1,0 +1,31 @@
+/* v4 — polish final: footer pemisah, kartu lokasi berdampingan, kolom kanan menyeimbangkan */
+/* Footer halaman: garis pemisah halus */
+.page-footer {
+  border-top: 1px solid #e6eaf2;
+  padding-top: 14px;
+  margin-top: 0;
+}
+
+/* Kartu lokasi: stat berdampingan, tidak timpang kiri */
+.location-card { align-content: start; }
+.location-card .location-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+}
+.location-card .location-meta span { text-align: left; }
+/* angka & label sejajar judul */
+.location-card .location-number { align-items: baseline; }
+.location-title { align-items: center; }
+
+/* Kolom kanan: kartu menyebar penuh tinggi kolom (statis, rapi) */
+.right-stack { align-content: start; }
+.right-stack .tenant-note { margin-top: 0; }
+/* panel audit tumbuh mengisi */
+.audit-panel { flex: 1 0 auto; }
+
+/* Ritme antar seksi seragam final */
+.location-section { margin: 0; }
+
+/* Em-dash jam pulang sudah diganti teks via template; pastikan muted halus */
+.activity-table .muted { color: #8791a2; font-style: normal; }

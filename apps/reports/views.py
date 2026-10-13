@@ -21,6 +21,7 @@ from django.utils import timezone as dj_timezone
 from apps.audit.models import AuditLog
 from apps.audit.services import catat_audit
 from apps.attendance.models import (
+    LeaveRequest,
     AttendanceAttempt,
     AttendanceDay,
     AttendanceLocation,
@@ -313,8 +314,14 @@ def build_admin_context(membership, organization):
         work_date=today,
     ).filter(Q(student__shift__isnull=True) | Q(student__shift__is_active=False)).count()
 
+    # Pengajuan izin menunggu tinjauan (badge di dashboard & sidebar)
+    pending_leave_count = LeaveRequest.objects.filter(
+        organization=org, status=LeaveRequest.Status.PENDING
+    ).count()
+
     return {
         **base,
+        "pending_leave_count": pending_leave_count,
         "pct_hadir": _pct(hadir, total),
         "pct_terlambat": _pct(terlambat, total),
         "pct_belum": _pct(belum, total),

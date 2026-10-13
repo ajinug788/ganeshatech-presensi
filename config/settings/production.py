@@ -16,3 +16,9 @@ EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
 )
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
+
+# CSRF: Django 4+ memvalidasi header Origin — subdomain produksi wajib terdaftar.
+CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    "https://presensi.tefaganeshatech.my.id https://tefaganeshatech.my.id",
+).split() if o]

@@ -38,7 +38,8 @@ class AdminRecordsView(APIView):
         date_str = request.GET.get("date")
         if date_str:
             try:
-                the_date = dj_timezone.datetime.date.fromisoformat(date_str)
+                import datetime as _dt
+                the_date = _dt.date.fromisoformat(date_str)
             except (ValueError, AttributeError):
                 return _error("VALIDATION_ERROR", 422)
         else:

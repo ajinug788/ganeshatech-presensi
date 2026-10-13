@@ -1,0 +1,93 @@
+/* ============================================================
+   v2 — SISTEM UTUH: spacing token, tipografi, konsistensi kartu
+   Diletakkan setelah stylesheet lama; override terarah.
+   ============================================================ */
+:root {
+  --sp-1: 8px;  --sp-2: 12px; --sp-3: 16px; --sp-4: 24px; --sp-5: 32px;
+  --radius: 12px; --radius-sm: 8px;
+  --line-soft: #e6eaf2;
+  --text-1: #16233c; --text-2: #46536b; --text-3: #6b7790;
+  --fs-xs: 11px; --fs-sm: 12px; --fs-md: 14px; --fs-lg: 18px; --fs-xl: 26px; --fs-num: 34px;
+}
+
+/* --- Grid halaman: ritme vertikal seragam --- */
+.main-content { padding: var(--sp-4) 30px var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-4); }
+.overview-banner { margin-bottom: 0; }
+.kpi-grid { gap: var(--sp-3); margin-bottom: 0; }
+.dashboard-grid { gap: var(--sp-3); }
+.main-stack, .right-stack { gap: var(--sp-3); }
+.page-heading { margin-bottom: 0; }
+.page-footer { margin-top: var(--sp-2); }
+
+/* --- Satu gaya kontainer: border halus, radius sama, shadow lembut tunggal --- */
+.kpi-card, .panel, .location-card, .tenant-note {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgb(22 35 60 / 4%);
+}
+.panel { padding: 20px; }
+.location-card, .tenant-note { padding: var(--sp-3); }
+
+/* --- Hero: lebih pendek, jadi konteks bukan pusat perhatian --- */
+.overview-banner { min-height: 0; padding: 20px 24px; align-items: center; }
+.overview-banner::after { display: none; }
+.banner-copy h2 { font-size: 18px; }
+.banner-copy p { font-size: 12px; color: #ccd9f4; }
+.banner-stats { padding: 8px 6px; border-radius: var(--radius-sm); }
+.banner-stats strong { font-size: 18px; }
+.banner-stats span, .banner-stats > div > small { font-size: var(--fs-xs); }
+
+/* --- KPI: anatomi seragam, angka proporsional --- */
+.kpi-card { min-height: 0; gap: 10px; padding: 16px 18px 14px; }
+.kpi-heading { color: var(--text-2); font-size: var(--fs-sm); }
+.kpi-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); font-size: 15px; }
+.kpi-value { margin: 0; font-size: var(--fs-num); color: var(--text-1); }
+.kpi-foot { font-size: var(--fs-xs); padding-top: 10px; color: var(--text-3); }
+
+/* --- Tipografi: naikkan teks mikro, kurangi level abu --- */
+.eyebrow { font-size: 10px; letter-spacing: .09em; color: #4d6398; }
+.page-heading h1 { font-size: clamp(22px, 2vw, 27px); }
+.section-heading h2, .panel-heading h2 { font-size: var(--fs-lg); }
+.activity-table { font-size: var(--fs-sm); }
+.activity-table th { font-size: 10px; }
+.activity-table td > small, .student-cell small, .attention-person span,
+.audit-list small, .location-meta, .shift-window, .more-note,
+.panel-heading .muted, .kpi-foot, .banner-copy p { font-size: var(--fs-xs); }
+.location-number { font-size: 22px; }
+.student-cell strong { font-size: var(--fs-sm); max-width: 170px; }
+.attention-person strong, .audit-list strong { font-size: var(--fs-sm); }
+.status-pill, .evidence-link, .filter-button { font-size: var(--fs-xs); }
+.panel-footer { font-size: var(--fs-xs); }
+.tenant-note p { font-size: var(--fs-xs); }
+.empty-state strong { font-size: var(--fs-sm); }
+.empty-state span { font-size: var(--fs-xs); }
+
+/* --- Merah hanya saat bermasalah: nilai 0 netral (kelas .is-zero) --- */
+.kpi-value.value-zero { color: var(--text-1); }
+.kpi-value.value-zero small { color: var(--text-3); }
+
+/* --- Kartu lokasi/shift & panel sekunder: latar menenangkan --- */
+.location-section { gap: var(--sp-2); }
+.empty-location { border-radius: var(--radius-sm); font-size: var(--fs-sm); }
+
+/* --- Tabel: header konsisten dengan panel, baris lebih lapang --- */
+.activity-table th { border-radius: 6px 6px 0 0; }
+.activity-table td { padding: 12px 10px; }
+
+/* --- Fokus & interaksi menyatu --- */
+.filter-button { font-weight: 650; }
+.filter-button { font-size: var(--fs-xs); }
+.kpi-foot a, .panel-footer a, .section-heading > a, .evidence-link { font-size: var(--fs-xs); }
+
+/* --- Modal & tombol ikut radius sistem --- */
+.button { border-radius: var(--radius-sm); }
+.status-modal { border-radius: var(--radius); }
+
+/* --- Mobile: jaga ritme --- */
+@media (max-width: 1120px) {
+  .main-content { padding: var(--sp-3) 20px; }
+}
+@media (max-width: 640px) {
+  .main-content { padding: var(--sp-3) 14px; gap: var(--sp-3); }
+  .overview-banner { flex-direction: column; align-items: stretch; }
+}

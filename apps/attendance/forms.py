@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from django import forms
+from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 
 from apps.tenants.models import Membership
@@ -47,6 +48,26 @@ class StudentForm(forms.ModelForm):
             # Akun sudah ada: tampilkan email, tidak boleh diubah via form.
             self.fields["email"].disabled = True
             self.fields["email"].initial = self.instance.user.email
+
+
+class StudentProfilePhotoForm(forms.Form):
+    photo = forms.ImageField(
+        label="Foto profil",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"accept": "image/*"}),
+        help_text="JPG, PNG, atau WebP. Foto akan di-crop dan dikompres otomatis.",
+    )
+
+
+class StudentPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["old_password"].label = "Kata sandi saat ini"
+        self.fields["new_password1"].label = "Kata sandi baru"
+        self.fields["new_password2"].label = "Ulangi kata sandi baru"
+        # Django's PasswordChangeForm focuses this field by default, which
+        # makes browsers jump down to the password card as soon as the page opens.
+        self.fields["old_password"].widget.attrs.pop("autofocus", None)
 
 
 class AttendanceLocationForm(forms.ModelForm):
@@ -183,13 +204,40 @@ class StudentImportForm(forms.Form):
 class LeaveRequestForm(forms.ModelForm):
     """Pengajuan izin/sakit siswa (ATT-11); siswa hanya untuk dirinya."""
 
+    date_from = forms.DateField(
+        label="Tanggal mulai",
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "type": "text",
+                "placeholder": "DD/MM/YYYY",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            },
+        ),
+    )
+    date_to = forms.DateField(
+        label="Tanggal selesai",
+        input_formats=["%d/%m/%Y"],
+        widget=forms.DateInput(
+            format="%d/%m/%Y",
+            attrs={
+                "type": "text",
+                "placeholder": "DD/MM/YYYY",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            },
+        ),
+    )
+    reason = forms.CharField(
+        label="Alasan",
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
     class Meta:
         model = LeaveRequest
         fields = ["kind", "date_from", "date_to", "reason"]
-        widgets = {
-            "date_from": forms.DateInput(attrs={"type": "date"}),
-            "date_to": forms.DateInput(attrs={"type": "date"}),
-        }
 
     def clean(self):
         cleaned = super().clean()

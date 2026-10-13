@@ -1,0 +1,17 @@
+/* Badge jumlah pending di sidebar */
+.nav-badge {
+  display: inline-grid; place-items: center;
+  min-width: 18px; height: 18px;
+  margin-left: auto;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 10px; font-weight: 800;
+  line-height: 1;
+}
+.nav-link.is-current .nav-badge { background: #fff; color: var(--navy); }
+
+/* Kartu aksi "Tinjau izin" dalam panel tindak lanjut: hover jelas */
+a.attention-item { border-radius: 8px; transition: background .15s; }
+a.attention-item:hover { background: #fff7ea; }

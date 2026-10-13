@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Profil Siswa — {{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="student-feature-page student-profile-page">
+  <section class="student-feature-card student-profile-identity">
+    <div class="student-profile-visual">
+      <button class="student-profile-photo-trigger" id="student-profile-photo-open" type="button" aria-haspopup="dialog" aria-label="Lihat dan kelola foto profil">
+      {% if student.profile_photo %}
+        <img class="student-profile-photo" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
+      {% else %}
+        <span class="student-profile-photo student-profile-photo--empty msym" aria-hidden="true">person</span>
+      {% endif %}
+      </button>
+      <span class="student-profile-role"><span class="msym" aria-hidden="true">school</span>Siswa</span>
+    </div>
+    <div class="student-profile-identity-copy">
+      <span class="student-eyebrow">Profil siswa</span>
+      <h2>{{ student.full_name }}</h2>
+      <p>{{ student.group|default:"Kelas belum diatur" }} · {{ request.organization.name }}</p>
+    </div>
+  </section>
+
+  <section class="student-feature-card student-profile-details">
+    <div class="student-feature-section-head"><div><h2>Informasi akun</h2><p>Email dipakai untuk masuk ke Presensi TeFa.</p></div><span class="student-feature-icon msym" aria-hidden="true">verified_user</span></div>
+    <div class="student-profile-detail-grid">
+      <div class="student-profile-detail"><span>Alamat email</span><strong>{{ request.user.email }}</strong></div>
+      <div class="student-profile-detail"><span>Nomor induk siswa</span><strong>{{ student.student_number }}</strong></div>
+      <div class="student-profile-detail"><span>Jadwal shift</span><strong>{{ student.shift.name|default:"Mengikuti kebijakan sekolah" }}</strong></div>
+    </div>
+  </section>
+
+  <section class="student-feature-card student-profile-photo-form">
+    <div class="student-feature-section-head"><div><h2>Foto profil</h2><p>Gunakan foto yang jelas agar akun mudah dikenali.</p></div><span class="student-feature-icon msym" aria-hidden="true">add_a_photo</span></div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_photo">
+      <div class="student-profile-file-field">
+        <label for="id_photo">Pilih foto baru</label>
+        {{ photo_form.photo }}
+        {% if photo_form.photo.help_text %}<small>{{ photo_form.photo.help_text }}</small>{% endif %}
+        {% for error in photo_form.photo.errors %}<small class="student-profile-error">{{ error }}</small>{% endfor %}
+      </div>
+      <div class="student-photo-editor" id="student-photo-editor" hidden>
+        <div class="student-photo-editor-copy"><strong>Atur potongan foto</strong><small>Geser foto di dalam kotak dan atur perbesarannya. Hasil akan dikompres otomatis.</small></div>
+        <canvas id="student-photo-canvas" width="640" height="640" role="img" aria-label="Pratinjau crop foto profil"></canvas>
+        <label class="student-photo-zoom" for="student-photo-zoom">Perbesaran <input id="student-photo-zoom" type="range" min="1" max="3" step="0.01" value="1"></label>
+        <p class="student-photo-editor-status" id="student-photo-editor-status" role="status" aria-live="polite"></p>
+        <div class="student-profile-form-actions">
+          <button class="btn btn--secondary" id="student-photo-cancel" type="button">Pilih ulang</button>
+          <button class="btn" id="student-photo-apply" type="button">Gunakan hasil crop</button>
+        </div>
+      </div>
+      <p class="student-photo-compressed-note" id="student-photo-compressed-note" hidden></p>
+      <p class="student-photo-feedback" id="student-photo-form-feedback" role="status" aria-live="polite" hidden></p>
+      <div class="student-profile-form-actions"><button class="btn" type="submit">Simpan foto</button></div>
+    </form>
+  </section>
+
+  <section class="student-feature-card student-profile-password-form">
+    <div class="student-feature-section-head"><div><h2>Ubah kata sandi</h2><p>Masukkan kata sandi saat ini untuk membuat kata sandi baru.</p></div><span class="student-feature-icon msym" aria-hidden="true">lock_reset</span></div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="change_password">
+      {{ password_form.as_p }}
+      <div class="student-profile-form-actions"><button class="btn" type="submit">Perbarui kata sandi</button></div>
+    </form>
+  </section>
+</div>
+<dialog class="student-profile-photo-dialog" id="student-profile-photo-dialog" aria-labelledby="student-profile-photo-dialog-title">
+  <div class="student-profile-photo-dialog-content">
+    <header class="student-profile-photo-dialog-header">
+      <h2 id="student-profile-photo-dialog-title">Foto profil</h2>
+      <button class="student-profile-photo-dialog-close" id="student-profile-photo-close" type="button" aria-label="Tutup">×</button>
+    </header>
+    {% if student.profile_photo %}
+      <img class="student-profile-photo-preview" src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto profil {{ student.full_name }}">
+    {% else %}
+      <div class="student-profile-photo-preview student-profile-photo-preview--empty"><span class="msym" aria-hidden="true">person</span><span>Belum ada foto profil</span></div>
+    {% endif %}
+    <div class="student-profile-photo-dialog-actions">
+      <button class="btn" id="student-profile-photo-change" type="button"><span class="msym" aria-hidden="true">photo_camera</span>Ganti foto profil</button>
+      {% if student.profile_photo %}
+      <form method="post" id="student-profile-photo-remove-form">
+        {% csrf_token %}<input type="hidden" name="action" value="remove_photo">
+        <button class="btn student-profile-photo-delete" type="submit"><span class="msym" aria-hidden="true">delete</span>Hapus foto profil</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</dialog>
+<script src="{% static 'js/student-profile.js' %}?v=7" defer></script>
+{% endblock %}
