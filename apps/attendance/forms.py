@@ -206,7 +206,7 @@ class LeaveRequestForm(forms.ModelForm):
 
     date_from = forms.DateField(
         label="Tanggal mulai",
-        help_text="Pengajuan hanya bisa mundur maksimal 1 hari dari hari ini.",
+        help_text="Pengajuan bisa dibuat hingga 7 hari ke belakang.",
         input_formats=["%d/%m/%Y", "%Y-%m-%d"],
         widget=forms.DateInput(
             format="%d/%m/%Y",
@@ -242,15 +242,15 @@ class LeaveRequestForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        minimum_date = (timezone.localdate() - timedelta(days=1)).isoformat()
+        minimum_date = (timezone.localdate() - timedelta(days=7)).isoformat()
         for field_name in ("date_from", "date_to"):
             self.fields[field_name].widget.attrs["data-min-date"] = minimum_date
 
     def clean_date_from(self):
         date_from = self.cleaned_data.get("date_from")
-        if date_from and date_from < timezone.localdate() - timedelta(days=1):
+        if date_from and date_from < timezone.localdate() - timedelta(days=7):
             raise forms.ValidationError(
-                "Tanggal mulai tidak boleh lebih dari 1 hari sebelum hari ini."
+                "Tanggal mulai tidak boleh lebih dari 7 hari sebelum hari ini."
             )
         return date_from
 
