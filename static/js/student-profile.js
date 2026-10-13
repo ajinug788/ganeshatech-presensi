@@ -6,8 +6,8 @@
   const status = document.getElementById("student-photo-editor-status");
   const applyButton = document.getElementById("student-photo-apply");
   const cancelButton = document.getElementById("student-photo-cancel");
-  const saveButton = document.getElementById("student-photo-save");
   const compressedNote = document.getElementById("student-photo-compressed-note");
+  const formFeedback = document.getElementById("student-photo-form-feedback");
   if (!input || !editor || !canvas || !zoomInput) return;
 
   const form = input.closest("form");
@@ -51,7 +51,7 @@
 
   function beginEditing(file) {
     readyToSubmit = false;
-    saveButton.disabled = true;
+    formFeedback.hidden = true;
     compressedNote.hidden = true;
     if (sourceUrl) URL.revokeObjectURL(sourceUrl);
     if (resultUrl) URL.revokeObjectURL(resultUrl);
@@ -160,7 +160,6 @@
       transfer.items.add(outputFile);
       input.files = transfer.files;
       readyToSubmit = true;
-      saveButton.disabled = false;
       editor.hidden = true;
       resultUrl = URL.createObjectURL(outputFile);
       compressedNote.textContent = `Siap diunggah: ${formatSize(outputFile.size)} (hasil crop otomatis dikompres).`;
@@ -176,7 +175,7 @@
   cancelButton.addEventListener("click", () => {
     input.value = "";
     readyToSubmit = false;
-    saveButton.disabled = true;
+    formFeedback.hidden = true;
     editor.hidden = true;
     compressedNote.hidden = true;
     sourceImage = null;
@@ -190,12 +189,16 @@
   form.addEventListener("submit", (event) => {
     if (!readyToSubmit) {
       event.preventDefault();
-      status.textContent = input.files && input.files.length
-        ? "Atur crop, lalu klik Gunakan hasil crop sebelum menyimpan."
-        : "Pilih foto terlebih dahulu. Setelah itu atur crop dan gunakan hasilnya.";
-      editor.hidden = false;
-      if (!input.files || !input.files.length) input.focus();
-      else editor.scrollIntoView({ behavior: "smooth", block: "center" });
+      formFeedback.hidden = true;
+      if (!input.files || !input.files.length) {
+        formFeedback.textContent = "Silakan pilih atau upload foto terlebih dahulu sebelum menyimpan.";
+        formFeedback.hidden = false;
+        input.focus();
+      } else {
+        status.textContent = "Atur crop, lalu klik Gunakan hasil crop sebelum menyimpan.";
+        editor.hidden = false;
+        editor.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }
   });
 })();

@@ -449,6 +449,8 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-photo-zoom input { width: 100%; accent-color: var(--student-primary); }
 .student-profile-photo-form button:disabled { cursor: not-allowed; opacity: .58; }
 .student-photo-compressed-note { margin: 12px 0 0; padding: 10px 12px; border-radius: 9px; color: #126b4b; background: #f0fbf5; font-size: 11px; }
+.student-photo-feedback { margin: 10px 0 0; color: #a72f46; font-size: 12px; }
+.student-photo-feedback[hidden] { display: none; }
 @media (max-width: 767px) {
   .student-photo-editor { padding: 12px; }
   #student-photo-canvas { width: min(100%, 300px); }
