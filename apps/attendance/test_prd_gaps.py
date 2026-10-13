@@ -294,9 +294,21 @@ def test_leave_review_list_cross_tenant_404(org_a, org_b, student_a):
 
 
 def test_leave_form_past_date_more_than_1_day_rejected(org_a, student_a):
+    """Perilaku baru (commit 517341d): lampau ≤7 hari BOLEH; >7 hari ditolak."""
     from apps.attendance.forms import LeaveRequestForm
 
-    old = datetime.date.today() - datetime.timedelta(days=5)
+    # Lampau 5 hari → masih boleh
+    ok = datetime.date.today() - datetime.timedelta(days=5)
+    form = LeaveRequestForm(
+        data={
+            "kind": "sakit", "date_from": ok.isoformat(),
+            "date_to": ok.isoformat(), "reason": "sakit",
+        }
+    )
+    assert form.is_valid()
+
+    # Lampau 8 hari → ditolak
+    old = datetime.date.today() - datetime.timedelta(days=8)
     form = LeaveRequestForm(
         data={
             "kind": "sakit", "date_from": old.isoformat(),
