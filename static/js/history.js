@@ -1,5 +1,8 @@
-const pageRoot = document.querySelector('#student-history-page');
-if (pageRoot) {
+function initializeStudentHistoryPage() {
+  const pageRoot = document.querySelector('#student-history-page');
+  if (!pageRoot || pageRoot.dataset.historyInitialized === 'true') return;
+  pageRoot.dataset.historyInitialized = 'true';
+
   const listView = document.querySelector('#history-list-view');
   const detailView = document.querySelector('#history-detail-view');
   const typeInput = document.querySelector('#history-kind');
@@ -10,6 +13,16 @@ if (pageRoot) {
   const dayList = document.querySelector('#history-day-list');
   const historyUrl = pageRoot.dataset.historyUrl;
   const query = new URLSearchParams(window.location.search);
+  const filtersStorageKey = 'tefa.student-history.filters';
+
+  function readSavedFilters() {
+    try {
+      const saved = JSON.parse(window.sessionStorage.getItem(filtersStorageKey) || '{}');
+      return saved && typeof saved === 'object' ? saved : {};
+    } catch {
+      return {};
+    }
+  }
 
   const statusInfo = {
     present: { label: 'Masuk Kerja', short: 'Hadir', className: 'present' },
@@ -168,6 +181,13 @@ if (pageRoot) {
     url.searchParams.set('period', periodInput.value);
     url.searchParams.set('sort', sortInput.value);
     window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+    try {
+      window.sessionStorage.setItem(filtersStorageKey, JSON.stringify({
+        type: typeInput.value,
+        period: periodInput.value,
+        sort: sortInput.value,
+      }));
+    } catch { /* The URL still preserves filters when session storage is unavailable. */ }
   }
 
   function createDayCard(dateString, record) {
@@ -272,9 +292,10 @@ if (pageRoot) {
     }
   }
 
-  async function loadPeriod() {
-    listStatus.textContent = 'Memuat riwayat…';
-    dayList.replaceChildren();
+  async function loadPeriod(preserveExisting = false) {
+    const hasExistingRows = preserveExisting && dayList.childElementCount > 0;
+    listStatus.textContent = hasExistingRows ? 'Memperbarui riwayat…' : 'Memuat riwayat…';
+    if (!hasExistingRows) dayList.replaceChildren();
     try {
       const range = periodRange();
       const params = typeInput.value === 'monthly'
@@ -346,9 +367,12 @@ if (pageRoot) {
   }
 
   async function initializeList() {
-    typeInput.value = query.get('type') === 'weekly' ? 'weekly' : 'monthly';
-    sortInput.value = query.get('sort') === 'newest' ? 'newest' : 'oldest';
-    const requestedPeriod = query.get('period') || query.get('month') || '';
+    const savedFilters = readSavedFilters();
+    const requestedType = query.get('type') || (query.get('month') ? 'monthly' : savedFilters.type);
+    typeInput.value = requestedType === 'weekly' ? 'weekly' : 'monthly';
+    const requestedSort = query.get('sort') || savedFilters.sort;
+    sortInput.value = requestedSort === 'newest' ? 'newest' : 'oldest';
+    const requestedPeriod = query.get('period') || query.get('month') || savedFilters.period || '';
     if (!requestedPeriod) {
       try {
         const latest = await fetchRecords({ page_size: '50', sort: 'newest' });
@@ -368,7 +392,7 @@ if (pageRoot) {
     }
     populatePeriods(typeInput.value, requestedPeriod);
     updateListUrl();
-    await loadPeriod();
+    await loadPeriod(true);
   }
 
   const selectedDate = query.get('date');
@@ -393,3 +417,9 @@ if (pageRoot) {
     });
   }
 }
+
+document.addEventListener('turbo:before-cache', () => {
+  document.querySelector('#student-history-page')?.removeAttribute('data-history-initialized');
+});
+document.addEventListener('turbo:load', initializeStudentHistoryPage);
+initializeStudentHistoryPage();
