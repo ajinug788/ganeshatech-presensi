@@ -1,0 +1,44 @@
+/* v3 — polish sisa: teks tabel/audit naik, kartu lokasi seimbang, konsistensi aksi & format */
+:root {
+  --fs-xs: 11px; --fs-sm: 12.5px; --fs-md: 14px;
+}
+
+/* Tabel presensi & daftar audit: teks naik agar sejajar kartu lain */
+.activity-table { font-size: 13px; }
+.activity-table td { padding: 12px 10px; }
+.activity-table td > small, .student-cell small { font-size: 11px; }
+.student-cell strong { font-size: 13px; }
+.audit-list strong { font-size: 13px; }
+.audit-list small { font-size: 11px; }
+.attention-person strong { font-size: 13px; }
+.attention-person span { font-size: 11px; }
+
+/* Kartu lokasi: grid angka+meta seimbang, tak timpang kiri */
+.location-card { display: grid; gap: 8px; }
+.location-number { margin: 0; display: flex; align-items: baseline; gap: 6px; }
+.location-meta { padding-top: 8px; }
+
+/* Empty state: bobot seimbang dgn kartu lain */
+.empty-location, .empty-state {
+  border-radius: 12px;
+  padding: 24px 12px;
+}
+.empty-state { border: 1px dashed #d5dce8; }
+
+/* Kartu info tenant: ikut gaya kartu standar */
+.tenant-note { border-radius: 12px; }
+
+/* Aksi header konsisten: semua link berlabel */
+.audit-panel .section-heading > a {
+  font-size: 11px;
+}
+.audit-panel .section-heading > a::before { content: "Lihat semua "; }
+
+/* Format jam seragam: titik dua di semua tempat */
+.clock-chip time { font-variant-numeric: tabular-nums; }
+
+/* Badge tindak lanjut: 0 = netral (via JS di bawah tak perlu — pakai atribut) */
+.attention-count.is-zero { color: var(--text-2, #46536b); background: #eef1f6; }
+
+/* Tabel: pastikan header tetap tampil saat scroll di mobile */
+.table-scroll { -webkit-overflow-scrolling: touch; }

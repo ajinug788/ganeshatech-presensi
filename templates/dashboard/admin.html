@@ -7,6 +7,9 @@
   <meta name="theme-color" content="#0b2b78">
   <title>Dashboard Admin — {{ org_name }}</title>
   <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v2.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v3.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v4.css' %}">
 </head>
 <body>
   <div class="admin-shell">
@@ -43,7 +46,7 @@
 
     <div class="page-column">
       <header class="topbar">
-        <div class="breadcrumb"><strong>Presensi TeFa</strong><span>/</span><span>{{ org_name }}</span></div>
+        <div class="breadcrumb"><strong>Presensi TeFa</strong><span>/</span><span>{{ org_name }}</span><span>/</span><span>Ringkasan</span></div>
         <div class="topbar-tools">
           <div class="clock-chip"><span class="clock-dot" aria-hidden="true"></span><time>{{ now_wib|date:"H:i" }} WIB</time></div>
           <div class="account-chip"><span class="avatar">{{ request.user.get_short_name|default:request.user.email|slice:":1"|upper }}</span><span><strong>{{ request.user.get_full_name|default:request.user.email }}</strong><small>{{ role_label }}</small></span></div>
@@ -60,7 +63,7 @@
 
         <section class="page-heading">
           <div>
-            <p class="eyebrow">{{ org_name }} <span>•</span> Area admin sekolah</p>
+            <p class="eyebrow">Area admin sekolah</p>
             <h1>Dashboard Admin</h1>
             <p class="muted">Ringkasan presensi siswa dan pengelolaan sekolah untuk hari ini.</p>
           </div>
@@ -69,7 +72,7 @@
 
         <section class="overview-banner" aria-label="Informasi presensi hari ini">
           <div class="banner-copy">
-            <span class="banner-kicker"><i aria-hidden="true"></i> RINGKASAN PRESENSI HARI INI</span>
+            <span class="banner-kicker"><i aria-hidden="true"></i> JADWAL &amp; KONTEKS PRESENSI</span>
             <h2>{% if shift_aktif %}{{ shift_aktif }} shift aktif{% elif policy %}Kebijakan presensi organisasi{% else %}Presensi {{ org_name }}{% endif %}</h2>
             {% if shift_aktif %}
               <p>Jam dan toleransi mengikuti shift yang ditetapkan untuk siswa. {{ fallback_total }} siswa tanpa shift aktif menggunakan kebijakan organisasi jika tersedia.</p>
@@ -100,12 +103,12 @@
           <article class="kpi-card">
             <div class="kpi-heading"><span>Terlambat</span><span class="kpi-icon icon-amber" aria-hidden="true">◷</span></div>
             <div class="kpi-value">{{ terlambat }} <small>{{ pct_terlambat }}%</small></div>
-            <div class="kpi-foot"><span>Catatan berstatus terlambat</span><span class="tag tag-amber">Hari ini</span></div>
+            <div class="kpi-foot"><span>Catatan berstatus terlambat</span><span class="tag tag-amber">Status hari ini</span></div>
           </article>
           <article class="kpi-card">
             <div class="kpi-heading"><span>Belum ada catatan</span><span class="kpi-icon icon-red" aria-hidden="true">!</span></div>
-            <div class="kpi-value value-red">{{ belum_absen }} <small>{{ pct_belum }}%</small></div>
-            <div class="kpi-foot"><span>Siswa aktif tanpa catatan hari ini</span><span class="tag tag-red">Perlu dicek</span></div>
+            <div class="kpi-value {% if belum_absen == 0 %}value-zero{% else %}value-red{% endif %}">{{ belum_absen }} <small>{{ pct_belum }}%</small></div>
+            <div class="kpi-foot"><span>Siswa aktif tanpa catatan hari ini</span>{% if belum_absen > 0 %}<span class="tag tag-red">Perlu dicek</span>{% else %}<span class="tag tag-green">Lengkap</span>{% endif %}</div>
           </article>
         </section>
 
@@ -118,6 +121,8 @@
                   <button type="button" class="filter-button selected" data-filter="all">Semua</button>
                   <button type="button" class="filter-button" data-filter="present">Hadir</button>
                   <button type="button" class="filter-button" data-filter="late">Terlambat</button>
+                  <button type="button" class="filter-button" data-filter="excused">Izin</button>
+                  <button type="button" class="filter-button" data-filter="absent">Tidak hadir</button>
                 </div>
               </div>
               <div class="table-scroll">
@@ -129,7 +134,7 @@
                       <td><div class="student-cell"><span class="initials">{{ row.day.student.full_name|slice:":2"|upper }}</span><span><strong>{{ row.day.student.full_name }}</strong><small>{{ row.day.student.student_number }}</small></span></div></td>
                       <td><strong>{{ row.lokasi|default:"—" }}</strong><small>{{ row.day.student.group|default:"Tanpa kelompok" }}</small></td>
                       <td><strong>{{ row.masuk }}</strong>{% if row.masuk != "—" %}<small>WIB</small>{% endif %}</td>
-                      <td><strong>{{ row.pulang }}</strong>{% if row.pulang != "—" %}<small>WIB</small>{% endif %}</td>
+                      <td>{% if row.pulang != "—" %}<strong>{{ row.pulang }}</strong><small>WIB</small>{% else %}<span class="muted">Belum absen pulang</span>{% endif %}</td>
                       <td>{% if row.photo_url %}<a class="evidence-link" href="{{ row.photo_url }}" target="_blank" rel="noopener">Lihat foto</a>{% else %}<span class="muted">—</span>{% endif %}</td>
                       <td><span class="status-pill status-{{ row.day.status }}">{{ row.status_label }}{% if row.day.status == 'late' and row.late_minutes %} · {{ row.late_minutes }} mnt{% endif %}</span></td>
                     </tr>
@@ -169,7 +174,7 @@
 
           <aside class="right-stack">
             <section class="panel attention-panel">
-              <div class="panel-heading compact-heading"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Belum ada catatan</h2><p class="muted">{{ belum_absen }} siswa aktif belum tercatat hari ini.</p></div><span class="attention-count">{{ belum_absen }}</span></div>
+              <div class="panel-heading compact-heading"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Belum ada catatan</h2><p class="muted">{{ belum_absen }} siswa aktif belum tercatat hari ini.</p></div><span class="attention-count {% if belum_absen == 0 %}is-zero{% endif %}">{{ belum_absen }}</span></div>
               <div class="attention-list">
                 {% for student in belum_list|slice:":6" %}
                 <article class="attention-item"><div class="attention-person"><strong>{{ student.full_name }}</strong><span>{{ student.group|default:"Tanpa kelompok" }} · {{ student.student_number }}</span></div><span class="tag tag-red">Belum tercatat</span>{% if membership.role == 'admin' %}<button type="button" class="button button-primary button-small" data-student-id="{{ student.pk }}" data-student-name="{{ student.full_name|escape }}" data-student-number="{{ student.student_number|escape }}">Catat status</button>{% endif %}</article>
