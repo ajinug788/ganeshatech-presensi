@@ -6,13 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b2b78">
   <title>Dashboard Admin — {{ org_name }}</title>
-  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}">
-  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v2.css' %}">
-  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v3.css' %}">
-  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v4.css' %}">
-  <link rel="stylesheet" href="{% static 'css/admin-mobile-nav.css' %}">
-  <link rel="stylesheet" href="{% static 'css/admin-mobile-nav-v2.css' %}">
-  <link rel="stylesheet" href="{% static 'css/admin-badge.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard.css' %}?v={% static_v 'css/school-admin-dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v2.css' %}?v={% static_v 'css/school-admin-dashboard-v2.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v3.css' %}?v={% static_v 'css/school-admin-dashboard-v3.css' %}">
+  <link rel="stylesheet" href="{% static 'css/school-admin-dashboard-v4.css' %}?v={% static_v 'css/school-admin-dashboard-v4.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-mobile-nav.css' %}?v={% static_v 'css/admin-mobile-nav.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-mobile-nav-v2.css' %}?v={% static_v 'css/admin-mobile-nav-v2.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-badge.css' %}?v={% static_v 'css/admin-badge.css' %}">
   <link rel="stylesheet" href="{% static 'css/drawer-fix.css' %}?v={% static_v 'css/drawer-fix.css' %}">
   <script src="{% static 'vendor/turbo.min.js' %}" data-turbo-track="reload" defer></script>
   <style>
