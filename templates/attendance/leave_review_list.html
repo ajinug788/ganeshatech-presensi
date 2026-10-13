@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Tinjau Pengajuan Izin{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/leave-review.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/leave-review.css' %}?v=3">
 {% endblock %}
 {% block content %}
 <div class="page-heading">
@@ -42,15 +42,16 @@
         <button class="lv-btn lv-btn--approve" type="submit"><span class="lv-ico" aria-hidden="true">✓</span> Setujui</button>
       </form>
       <details class="lv-reject">
-        <summary class="lv-btn lv-btn--reject"><span class="lv-ico" aria-hidden="true">✕</span> Tolak</summary>
+        <summary class="lv-btn lv-btn--reject" aria-expanded="false"><span class="lv-ico" aria-hidden="true">✕</span> Tolak</summary>
         <form method="post" action="{% url 'attendance:leave_review_action' r.pk %}" class="lv-reject-form">
           {% csrf_token %}
           <input type="hidden" name="decision" value="reject">
-          <label class="lv-label" for="note-{{ r.pk }}">Catatan penolakan <span>(wajib)</span></label>
-          <textarea id="note-{{ r.pk }}" name="review_note" rows="2" required placeholder="Contoh: Tidak disetujui karena alasan kurang jelas"></textarea>
+          <label class="lv-label" for="note-{{ r.pk }}">Catatan penolakan <span>wajib</span></label>
+          <textarea id="note-{{ r.pk }}" name="review_note" rows="3" required placeholder="Contoh: Tidak disetujui karena alasan kurang jelas"></textarea>
+          <p class="lv-hint">Catatan ini akan dilihat siswa sebagai alasan penolakannya.</p>
           <div class="lv-reject-actions">
-            <button class="lv-btn lv-btn--reject-send" type="submit">Kirim penolakan</button>
             <button class="lv-btn lv-btn--ghost" type="button" onclick="this.closest('details').removeAttribute('open')">Batal</button>
+            <button class="lv-btn lv-btn--reject-send" type="submit" disabled>Kirim penolakan</button>
           </div>
         </form>
       </details>
@@ -63,4 +64,45 @@
 <section class="card"><p class="lv-empty">Belum ada pengajuan izin. 🎉</p></section>
 {% endif %}
 {% include "attendance/_pagination.html" %}
+<script>
+/* Delegasi Turbo-safe: state tombol Tolak, enable/disable kirim, tutup panel saat Setujui */
+document.addEventListener('click', function(e) {
+  var sum = e.target.closest('.lv-reject > summary');
+  if (sum) {
+    var det = sum.parentElement;
+    setTimeout(function() { sum.setAttribute('aria-expanded', det.hasAttribute('open') ? 'true' : 'false'); }, 0);
+  }
+  var ta = e.target.closest && e.target.closest('.lv-reject-form textarea');
+  if (ta) {
+    var send = ta.closest('.lv-reject-form').querySelector('.lv-btn--reject-send');
+    send.disabled = ta.value.trim() === '';
+  }
+  var approve = e.target.closest('.lv-btn--approve');
+  if (approve) {
+    var card = approve.closest('.lv-card');
+    var det2 = card && card.querySelector('.lv-reject');
+    if (det2 && det2.hasAttribute('open')) {
+      e.preventDefault();
+      det2.removeAttribute('open');
+    }
+  }
+});
+document.addEventListener('input', function(e) {
+  var ta = e.target.closest && e.target.closest('.lv-reject-form textarea');
+  if (ta) {
+    var send = ta.closest('.lv-reject-form').querySelector('.lv-btn--reject-send');
+    send.disabled = ta.value.trim() === '';
+  }
+});
+document.addEventListener('toggle', function(e) {
+  if (e.target.matches && e.target.matches('.lv-reject')) {
+    var s = e.target.querySelector('summary');
+    if (s) s.setAttribute('aria-expanded', e.target.hasAttribute('open') ? 'true' : 'false');
+    if (e.target.hasAttribute('open')) {
+      var t = e.target.querySelector('textarea');
+      if (t) { t.focus(); t.closest('.lv-reject-form').querySelector('.lv-btn--reject-send').disabled = t.value.trim() === ''; }
+    }
+  }
+}, true);
+</script>
 {% endblock %}

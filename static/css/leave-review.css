@@ -44,7 +44,7 @@
   color: #4e5b72; font-size: 11px; background: #f4f6fa;
 }
 
-/* ---- Area aksi: Setujui / Tolak sejajar, catatan muncul saat Tolak diklik ---- */
+/* ---- Area aksi: baris tombol + panel tolak full-width di baris tersendiri ---- */
 .lv-actions {
   display: flex; flex-wrap: wrap; align-items: center; gap: 9px;
   padding-top: 11px; border-top: 1px solid #eef1f7;
@@ -68,25 +68,35 @@
 .lv-btn--ghost { color: #77859a; border-color: #e2e7ef; background: #fff; }
 .lv-btn--ghost:hover { background: #f4f6fa; }
 
-/* Details = panel tolak */
-.lv-reject { position: relative; }
+/* Details = panel tolak: summary di baris tombol, FORM full-width di bawah.
+   Trik: .lv-reject diubah jadi display:contents agar summary ikut baris tombol
+   dan form turun sebagai item grid .lv-card tersendiri (full-width, tidak
+   menjepit tombol Setujui). */
+.lv-reject { display: contents; }
 .lv-reject > summary { list-style: none; }
 .lv-reject > summary::-webkit-details-marker { display: none; }
-.lv-reject > summary.lv-btn--reject[open], .lv-reject[open] > summary.lv-btn--reject { background: #fdeceb; }
+.lv-reject > summary .lv-ico { transition: transform .15s; }
+.lv-reject[open] > summary { background: #fdeceb; border-color: #e5b3b0; }
+.lv-reject[open] > summary .lv-ico { transform: rotate(90deg); }
 .lv-reject-form {
-  display: grid; gap: 8px; width: min(100%, 460px);
-  margin-top: 9px; padding: 12px;
-  border: 1px solid #eccfcd; border-radius: 10px; background: #fff8f7;
+  grid-column: 1 / -1;
+  display: grid; gap: 9px; width: 100%; max-width: 640px;
+  padding: 14px; box-sizing: border-box;
+  border: 1px solid #eccfcd; border-left: 3px solid #d9645f; border-radius: 10px;
+  background: #fff8f7;
 }
-.lv-label { color: #4e5b72; font-size: 11px; font-weight: 700; }
-.lv-label span { color: #b0453f; font-weight: 500; }
+.lv-label { display: flex; align-items: center; gap: 5px; color: #4e5b72; font-size: 11px; font-weight: 700; }
+.lv-label span { color: #b0453f; font-weight: 700; }
+.lv-label span::before { content: "*"; }
+.lv-hint { margin: 0; color: #8791a2; font-size: 10px; line-height: 1.5; }
 .lv-reject-form textarea {
-  width: 100%; padding: 9px 11px; resize: vertical; min-height: 58px;
-  border: 1px solid #dce2ed; border-radius: 7px;
+  width: 100%; padding: 9px 11px; resize: none; min-height: 64px; box-sizing: border-box;
+  border: 1px solid #dce2ed; border-radius: 7px; background: #fff;
   color: var(--ink, #27354c); font: 400 12px/1.5 'Inter', sans-serif;
 }
 .lv-reject-form textarea:focus { border-color: #6a87c7; outline: none; box-shadow: 0 0 0 3px rgb(36 78 170 / 12%); }
-.lv-reject-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.lv-reject-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.lv-btn--reject-send:disabled { opacity: .55; cursor: not-allowed; }
 .lv-empty { margin: 6px 0; color: #77859a; font-size: 12.5px; text-align: center; }
 
 @media (max-width: 640px) {
@@ -94,7 +104,7 @@
   .lv-card { padding: 14px; }
   .lv-head { flex-direction: column; gap: 8px; }
   .lv-actions { flex-direction: column; align-items: stretch; }
-  .lv-actions > form, .lv-reject, .lv-reject > summary { width: 100%; }
+  .lv-actions > form, .lv-reject > summary { width: 100%; }
   .lv-btn { justify-content: center; min-height: 42px; }
-  .lv-reject-form { width: 100%; }
+  .lv-reject-form { max-width: 100%; }
 }

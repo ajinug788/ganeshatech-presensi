@@ -60,6 +60,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.accounts.context.total_siswa",
+                "apps.accounts.context.page_title",
             ],
         },
     },

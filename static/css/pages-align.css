@@ -18,33 +18,35 @@
 .admin-workspace .messages { margin: 0; }
 
 /* --- Satu gaya kartu = gaya panel Ringkasan --- */
-.admin-workspace .card {
+.admin-page .admin-workspace .card,
+.admin-page .admin-workspace > section.card {
   margin: 0;
   padding: 20px;
   border: 1px solid var(--line-soft);
-  border-radius: var(--radius);
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 1px 2px rgb(22 35 60 / 4%);
 }
 
 /* --- Tipografi = Ringkasan --- */
 .admin-workspace .eyebrow { font-size: 10px; letter-spacing: .09em; color: #4d6398; }
-.admin-workspace h1 { font-size: clamp(22px, 2vw, 27px); }
+.admin-page .admin-workspace h1 { font-size: clamp(20px, 2vw, 25.6px); }
 .admin-workspace h2 { font-size: 18px; }
 .admin-workspace .page-heading .text-muted,
 .admin-workspace .muted { font-size: 12px; color: var(--text-3); }
 
 /* --- Tabel = gaya aktivitas presensi Ringkasan --- */
 .admin-workspace .table,
-.admin-workspace table.w-full { font-size: 13px; min-width: 0; }
+.admin-page .admin-workspace table.table,
+.admin-page .admin-workspace table.w-full { font-size: 13px; min-width: 0; }
 .admin-page .admin-workspace .card .table-wrap,
 .admin-page .admin-workspace .table-wrap { overflow-x: auto; max-width: 100%; }
 .admin-page .admin-workspace .card > table,
 .admin-page .admin-workspace section.card table { display: block; overflow-x: auto; }
 .admin-workspace .table th,
-.admin-workspace table.w-full th { font-size: 10px; padding: 10px 12px; }
+.admin-page .admin-workspace table.w-full th { font-size: 10px; padding: 10px 12px; }
 .admin-workspace .table td,
-.admin-workspace table.w-full td { padding: 12px; color: var(--text-2); }
+.admin-page .admin-workspace table.w-full td { padding: 12px; color: var(--text-2); }
 .admin-workspace .table tbody tr:hover,
 .admin-workspace table.w-full tbody tr:hover { background: #fafbfe; }
 .admin-workspace .table-wrap { border: 1px solid var(--line-soft); border-radius: var(--radius-sm); }
@@ -105,3 +107,8 @@
 @media (max-width: 760px) {
   .admin-workspace { padding: 16px 13px 18px; gap: var(--sp-3); }
 }
+
+/* Samakan eyebrow & tombol dgn Ringkasan */
+.admin-page .admin-workspace .eyebrow { font-size: 10px; }
+.admin-page .admin-workspace .btn { font-size: 9.5px; }
+.admin-page .admin-workspace .button { font-size: 9.5px; }
