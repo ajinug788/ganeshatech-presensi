@@ -40,10 +40,6 @@
   let dragPoint = null;
   let readyToSubmit = false;
 
-  document.querySelectorAll(".student-message--success").forEach((message) => {
-    window.setTimeout(() => message.remove(), 3000);
-  });
-
   const formatSize = (bytes) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   const clampCrop = () => {
     const maxX = sourceImage.naturalWidth - crop.side;
