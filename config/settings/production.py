@@ -1,3 +1,4 @@
+import os
 """Production: DEBUG off, semua secret dari environment (TDIP §13)."""
 from .base import *  # noqa: F401,F403
 
@@ -9,3 +10,9 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
 SECURE_HSTS_SECONDS = env.int("DJANGO_SECURE_HSTS_SECONDS", default=0)  # 31536000 setelah TLS stabil
+
+# Email: dari .env (console = tautan reset tercetak di journal; TODO: SMTP nyata)
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")

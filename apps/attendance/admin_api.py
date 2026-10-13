@@ -63,6 +63,7 @@ class AdminRecordsView(APIView):
                     continue
                 results.append({
                     "id": str(s.id),
+                    "attendance_day_id": None,
                     "name": s.full_name,
                     "group": s.group or "",
                     "date": the_date.isoformat(),
@@ -83,6 +84,7 @@ class AdminRecordsView(APIView):
             snap = attendance_day_snapshot(d)
             results.append({
                 "id": str(s.id),
+                "attendance_day_id": str(d.pk),
                 "name": s.full_name,
                 "group": s.group or "",
                 "date": the_date.isoformat(),

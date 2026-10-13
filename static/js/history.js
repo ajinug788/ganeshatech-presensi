@@ -1,58 +1,82 @@
-import { api } from './api.js';
-
+// history.js — riwayat siswa dari API nyata /api/v1/attendance/me/history/ (server-side pagination)
 const tbody = document.querySelector('#tbl-history tbody');
 const status = document.querySelector('#hist-status');
 const count = document.querySelector('#hist-count');
-const pageSize = 8;
-let records = [];
-let page = 0;
+const btnPrev = document.querySelector('#hist-prev');
+const btnNext = document.querySelector('#hist-next');
+
+let page = 1;
+let totalPages = 1;
+let total = 0;
 
 const STATUS = {
-  HADIR: ['Hadir', 'badge--hadir'],
-  BELUM_PULANG: ['Belum pulang', 'badge--belum'],
-  BELUM_HADIR: ['Belum hadir', 'badge--tidak'],
-  PERLU_DITINJAU: ['Perlu ditinjau', 'badge--tinjau'],
+  present: ['Hadir', 'badge--hadir'],
+  late: ['Terlambat', 'badge--belum'],
+  absent: ['Tidak hadir', 'badge--tinjau'],
+  excused: ['Izin / sakit', 'badge--tidak'],
 };
 
-function render() {
-  tbody.replaceChildren();
-  const visible = records.slice(page * pageSize, (page + 1) * pageSize);
-  for (const record of visible) {
-    const row = document.createElement('tr');
-    const date = document.createElement('td');
-    date.textContent = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(`${record.date}T12:00:00+07:00`));
-    row.append(date);
-    for (const value of [record.check_in, record.check_out]) {
-      const cell = document.createElement('td');
-      cell.textContent = value || '—';
-      row.append(cell);
+function fmtJam(iso) {
+  if (!iso) return '—';
+  return new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(iso));
+}
+
+function fmtTanggal(dateStr) {
+  return new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(`${dateStr}T12:00:00+07:00`));
+}
+
+function getCookie(name) {
+  const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+async function load() {
+  status.textContent = 'Memuat riwayat…';
+  status.className = 'status-line';
+  try {
+    const res = await fetch(`/api/v1/attendance/me/history/?page=${page}&page_size=8`, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' },
+    });
+    if (res.status === 401) { window.location.href = '/accounts/login/'; return; }
+    if (!res.ok) throw new Error('Server menolak permintaan (' + res.status + ')');
+    const data = await res.json();
+    total = data.count ?? 0;
+    totalPages = Math.max(1, Math.ceil(total / (data.page_size ?? 8)));
+    tbody.replaceChildren();
+    for (const r of data.results || []) {
+      const row = document.createElement('tr');
+      const date = document.createElement('td');
+      date.textContent = fmtTanggal(r.work_date);
+      row.append(date);
+      const masuk = document.createElement('td');
+      masuk.textContent = fmtJam(r.check_in_at);
+      row.append(masuk);
+      const pulang = document.createElement('td');
+      pulang.textContent = fmtJam(r.check_out_at);
+      row.append(pulang);
+      const st = document.createElement('td');
+      const badge = document.createElement('span');
+      const [label, style] = STATUS[r.status] || [r.status, 'badge--tidak'];
+      badge.className = `badge ${style}`;
+      badge.textContent = r.status === 'late' && r.late_minutes ? `Terlambat ${r.late_minutes} mnt` : label;
+      st.append(badge);
+      row.append(st);
+      tbody.append(row);
     }
-    const cell = document.createElement('td');
-    const badge = document.createElement('span');
-    const [label, style] = STATUS[record.status] || [record.status, 'badge--tidak'];
-    badge.className = `badge ${style}`;
-    badge.textContent = label;
-    cell.append(badge);
-    row.append(cell);
-    tbody.append(row);
+    const start = total ? (page - 1) * (data.page_size ?? 8) + 1 : 0;
+    const end = Math.min(page * (data.page_size ?? 8), total);
+    count.textContent = total ? `Menampilkan ${start}–${end} dari ${total} catatan` : 'Belum ada catatan';
+    btnPrev.disabled = page <= 1;
+    btnNext.disabled = page >= totalPages;
+    status.textContent = '';
+  } catch (error) {
+    status.className = 'status status--error';
+    status.textContent = `Riwayat belum dapat dimuat. ${error.message || 'Periksa koneksi lalu coba lagi.'}`;
+    count.textContent = '—';
   }
-  const start = records.length ? page * pageSize + 1 : 0;
-  const end = Math.min((page + 1) * pageSize, records.length);
-  count.textContent = records.length ? `Menampilkan ${start}–${end} dari ${records.length} catatan` : 'Belum ada catatan';
-  document.querySelector('#hist-prev').disabled = page === 0;
-  document.querySelector('#hist-next').disabled = end >= records.length;
-  status.textContent = records.length ? '' : 'Belum ada riwayat absensi.';
 }
 
-document.querySelector('#hist-prev').addEventListener('click', () => { page = Math.max(0, page - 1); render(); });
-document.querySelector('#hist-next').addEventListener('click', () => { page += 1; render(); });
-
-try {
-  const response = await api('GET', '/attendance/my-records/');
-  records = response.results || [];
-  render();
-} catch (error) {
-  status.className = 'status status--error';
-  status.textContent = `Riwayat belum dapat dimuat. ${error.message || 'Periksa koneksi lalu coba lagi.'}`;
-  count.textContent = '—';
-}
+btnPrev.addEventListener('click', () => { if (page > 1) { page -= 1; load(); } });
+btnNext.addEventListener('click', () => { if (page < totalPages) { page += 1; load(); } });
+load();

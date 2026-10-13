@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Dashboard Pembina — TeFa Presensi{% endblock %}
+{% block title %}Dashboard Pembina — TeFa Presensi
+{% endblock %}
 {% block nav %}<a href="/reports/dashboard/pembina/" aria-current="page">Ringkasan</a><a href="/reports/rekap/">Rekap &amp; Laporan</a><a href="/attendance/students/">Daftar siswa</a><form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn btn--secondary" style="min-height:38px;padding:7px 12px">Keluar</button></form>{% endblock %}
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">{{ membership.organization.name }} · Panel pembina</p><h1>Ringkasan kehadiran</h1><p class="text-muted">Pantau kehadiran siswa hari ini dan tindak lanjuti yang belum absen.</p></div><span class="badge badge--hadir">Hari ini</span></div>
@@ -30,7 +31,7 @@
   <div class="section-head"><div><p class="eyebrow">Pemantauan</p><h2>Aktivitas absen terakhir</h2></div><a class="panel-link" href="/reports/rekap/">Lihat rekap →</a></div>
   {% if aktivitas %}
     <div class="table-wrap"><table class="table">
-      <thead><tr><th>Foto</th><th>Nama siswa</th><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Lokasi</th></tr></thead>
+      <thead><tr><th>Foto</th><th>Nama siswa</th><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th><th>Lokasi</th><th>Aksi</th></tr></thead>
       <tbody>
         {% for item in aktivitas %}<tr>
           <td>
@@ -49,6 +50,7 @@
             {% else %}<span class="badge badge--tidak">Izin</span>{% endif %}
           </td>
           <td>{{ item.lokasi|default:"—" }}</td>
+          <td><a class="btn btn--secondary" href="/reports/koreksi/{{ item.day.id }}/" style="min-height:34px;padding:5px 10px">Koreksi</a></td>
         </tr>{% endfor %}
       </tbody>
     </table></div>
@@ -67,41 +69,29 @@
   </div>
 </div>
 
+{% load static %}
+<script type="module" src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}
+
 <script>
+// Koreksi: pakai halaman koreksi nyata /reports/koreksi/{attendance_day_id}/ (POST form + audit).
+// Buka di modal? Lebih sederhana & aman: redirect ke halaman koreksi.
 document.addEventListener('DOMContentLoaded', () => {
-  // Klik thumbnail → modal foto besar
-  document.querySelectorAll('img[data-media]').forEach((img) => {
-    img.addEventListener('click', async () => {
-      const modal = document.getElementById('modal-foto');
-      const content = document.getElementById('foto-content');
-      content.innerHTML = '<strong>Memuat foto…</strong>';
-      modal.hidden = false;
-      try {
-        const res = await fetch('/photos/' + img.dataset.media + '/', { credentials: 'same-origin' });
-        if (!res.ok) throw new Error('Foto tidak tersedia.');
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        content.innerHTML = '';
-        const big = document.createElement('img');
-        big.src = url;
-        big.alt = 'Foto selfie absensi';
-        big.style.cssText = 'width:100%;max-height:60vh;object-fit:contain;border-radius:12px;';
-        big.onload = () => URL.revokeObjectURL(url);
-        content.appendChild(big);
-      } catch (e) {
-        content.innerHTML = '<strong>Foto tidak tersedia.</strong>';
-      }
-    });
-  });
-  document.getElementById('foto-tutup').addEventListener('click', () => {
-    document.getElementById('modal-foto').hidden = true;
-  });
-  document.getElementById('modal-foto').addEventListener('click', (e) => {
-    if (e.target.id === 'modal-foto') e.target.hidden = true;
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') document.getElementById('modal-foto').hidden = true;
+  const table = document.getElementById('tbl-siswa');
+  if (!table) return;
+  table.addEventListener('click', (event) => {
+    const btn = event.target.closest('[data-koreksi]');
+    if (!btn) return;
+    const row = btn.closest('tr');
+    const dayId = btn.dataset.dayId;
+    if (dayId && dayId !== 'null') {
+      window.location.href = `/reports/koreksi/${dayId}/`;
+    } else {
+      // Belum ada AttendanceDay (siswa belum absen) → tidak bisa dikoreksi.
+      btn.textContent = 'Belum absen';
+      btn.disabled = true;
+    }
   });
 });
+
 </script>
-{% endblock %}

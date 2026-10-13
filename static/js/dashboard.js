@@ -84,7 +84,7 @@ function render() {
     distCell.textContent = record.location || '—';
     tr.append(distCell);
     const actionCell = document.createElement('td');
-    actionCell.append(button('Koreksi', { koreksi: String(record.id), nama: record.name }));
+    actionCell.append(button('Koreksi', { koreksi: String(record.id), nama: record.name, day_id: record.attendance_day_id || '' }));
     tr.append(actionCell);
     tbody.append(tr);
   }
