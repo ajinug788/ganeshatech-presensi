@@ -64,6 +64,9 @@
 .lv-btn--reject { color: #b0453f; border-color: #eccfcd; background: #fff; }
 .lv-btn--reject:hover { background: #fdeceb; }
 .lv-btn--reject.is-open { color: #fff; background: #d9645f; border-color: #d9645f; }
+.lv-archive { margin-top: 0.5rem; }
+.lv-btn--archive { color: #7a7a7a; border-color: #ddd; background: #fff; font-size: 0.8rem; }
+.lv-btn--archive:hover { color: #b0453f; border-color: #eccfcd; background: #fdeceb; }
 .lv-btn--reject-send { color: #fff; background: #d9645f; }
 .lv-btn--reject-send:hover { background: #c6534e; }
 .lv-btn--ghost { color: #77859a; border-color: #e2e7ef; background: #fff; }

@@ -59,6 +59,15 @@
       </form>
     </div>
     {% endif %}
+    {% if is_admin and r.status != 'approved' %}
+    <div class="lv-archive">
+      <form method="post" action="{% url 'attendance:leave_archive' r.pk %}"
+            onsubmit="return confirm('Arsipkan pengajuan izin ini? Data disembunyikan dari daftar.');">
+        {% csrf_token %}
+        <button class="lv-btn lv-btn--archive" type="submit">Hapus (arsip)</button>
+      </form>
+    </div>
+    {% endif %}
   </article>
   {% endfor %}
 </div>

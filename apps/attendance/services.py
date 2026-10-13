@@ -879,6 +879,37 @@ def apply_leave_approval(*, leave_request, actor):
     return leave
 
 
+def archive_leave(*, leave_request, actor):
+    """Arsipkan (soft-delete) pengajuan izin — hanya admin, hanya yang belum approved.
+
+    Approved JANGAN diarsipkan: sudah memengaruhi AttendanceDay (excused);
+    batalkan lewat mekanisme tinjauan, bukan arsip.
+    """
+    leave = leave_request
+    if leave.status == LeaveRequest.Status.APPROVED:
+        raise ValueError(
+            "Izin yang sudah disetujui tidak bisa dihapus; "
+            "gunakan penolakan/pembatalan tinjauan."
+        )
+    leave.archived_at = dj_timezone.now()
+    leave.archived_by = actor
+    leave.save(update_fields=["archived_at", "archived_by"])
+    catat_audit(
+        action="leave_archived",
+        object_type="attendance.LeaveRequest",
+        object_id=leave.pk,
+        organization=leave.organization,
+        actor=actor,
+        metadata={
+            "student_number": leave.student.student_number,
+            "status": leave.status,
+            "date_from": leave.date_from.isoformat(),
+            "date_to": leave.date_to.isoformat(),
+        },
+    )
+    return leave
+
+
 def reject_leave(*, leave_request, actor, review_note=""):
     """Tolak pengajuan izin; note wajib (divalidasi view/service)."""
     if not (review_note or "").strip():

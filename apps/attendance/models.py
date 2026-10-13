@@ -509,6 +509,16 @@ class LeaveRequest(models.Model):
     reviewed_at = models.DateTimeField(_("ditinjau pada"), null=True, blank=True)
     review_note = models.TextField(_("catatan tinjauan"), blank=True, default="")
     created_at = models.DateTimeField(_("dibuat"), auto_now_add=True)
+    # Soft-delete (arsip): disembunyikan dari semua daftar, jejak data tetap ada.
+    archived_at = models.DateTimeField(_("diarsipkan pada"), null=True, blank=True)
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="leave_requests_archived",
+        verbose_name=_("diarsipkan oleh"),
+    )
 
     class Meta:
         verbose_name = _("pengajuan izin")

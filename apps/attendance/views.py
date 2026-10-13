@@ -55,6 +55,7 @@ from .services import (
     reset_student_password,
     self_assign_shift,
     set_student_account_active,
+    archive_leave,
     unassign_supervisor,
 )
 
@@ -855,6 +856,7 @@ class LeaveRequestCreateView(RoleRequiredMixin, CreateView):
         ctx["my_requests"] = LeaveRequest.objects.filter(
             organization=self.organization,
             student__user=self.request.user,
+            archived_at__isnull=True,
         ).order_by("-created_at")
         return ctx
 
@@ -879,7 +881,7 @@ class LeaveReviewListView(RoleRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = LeaveRequest.objects.filter(
-            organization=self.organization
+            organization=self.organization, archived_at__isnull=True
         ).select_related("student", "reviewed_by")
         status = self.request.GET.get("status", "").strip()
         if status in ("pending", "approved", "rejected"):
@@ -889,7 +891,10 @@ class LeaveReviewListView(RoleRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["status"] = self.request.GET.get("status", "")
-        base = LeaveRequest.objects.filter(organization=self.organization)
+        ctx["is_admin"] = self.membership.role == "admin"
+        base = LeaveRequest.objects.filter(
+            organization=self.organization, archived_at__isnull=True
+        )
         ctx["counts"] = {
             "all": base.count(),
             "pending": base.filter(status="pending").count(),
@@ -926,6 +931,22 @@ class LeaveReviewActionView(RoleRequiredMixin, View):
                 messages.success(request, "Pengajuan izin ditolak.")
         except ValueError as exc:
             messages.error(request, str(exc))
+        return redirect("attendance:leave_review_list")
+
+
+class LeaveArchiveView(AdminRequiredMixin, View):
+    """Arsipkan (soft-delete) pengajuan izin — admin saja (POST)."""
+
+    def post(self, request, *args, **kwargs):
+        leave = get_object_or_404(
+            LeaveRequest, pk=kwargs["pk"], organization=self.organization
+        )
+        try:
+            archive_leave(leave_request=leave, actor=request.user)
+        except ValueError as exc:
+            messages.error(request, str(exc))
+        else:
+            messages.success(request, "Pengajuan izin diarsipkan (dihapus dari daftar).")
         return redirect("attendance:leave_review_list")
 
 

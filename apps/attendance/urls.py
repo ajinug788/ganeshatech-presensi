@@ -64,6 +64,7 @@ urlpatterns = [
     path("izin/ajukan/", views.LeaveRequestCreateView.as_view(), name="leave_request_create"),
     path("izin/tinjau/", views.LeaveReviewListView.as_view(), name="leave_review_list"),
     path("izin/<uuid:pk>/tinjau/", views.LeaveReviewActionView.as_view(), name="leave_review_action"),
+    path("izin/<uuid:pk>/arsip/", views.LeaveArchiveView.as_view(), name="leave_archive"),
     # Penugasan pembina (USER-04)
     path("pembina-penjaga/", views.SupervisorManageView.as_view(), name="supervisor_manage"),
 
