@@ -39,6 +39,7 @@
         <div><strong>{{ org_name }}</strong><small>Organisasi aktif</small></div>
       </div>
 
+      {% if membership.role == 'admin' %}
       <nav class="side-nav">
         <a class="nav-link is-current" href="{% url 'tenants:dashboard_admin' %}" aria-current="page"><span aria-hidden="true">▦</span>Ringkasan</a>
         <a class="nav-link" href="{% url 'attendance:student_list' %}"><span aria-hidden="true">♧</span>Master siswa</a>
@@ -210,7 +211,7 @@
               {% if belum_absen > 6 %}<p class="more-note">Menampilkan 6 dari {{ belum_absen }} siswa yang belum tercatat.</p>{% if membership.role == 'admin' %}<a class="attention-report-link" href="{% url 'reports:rekap' %}">Lihat rekap lengkap <span aria-hidden="true">→</span></a>{% endif %}{% endif %}
             </section>
 
-            {% if membership.role == 'admin' %}
+            {% if membership.role == 'admin' and False %}{# kartu disembunyikan dari dashboard; data tetap tercatat & ada di menu Riwayat koreksi & audit #}
             <section class="panel audit-panel">
               <div class="section-heading"><div><p class="eyebrow">JEJAK PERUBAHAN</p><h2>Koreksi terbaru</h2></div><a href="{% url 'reports:riwayat_koreksi' %}" aria-label="Buka riwayat koreksi">→</a></div>
               <div class="audit-list">
