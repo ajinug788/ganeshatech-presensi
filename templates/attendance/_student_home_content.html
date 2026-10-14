@@ -42,10 +42,10 @@
       {% if today_day and today_day.check_in_at and today_day.check_out_at %}
         <span class="attendance-button attendance-button--done"><span class="msym" aria-hidden="true">task_alt</span>Kehadiran hari ini sudah lengkap</span>
       {% elif today_day and today_day.check_in_at %}
-        <a class="attendance-button" href="{% url 'attendance:capture' %}?type=checkout"><span class="msym" aria-hidden="true">logout</span>Ambil Absen Pulang Sekarang</a>
+        <a class="attendance-button" href="{% url 'attendance:capture' %}?type=checkout"><span class="msym" aria-hidden="true">logout</span>Absen Keluar</a>
       {% else %}
-        <a class="attendance-button" href="{% url 'attendance:capture' %}" id="btn-absen-masuk"><span class="msym" aria-hidden="true">photo_camera_front</span>Ambil Absen Masuk Sekarang</a>
-        <span class="attendance-button attendance-button--disabled"><span class="msym" aria-hidden="true">logout</span>Absen pulang aktif setelah absen masuk</span>
+        <a class="attendance-button" href="{% url 'attendance:capture' %}" id="btn-absen-masuk"><span class="msym" aria-hidden="true">photo_camera_front</span>Absen Masuk</a>
+        <span class="attendance-button attendance-button--disabled"><span class="msym" aria-hidden="true">logout</span>Absen Keluar</span>
       {% endif %}
     </div>
   </section>
