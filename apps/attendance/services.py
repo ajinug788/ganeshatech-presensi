@@ -24,7 +24,7 @@ def generate_temp_password(length: int = SISWA_TEMP_PASSWORD_LENGTH) -> str:
 @transaction.atomic
 def provision_student(
     *, organization, student_number, full_name, group=None,
-    email=None, actor=None,
+    email=None, actor=None, extra=None,
 ):
     """Buat StudentProfile; bila email diisi, buat akun + membership siswa.
 
@@ -49,12 +49,15 @@ def provision_student(
             organization=organization, user=user, role=Membership.Role.SISWA
         )
 
-    student = organization.students.create(
-        student_number=student_number,
-        full_name=full_name,
-        group=group,
-        user=user,
-    )
+    fields = {
+        "student_number": student_number,
+        "full_name": full_name,
+        "group": group,
+        "user": user,
+    }
+    if extra:
+        fields.update(extra)
+    student = organization.students.create(**fields)
 
     catat_audit(
         action="student_created",

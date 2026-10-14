@@ -167,6 +167,10 @@ class StudentCreateView(AdminRequiredMixin, CreateView):
         if email and get_user_model().objects.filter(email=email.lower()).exists():
             form.add_error("email", "Email ini sudah terdaftar.")
             return self.form_invalid(form)
+        extra = {
+            k: form.cleaned_data.get(k) or None
+            for k in ("phone", "address", "birth_place", "birth_date", "gender", "shift")
+        }
         student, temp_password = provision_student(
             organization=self.organization,
             student_number=form.cleaned_data["student_number"],
@@ -174,7 +178,9 @@ class StudentCreateView(AdminRequiredMixin, CreateView):
             group=form.cleaned_data["group"] or None,
             email=getattr(form, "email_for_account", None),
             actor=self.request.user,
+            extra=extra,
         )
+        self._save_extras(student, form)
         if temp_password:
             messages.info(
                 self.request,
@@ -184,6 +190,24 @@ class StudentCreateView(AdminRequiredMixin, CreateView):
         else:
             messages.success(self.request, "Siswa berhasil ditambahkan.")
         return redirect(self.get_success_url())
+
+
+    def _save_extras(self, student, form):
+        """Simpan foto profil bila diunggah (opsional)."""
+        photo = form.cleaned_data.get("photo") if hasattr(form, "cleaned_data") else None
+        if not photo:
+            return
+        try:
+            asset = _store_photo(
+                organization=self.organization,
+                user=self.request.user,
+                django_file=photo,
+            )
+        except AttendanceError as exc:
+            form.add_error("photo", str(exc))
+            raise
+        student.profile_photo = asset
+        student.save(update_fields=["profile_photo", "updated_at"])
 
 
 class StudentDetailView(AdminRequiredMixin, DetailView):
@@ -218,6 +242,7 @@ class StudentUpdateView(AdminRequiredMixin, UpdateView):
             # organization & user tidak boleh berubah via form.
             student.organization_id = self.organization.pk
             student.save()
+            self._save_extras(student, form)
         catat_audit(
             action="student_updated",
             object_type="attendance.StudentProfile",

@@ -22,17 +22,28 @@ DAYS = [
 
 
 class StudentForm(forms.ModelForm):
-    """Form siswa; email opsional → provisioning akun via service."""
+    """Form siswa lengkap; email opsional → provisioning akun via service."""
 
     email = forms.EmailField(
         required=False,
         label="Email (opsional — bila diisi, akun siswa dibuat otomatis)",
     )
+    photo = forms.ImageField(
+        required=False,
+        label="Foto profil",
+    )
     reason = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
         model = StudentProfile
-        fields = ["student_number", "full_name", "group", "is_active"]
+        fields = [
+            "full_name", "student_number", "group", "shift",
+            "phone", "address", "birth_place", "birth_date", "gender", "is_active",
+        ]
+        widgets = {
+            "address": forms.Textarea(attrs={"rows": 2}),
+            "birth_date": forms.DateInput(attrs={"type": "date"}),
+        }
         # 'email' TIDAK di Meta.fields: field non-model akan dibuang
         # ModelForm._post_clean dari cleaned_data bila ikut di sana.
 
@@ -59,6 +70,9 @@ class StudentForm(forms.ModelForm):
     def __init__(self, *args, organization=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.organization = organization
+        if organization is not None:
+            self.fields["shift"].queryset = organization.shifts.filter(is_active=True)
+            self.fields["shift"].required = False
         if self.instance and self.instance.pk and self.instance.user_id:
             # Akun sudah ada: tampilkan email, tidak boleh diubah via form.
             self.fields["email"].disabled = True

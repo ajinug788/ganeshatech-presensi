@@ -56,6 +56,17 @@ class StudentProfile(models.Model):
     student_number = models.CharField(_("nomor induk siswa"), max_length=50)
     full_name = models.CharField(_("nama lengkap"), max_length=200)
     group = models.CharField(_("kelas/kelompok"), max_length=100, null=True, blank=True)
+    phone = models.CharField(_("nomor HP"), max_length=32, null=True, blank=True)
+    address = models.TextField(_("alamat"), null=True, blank=True)
+    birth_place = models.CharField(_("tempat lahir"), max_length=120, null=True, blank=True)
+    birth_date = models.DateField(_("tanggal lahir"), null=True, blank=True)
+    gender = models.CharField(
+        _("jenis kelamin"),
+        max_length=1,
+        choices=[("L", _("Laki-laki")), ("P", _("Perempuan"))],
+        null=True,
+        blank=True,
+    )
     is_active = models.BooleanField(_("aktif"), default=True)
     shift = models.ForeignKey(
         "Shift",

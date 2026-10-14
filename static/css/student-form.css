@@ -1,20 +1,35 @@
-/* Form siswa (tambah/ubah) — override untuk halaman admin */
-.sf-card { max-width: 640px; padding: 22px 24px !important; }
-.sf-section + .sf-section { margin-top: 20px; padding-top: 18px; border-top: 1px solid #eef1f7; }
-.sf-section-title { margin: 0 0 12px; color: #27354c; font: 700 13px 'Plus Jakarta Sans', sans-serif; }
+/* Form siswa (tambah/ubah) — full-width, grid responsif */
+.sf-card--full { max-width: 1080px; padding: 24px 28px !important; }
+.sf-section + .sf-section { margin-top: 22px; padding-top: 20px; border-top: 1px solid #eef1f7; }
+.sf-section-title { margin: 0 0 14px; color: #27354c; font: 700 13px 'Plus Jakarta Sans', sans-serif; }
 .sf-section-title small { color: #8791a2; font-weight: 500; font-size: 11px; }
 
-/* Field: label di atas input, rapat kiri */
+/* Grid field: 2 kolom desktop, 1 kolom HP */
+.sf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+.sf-grid .full { grid-column: 1 / -1; }
+
+/* Field: label di atas input */
 .sf-field { display: grid; gap: 5px; align-content: start; min-width: 0; }
 .sf-field label { margin: 0; color: #4e5b72; font-size: 11px; font-weight: 700; }
-.sf-field label + input { margin: 0; }
-.sf-field input, .sf-field select { width: 100%; box-sizing: border-box; }
+.sf-field label + input, .sf-field label + select, .sf-field label + textarea { margin: 0; }
+.sf-field input, .sf-field select, .sf-field textarea { width: 100%; box-sizing: border-box; }
+.sf-field textarea { min-height: 64px; }
 .sf-field .req { color: #d9645f; }
 .sf-hint { margin: 0; color: #8791a2; font-size: 10px; line-height: 1.5; }
 .sf-error { margin: 0; color: #b0453f; font-size: 10.5px; font-weight: 600; }
-.sf-field.has-error input { border-color: #d9645f; }
+.sf-field.has-error input, .sf-field.has-error select, .sf-field.has-error textarea { border-color: #d9645f; }
 
-/* Checkbox: ukuran normal, sejajar label — melawan rule input global */
+/* Baris foto: kotak foto di kiri, field sisanya di kanan */
+.sf-grid--photo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; align-items: start; }
+.sf-photo-box { display: grid; gap: 7px; justify-items: start; }
+.sf-photo-box input[type="file"] { font-size: 11px; }
+.sf-photo-preview { width: 160px; height: 160px; object-fit: cover; border-radius: 12px; border: 1px solid #dce2ed; }
+.sf-photo-placeholder {
+  display: grid; place-items: center; width: 160px; height: 160px;
+  border: 2px dashed #c9d4e8; border-radius: 12px; color: #98a5bd; font-size: 30px;
+}
+
+/* Checkbox */
 .sf-field--check { align-content: center; }
 .sf-check-wrap { display: flex; align-items: center; gap: 9px; min-height: 38px; }
 .sf-check-wrap input[type="checkbox"] {
@@ -25,15 +40,16 @@
 
 /* Alert error non-field */
 .sf-alert {
-  max-width: 640px; margin-bottom: 14px; padding: 11px 14px;
+  max-width: 1080px; margin-bottom: 14px; padding: 11px 14px;
   border: 1px solid #eccfcd; border-left: 3px solid #d9645f; border-radius: 8px;
   color: #b0453f; background: #fff8f7; font-size: 12px;
 }
 .sf-alert ul { margin: 0; padding-left: 16px; }
 
-.sf-actions { margin-top: 20px; padding-top: 14px; border-top: 1px solid #eef1f7; }
+.sf-actions { margin-top: 22px; padding-top: 16px; border-top: 1px solid #eef1f7; }
 
-@media (max-width: 640px) {
-  .sf-card { padding: 16px !important; }
+@media (max-width: 720px) {
+  .sf-card--full { padding: 16px !important; }
+  .sf-grid, .sf-grid--photo { grid-template-columns: 1fr; }
   .sf-check-wrap { min-height: 42px; }
 }

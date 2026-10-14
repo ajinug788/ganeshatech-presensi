@@ -2,62 +2,118 @@
 {% load static %}
 {% block title %}{{ action_label|default:"Form Siswa" }}{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/student-form.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/student-form.css' %}?v=2">
 {% endblock %}
 {% block content %}
 <div class="page-heading">
   <div>
     <p class="eyebrow">Manajemen</p>
     <h1>{% if form.instance.pk %}Ubah Siswa{% else %}Tambah Siswa{% endif %}</h1>
-    <p class="muted">{% if form.instance.pk %}Perubahan tercatat di jejak audit.{% else %}Isi data siswa. Email opsional untuk membuat akun login otomatis.{% endif %}</p>
+    <p class="muted">{% if form.instance.pk %}Perubahan tercatat di jejak audit.{% else %}Lengkapi data siswa. Email opsional untuk membuat akun login otomatis.{% endif %}</p>
   </div>
   <a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">← Kembali</a>
 </div>
 
 {% if form.non_field_errors %}<div class="sf-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 
-<section class="card sf-card">
-  <form method="post" novalidate>
+<section class="card sf-card sf-card--full">
+  <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
+
     <div class="sf-section">
       <h2 class="sf-section-title">Data siswa</h2>
-      <div class="form-grid">
-        <div class="sf-field {% if form.student_number.errors %}has-error{% endif %}">
-          <label for="{{ form.student_number.id_for_label }}">Nomor induk <span class="req" aria-hidden="true">*</span></label>
-          {{ form.student_number }}
-          {% if form.student_number.errors %}<p class="sf-error">{{ form.student_number.errors.0 }}</p>
-          {% else %}<p class="sf-hint">Nomor unik siswa dalam organisasi ini.</p>{% endif %}
+      <div class="sf-grid sf-grid--photo">
+        <div class="sf-field sf-field--photo {% if form.photo.errors %}has-error{% endif %}">
+          <label>Foto profil</label>
+          <div class="sf-photo-box">
+            {% if form.instance.profile_photo %}
+            <img src="/photos/{{ form.instance.profile_photo_id }}/" alt="Foto {{ form.instance.full_name }}" class="sf-photo-preview" onerror="this.style.display='none'">
+            {% else %}
+            <span class="sf-photo-placeholder" aria-hidden="true">⬆</span>
+            {% endif %}
+            {{ form.photo }}
+            <small class="sf-hint">JPG/PNG, otomatis dikompres.</small>
+            {% if form.photo.errors %}<p class="sf-error">{{ form.photo.errors.0 }}</p>{% endif %}
+          </div>
         </div>
-        <div class="sf-field {% if form.full_name.errors %}has-error{% endif %}">
-          <label for="{{ form.full_name.id_for_label }}">Nama lengkap <span class="req" aria-hidden="true">*</span></label>
-          {{ form.full_name }}
-          {% if form.full_name.errors %}<p class="sf-error">{{ form.full_name.errors.0 }}</p>{% endif %}
-        </div>
-        <div class="sf-field {% if form.group.errors %}has-error{% endif %}">
-          <label for="{{ form.group.id_for_label }}">Kelas / kelompok</label>
-          {{ form.group }}
-          {% if form.group.errors %}<p class="sf-error">{{ form.group.errors.0 }}</p>
-          {% else %}<p class="sf-hint">Boleh dikosongkan, mis. X RPL 1.</p>{% endif %}
-        </div>
-        <div class="sf-field sf-field--check">
-          <span class="sf-check-wrap">
-            <input type="checkbox" name="{{ form.is_active.html_name }}" id="{{ form.is_active.id_for_label }}" {% if form.is_active.value %}checked{% endif %}>
-            <label for="{{ form.is_active.id_for_label }}" class="sf-check-label">Siswa aktif</label>
-          </span>
-          <p class="sf-hint">Siswa nonaktif tidak muncul pada rekap absensi harian.</p>
+        <div class="sf-photo-fields">
+          <div class="sf-grid">
+            <div class="sf-field {% if form.full_name.errors %}has-error{% endif %}">
+              <label for="{{ form.full_name.id_for_label }}">Nama lengkap <span class="req" aria-hidden="true">*</span></label>
+              {{ form.full_name }}
+              {% if form.full_name.errors %}<p class="sf-error">{{ form.full_name.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="sf-field {% if form.student_number.errors %}has-error{% endif %}">
+              <label for="{{ form.student_number.id_for_label }}">Nomor induk <span class="req" aria-hidden="true">*</span></label>
+              {{ form.student_number }}
+              {% if form.student_number.errors %}<p class="sf-error">{{ form.student_number.errors.0 }}</p>
+              {% else %}<p class="sf-hint">Nomor unik siswa dalam organisasi ini.</p>{% endif %}
+            </div>
+            <div class="sf-field {% if form.group.errors %}has-error{% endif %}">
+              <label for="{{ form.group.id_for_label }}">Kelas / kelompok</label>
+              {{ form.group }}
+              {% if form.group.errors %}<p class="sf-error">{{ form.group.errors.0 }}</p>
+              {% else %}<p class="sf-hint">Boleh dikosongkan, mis. X RPL 1.</p>{% endif %}
+            </div>
+            <div class="sf-field {% if form.shift.errors %}has-error{% endif %}">
+              <label for="{{ form.shift.id_for_label }}">Shift</label>
+              {{ form.shift }}
+              {% if form.shift.errors %}<p class="sf-error">{{ form.shift.errors.0 }}</p>
+              {% else %}<p class="sf-hint">Kosong = ikut kebijakan absensi organisasi.</p>{% endif %}
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="sf-section sf-section--account">
-      <h2 class="sf-section-title">Akun login <small>(opsional)</small></h2>
-      <div class="form-grid">
+    <div class="sf-section">
+      <h2 class="sf-section-title">Data diri</h2>
+      <div class="sf-grid">
+        <div class="sf-field {% if form.birth_place.errors %}has-error{% endif %}">
+          <label for="{{ form.birth_place.id_for_label }}">Tempat lahir</label>
+          {{ form.birth_place }}
+          {% if form.birth_place.errors %}<p class="sf-error">{{ form.birth_place.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="sf-field {% if form.birth_date.errors %}has-error{% endif %}">
+          <label for="{{ form.birth_date.id_for_label }}">Tanggal lahir</label>
+          {{ form.birth_date }}
+          {% if form.birth_date.errors %}<p class="sf-error">{{ form.birth_date.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="sf-field {% if form.gender.errors %}has-error{% endif %}">
+          <label for="{{ form.gender.id_for_label }}">Jenis kelamin</label>
+          {{ form.gender }}
+          {% if form.gender.errors %}<p class="sf-error">{{ form.gender.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="sf-field {% if form.phone.errors %}has-error{% endif %}">
+          <label for="{{ form.phone.id_for_label }}">Nomor HP</label>
+          {{ form.phone }}
+          {% if form.phone.errors %}<p class="sf-error">{{ form.phone.errors.0 }}</p>
+          {% else %}<p class="sf-hint">Contoh: 0812xxxxxxx.</p>{% endif %}
+        </div>
+        <div class="sf-field {% if form.address.errors %}has-error{% endif %} full">
+          <label for="{{ form.address.id_for_label }}">Alamat</label>
+          {{ form.address }}
+          {% if form.address.errors %}<p class="sf-error">{{ form.address.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="sf-section">
+      <h2 class="sf-section-title">Akun login <small>(opsional)</small> &amp; status</h2>
+      <div class="sf-grid">
         <div class="sf-field {% if form.email.errors %}has-error{% endif %} full">
           <label for="{{ form.email.id_for_label }}">Email</label>
           {{ form.email }}
           {% if form.email.errors %}<p class="sf-error">{{ form.email.errors.0 }}</p>
           {% elif form.instance.pk and form.instance.user_id %}<p class="sf-hint">Akun sudah aktif dengan email di atas (tidak dapat diubah lewat form ini).</p>
           {% else %}<p class="sf-hint">Bila diisi, akun siswa dibuat otomatis dan password sementara ditampilkan sekali setelah disimpan.</p>{% endif %}
+        </div>
+        <div class="sf-field sf-field--check full">
+          <span class="sf-check-wrap">
+            <input type="checkbox" name="{{ form.is_active.html_name }}" id="{{ form.is_active.id_for_label }}" {% if form.is_active.value %}checked{% endif %}>
+            <label for="{{ form.is_active.id_for_label }}" class="sf-check-label">Siswa aktif</label>
+          </span>
+          <p class="sf-hint">Siswa nonaktif tidak muncul pada rekap absensi harian.</p>
         </div>
       </div>
     </div>
