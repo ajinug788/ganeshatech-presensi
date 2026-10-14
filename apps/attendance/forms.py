@@ -41,8 +41,13 @@ class StudentForm(forms.ModelForm):
             "phone", "address", "birth_place", "birth_date", "gender", "is_active",
         ]
         widgets = {
-            "address": forms.Textarea(attrs={"rows": 2}),
+            "address": forms.Textarea(attrs={"rows": 2, "style": "resize:none"}),
             "birth_date": forms.DateInput(attrs={"type": "date"}),
+            "shift": forms.Select(attrs={"style": "color:#8791a2"}),
+            "gender": forms.Select(
+                choices=[("", "Pilih jenis kelamin"), ("L", "Laki-laki"), ("P", "Perempuan")],
+                attrs={"style": "color:#8791a2"},
+            ),
         }
         # 'email' TIDAK di Meta.fields: field non-model akan dibuang
         # ModelForm._post_clean dari cleaned_data bila ikut di sana.
