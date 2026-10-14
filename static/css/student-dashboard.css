@@ -152,15 +152,19 @@ body.student-page {
 .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 7px; }
 .month-metric { min-width: 0; padding: 9px; border: 1px solid #eceef4; border-radius: 10px; background: #fff; box-shadow: 0 2px 7px rgb(25 35 60 / 4%); }
 .metric-label { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 2px; color: #5a6578; font-size: 9px; }
-.metric-label .msym { font-size: 15px; }
+.metric-label .msym { width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-items: center; border-radius: 8px; font-size: 15px; }
 .metric-number { color: #172033; font-size: 17px; font-weight: 800; line-height: 1.25; }
 .metric-number small { color: #687184; font-size: 8px; font-weight: 500; }
 .metric-track { height: 3px; overflow: hidden; margin-top: 6px; border-radius: 999px; background: #eceeff; }
 .metric-track i { display: block; height: 100%; border-radius: inherit; }
-.metric--present .msym, .metric--present .metric-track i { color: var(--student-green); background: var(--student-green); }
-.metric--late .msym, .metric--late .metric-track i { color: #ed8700; background: #ed8700; }
-.metric--excused .msym, .metric--excused .metric-track i { color: var(--student-blue); background: var(--student-blue); }
-.metric--absent .msym, .metric--absent .metric-track i { color: #777d8d; background: #c9ccd6; }
+.metric--present .metric-label .msym { color: var(--student-green); background: var(--student-green-soft); }
+.metric--present .metric-track i { background: var(--student-green); }
+.metric--late .metric-label .msym { color: #ed8700; background: #fff4e5; }
+.metric--late .metric-track i { background: #ed8700; }
+.metric--excused .metric-label .msym { color: var(--student-blue); background: #eaf6ff; }
+.metric--excused .metric-track i { background: var(--student-blue); }
+.metric--absent .metric-label .msym { color: #6b7280; background: #f0f1f5; }
+.metric--absent .metric-track i { background: #c9ccd6; }
 .leave-panel { gap: 9px; }
 .secondary-action { min-height: 35px; justify-content: flex-start; color: var(--student-primary); font-size: 9px; }
 .secondary-action .msym { font-size: 16px; }
@@ -655,6 +659,45 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .history-timeline-item { grid-template-columns: minmax(102px, .8fr) minmax(0, 1fr); gap: 6px; }
   .history-timeline-time { padding-left: 31px; }
   .history-event-card { padding-inline: 7px; }
+}
+
+/* Desktop dashboard refinements: use the available width and keep the hero compact. */
+@media (min-width: 1024px) {
+  .student-dashboard { max-width: 1120px; gap: 24px; }
+  .student-welcome {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 24px;
+    padding-bottom: 6px;
+  }
+  .student-welcome h1 { grid-column: 1; grid-row: 1; margin: 0; font-size: clamp(28px, 2vw, 34px); }
+  .student-welcome .student-classline { grid-column: 1; grid-row: 2; margin-top: 8px; }
+  .student-welcome .student-dateline { grid-column: 1; grid-row: 3; margin-top: 5px; }
+  .student-welcome .welcome-status-row {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+    justify-content: flex-end;
+  }
+  .student-welcome .server-time {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #e3e8f2;
+    border-radius: 999px;
+    color: #34466a;
+    background: #fff;
+    box-shadow: 0 3px 10px rgb(25 35 60 / 5%);
+    font-size: 12px;
+  }
+  .student-dashboard .month-section .section-heading { margin-bottom: 12px; }
+  .student-dashboard .month-metric { padding: 15px; border-radius: 13px; }
+  .student-dashboard .attendance-card,
+  .student-dashboard .student-panel,
+  .student-dashboard .month-metric,
+  .student-dashboard .recent-card {
+    box-shadow: 0 8px 24px rgb(25 35 60 / 5%), 0 1px 2px rgb(25 35 60 / 3%);
+  }
 }
 .student-photo-feedback { margin: 10px 0 0; color: #a72f46; font-size: 12px; }
 .student-photo-feedback[hidden] { display: none; }
