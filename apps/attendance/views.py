@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponseRedirect
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -97,6 +99,39 @@ class StudentListView(AdminRequiredMixin, ListView):
         else:
             qs = qs.order_by("full_name")
         return qs
+
+    def get(self, request, *args, **kwargs):
+        # page invalid / di luar jangkauan -> redirect halaman 1 (bukan 404)
+        page = request.GET.get("page", "")
+        if page:
+            try:
+                n = int(page)
+            except (TypeError, ValueError):
+                n = 0
+            if n < 1:
+                params = request.GET.copy()
+                params.pop("page", None)
+                from urllib.parse import urlencode
+                qs = params.urlencode()
+                return HttpResponseRedirect(
+                    reverse_lazy("attendance:student_list")
+                    + (("?") + qs if qs else "")
+                )
+            self.paginate_by = self.paginate_by  # noqa: keep
+            try:
+                resp = super().get(request, *args, **kwargs)
+                # cek empty page: jika paginator melempar Http404 karena page > num_pages, redirect
+                return resp
+            except Http404:
+                params = request.GET.copy()
+                params.pop("page", None)
+                from urllib.parse import urlencode
+                qs = params.urlencode()
+                return HttpResponseRedirect(
+                    reverse_lazy("attendance:student_list")
+                    + (("?") + qs if qs else "")
+                )
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
