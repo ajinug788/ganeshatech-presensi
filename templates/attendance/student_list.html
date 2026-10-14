@@ -1,32 +1,55 @@
 {% extends "base.html" %}
+{% load static static_v %}
 {% block title %}Daftar Siswa{% endblock %}
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>Daftar Siswa</h1></div><a class="btn" href="{% url 'attendance:student_create' %}">+ Tambah Siswa</a></div>
-<section class="card">
-  <form method="get" class="filters" role="search" aria-label="Filter siswa">
-    <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / nomor induk" aria-label="Cari nama / nomor induk">
-    <input type="text" name="group" value="{{ group }}" placeholder="Kelompok" aria-label="Kelompok">
-    <select name="status" aria-label="Status">
-      <option value="">Semua status</option>
-      <option value="active" {% if status == 'active' %}selected{% endif %}>Aktif</option>
-      <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Nonaktif</option>
-    </select>
-    <button class="btn" type="submit">Terapkan filter</button>
+<section class="card students-card">
+  <form method="get" class="filters students-filters" role="search" aria-label="Filter siswa">
+    <div class="filter-field">
+      <label for="f-q">Cari</label>
+      <input id="f-q" type="text" name="q" value="{{ q }}" placeholder="Nama / nomor induk" autocomplete="off">
+    </div>
+    <div class="filter-field">
+      <label for="f-group">Kelompok</label>
+      <select id="f-group" name="group">
+        <option value="">Semua kelompok</option>
+        {% for g in groups %}<option value="{{ g }}" {% if group == g %}selected{% endif %}>{{ g }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="f-status">Status</label>
+      <select id="f-status" name="status">
+        <option value="">Semua status</option>
+        <option value="active" {% if status == 'active' %}selected{% endif %}>Aktif</option>
+        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Nonaktif</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn btn--secondary" type="submit">Terapkan</button>
+      {% if q or group or status %}<a class="btn btn--ghost" href="{% url 'attendance:student_list' %}">Reset</a>{% endif %}
+    </div>
   </form>
-  <div class="table-wrap"><table class="table">
+  <p class="students-count" aria-live="polite">Menampilkan {{ page_obj.paginator.count }} siswa{% if q or group or status %} (terfilter){% endif %}</p>
+  <div class="table-wrap"><table class="table students-table">
     <thead>
-      <tr><th>Foto</th><th>NIS</th><th>Nama</th><th>Kelompok</th><th>Akun</th><th>Status</th><th>Aksi</th></tr>
+      <tr><th class="col-foto">Foto</th><th><a class="sort-link" href="?{% if order == 'nis' %}order=-nis{% else %}order=nis{% endif %}&q={{ q }}&group={{ group }}&status={{ status }}">NIS<span class="sort-ind">{% if order == 'nis' %}▲{% elif order == '-nis' %}▼{% endif %}</span></a></th><th><a class="sort-link" href="?{% if order == 'nama' %}order=-nama{% else %}order=nama{% endif %}&q={{ q }}&group={{ group }}&status={{ status }}">Nama<span class="sort-ind">{% if order == 'nama' %}▲{% elif order == '-nama' %}▼{% endif %}</span></a></th><th><a class="sort-link" href="?{% if order == 'kelompok' %}order=-kelompok{% else %}order=kelompok{% endif %}&q={{ q }}&group={{ group }}&status={{ status }}">Kelompok<span class="sort-ind">{% if order == 'kelompok' %}▲{% elif order == '-kelompok' %}▼{% endif %}</span></a></th><th>Akun</th><th>Status</th><th class="col-aksi">Aksi</th></tr>
     </thead>
     <tbody>
       {% for student in object_list %}
       <tr>
-        <td>{% if student.profile_photo %}<img src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto {{ student.full_name }}" loading="lazy" style="width:40px;height:40px;object-fit:cover;border-radius:10px;background:#eef1ee;">{% else %}<span class="initials" style="width:40px;height:40px;display:inline-grid;place-items:center;border-radius:10px;color:#fff;background:#244b9b;font-size:12px;font-weight:800;">{{ student.full_name|slice:":2"|upper }}</span>{% endif %}</td>
-        <td>{{ student.student_number }}</td>
-        <td><a href="{% url 'attendance:student_detail' student.pk %}">{{ student.full_name }}</a></td>
+        <td class="col-foto">{% if student.profile_photo %}<img src="{% url 'photos:photo' student.profile_photo_id %}" alt="Foto {{ student.full_name }}" loading="lazy" style="width:40px;height:40px;object-fit:cover;border-radius:10px;background:#eef1ee;">{% else %}<span class="initials" style="width:40px;height:40px;display:inline-grid;place-items:center;border-radius:10px;color:#fff;background:#244b9b;font-size:12px;font-weight:800;">{{ student.full_name|slice:":2"|upper }}</span>{% endif %}</td>
+        <td><code class="nis">{{ student.student_number }}</code></td>
+        <td><a class="student-name" href="{% url 'attendance:student_detail' student.pk %}">{{ student.full_name }}</a></td>
         <td>{{ student.group|default:"—" }}</td>
-        <td>{{ student.user.email|default:"(tanpa akun)" }}</td>
+        <td class="col-akun">{{ student.user.email|default:"(tanpa akun)" }}</td>
         <td>{% if student.is_active %}<span class="badge badge--hadir">Aktif</span>{% else %}<span class="badge badge--tidak">Nonaktif</span>{% endif %}</td>
-        <td><a href="{% url 'attendance:student_update' student.pk %}">Ubah</a><a href="{% url 'attendance:student_delete' student.pk %}">Nonaktifkan</a></td>
+        <td class="col-aksi">
+          <div class="row-actions">
+            <a class="action-link" href="{% url 'attendance:student_update' student.pk %}">Ubah</a>
+            <span class="action-divider" aria-hidden="true"></span>
+            <a class="action-link action-danger" href="{% url 'attendance:student_delete' student.pk %}">Nonaktifkan</a>
+          </div>
+        </td>
       </tr>
       {% empty %}
       <tr><td colspan="7"><div class="empty-state"><strong>Belum ada siswa</strong>Tambahkan siswa pertama lewat tombol di atas.</div></td></tr>
@@ -35,4 +58,5 @@
   </table></div>
   {% include "attendance/_pagination.html" %}
 </section>
+<link rel="stylesheet" href="{% static 'css/students-list.css' %}?v={% static_v 'css/students-list.css' %}">
 {% endblock %}

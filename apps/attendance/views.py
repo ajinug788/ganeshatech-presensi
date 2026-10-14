@@ -89,6 +89,13 @@ class StudentListView(AdminRequiredMixin, ListView):
             qs = qs.filter(is_active=True)
         elif status == "inactive":
             qs = qs.filter(is_active=False)
+        order = self.request.GET.get("order", "")
+        allowed = {"nis": "student_number", "nama": "full_name", "kelompok": "group"}
+        if order.lstrip("-").strip("-") in allowed:
+            field = allowed[order.lstrip("-")]
+            qs = qs.order_by(("-" + field) if order.startswith("-") else field)
+        else:
+            qs = qs.order_by("full_name")
         return qs
 
     def get_context_data(self, **kwargs):
@@ -96,6 +103,7 @@ class StudentListView(AdminRequiredMixin, ListView):
         ctx["q"] = self.request.GET.get("q", "")
         ctx["group"] = self.request.GET.get("group", "")
         ctx["status"] = self.request.GET.get("status", "")
+        ctx["order"] = self.request.GET.get("order", "")
         ctx["groups"] = (
             self.organization.students.order_by("group")
             .values_list("group", flat=True)
@@ -891,6 +899,7 @@ class LeaveReviewListView(RoleRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["status"] = self.request.GET.get("status", "")
+        ctx["order"] = self.request.GET.get("order", "")
         ctx["is_admin"] = self.membership.role == "admin"
         base = LeaveRequest.objects.filter(
             organization=self.organization, archived_at__isnull=True

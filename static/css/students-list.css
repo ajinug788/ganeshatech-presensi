@@ -1,0 +1,68 @@
+/* students-list.css — polish UI Master siswa (mengikuti design system Ringkasan) */
+.students-card { display: flex; flex-direction: column; }
+.students-card .table-wrap { flex: 0 0 auto; }
+
+/* --- Filter bar --- */
+.students-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.6fr) minmax(140px, 1fr) minmax(140px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 4px 0 14px;
+  border-bottom: 1px solid #eef1f6;
+  margin-bottom: 10px;
+}
+.filter-field { display: flex; flex-direction: column; gap: 5px; }
+.filter-field label {
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: #67718a;
+}
+.filter-field input, .filter-field select {
+  height: 38px; border: 1px solid #d8dee9; border-radius: 8px;
+  padding: 0 11px; font-size: 13px; color: #1c2333; background: #fff;
+  min-width: 0; width: 100%;
+}
+.filter-field input:focus, .filter-field select:focus {
+  outline: none; border-color: #244b9b; box-shadow: 0 0 0 3px rgb(36 75 155 / 12%);
+}
+.filter-actions { display: flex; gap: 8px; }
+.filter-actions .btn { height: 38px; padding: 0 16px; white-space: nowrap; }
+
+/* counter hasil */
+.students-count {
+  font-size: 12px; color: #67718a; margin: 0 0 8px;
+}
+
+/* --- Tabel --- */
+.students-table th.col-foto, .students-table td.col-foto { width: 56px; }
+.students-table .nis {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; background: #f2f5fa; border-radius: 6px; padding: 2px 7px;
+}
+.students-table .student-name { font-weight: 600; }
+.students-table .col-akun { font-size: 12px; color: #67718a; word-break: break-all; }
+
+/* aksi per baris */
+.row-actions { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.action-divider { width: 1px; height: 14px; background: #dde3ec; display: inline-block; }
+.students-table .action-link { font-size: 13px; font-weight: 600; color: #244b9b; }
+.students-table .action-link:hover { text-decoration: underline; }
+.students-table .action-danger { color: #c0392b; }
+.students-table .action-danger:hover { color: #96281b; }
+
+/* sort link */
+.sort-link { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.sort-link:hover { color: #244b9b; }
+.sort-ind { font-size: 9px; color: #244b9b; }
+
+/* baris hover */
+.students-table tbody tr { transition: background .12s ease; }
+.students-table tbody tr:hover { background: #f7f9fc; }
+
+@media (max-width: 720px) {
+  .students-filters { grid-template-columns: 1fr 1fr; }
+  .filter-field:first-child { grid-column: 1 / -1; }
+  .filter-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .students-table .col-akun { display: none; }
+  .students-table thead .col-akun { display: none; }
+}

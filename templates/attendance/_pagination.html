@@ -3,10 +3,10 @@
   <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
   <div class="pagination__actions">
     {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&group={{ group }}&status={{ status }}">← Sebelumnya</a>
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&group={{ group }}&status={{ status }}&order={{ order|default:"" }}">← Sebelumnya</a>
     {% endif %}
     {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&group={{ group }}&status={{ status }}">Berikutnya →</a>
+      <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&group={{ group }}&status={{ status }}&order={{ order|default:"" }}">Berikutnya →</a>
     {% endif %}
   </div>
 </nav>
