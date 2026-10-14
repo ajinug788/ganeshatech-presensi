@@ -395,7 +395,7 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-nav-item { min-height: 44px; align-content: center; gap: 3px; font-size: 10px; }
   .student-dashboard { display: flex; flex-direction: column; align-items: stretch; gap: 13px; }
   .student-dashboard > * { min-width: 0; }
-  .student-welcome { display: flex; flex-direction: column; gap: 12px; }
+  .student-welcome { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
   .student-dashboard .student-eyebrow { font-size: 10px; }
   .student-dashboard .student-classline { font-size: 12px; }
   .student-dashboard .student-dateline { font-size: 11px; }
