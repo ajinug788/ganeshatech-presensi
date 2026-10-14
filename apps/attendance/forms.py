@@ -32,6 +32,12 @@ class StudentForm(forms.ModelForm):
         required=False,
         label="Foto profil",
     )
+    gender = forms.TypedChoiceField(
+        required=False,
+        empty_value=None,
+        choices=[("", "Pilih jenis kelamin"), ("L", "Laki-laki"), ("P", "Perempuan")],
+        widget=forms.Select(attrs={"style": "color:#8791a2"}),
+    )
     reason = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
@@ -44,7 +50,10 @@ class StudentForm(forms.ModelForm):
             "address": forms.Textarea(attrs={"rows": 2, "style": "resize:none"}),
             "birth_date": forms.DateInput(attrs={"type": "date"}),
             "shift": forms.Select(attrs={"style": "color:#8791a2"}),
-            "gender": forms.Select(attrs={"style": "color:#8791a2"}),
+            "gender": forms.Select(
+                choices=[("", "Pilih jenis kelamin"), ("L", "Laki-laki"), ("P", "Perempuan")],
+                attrs={"style": "color:#8791a2"},
+            ),
         }
         # 'email' TIDAK di Meta.fields: field non-model akan dibuang
         # ModelForm._post_clean dari cleaned_data bila ikut di sana.
@@ -72,7 +81,6 @@ class StudentForm(forms.ModelForm):
     def __init__(self, *args, organization=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.organization = organization
-        self.fields["gender"].empty_label = "Pilih jenis kelamin"
         if organization is not None:
             self.fields["shift"].queryset = organization.shifts.filter(is_active=True)
             self.fields["shift"].required = False
