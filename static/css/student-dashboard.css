@@ -124,9 +124,9 @@ body.student-page {
 .shift-summary-row .tolerance-time { color: #b36b08; font-weight: 600; }
 .shift-summary--empty { display: flex; align-items: flex-start; color: #596275; font-size: 10px; }
 .shift-summary--empty .msym { margin-right: 7px; color: var(--student-primary); }
-.safety-note, .alert-card { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 9px; color: #384154; background: var(--student-amber-soft); font-size: 9px; line-height: 1.4; }
-.safety-note .msym, .alert-card .msym { flex: 0 0 auto; color: var(--student-amber); font-size: 16px; }
-.safety-note p, .alert-card p { margin: 0; }
+.alert-card { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 9px; color: #384154; background: var(--student-amber-soft); font-size: 9px; line-height: 1.4; }
+.alert-card .msym { flex: 0 0 auto; color: var(--student-amber); font-size: 16px; }
+.alert-card p { margin: 0; }
 .attendance-actions { display: grid; gap: 6px; }
 .attendance-button { width: 100%; min-height: 39px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 10px; border: 0; border-radius: 8px; color: #fff !important; background: var(--student-primary); box-shadow: 0 3px 7px rgb(8 44 122 / 17%); font-size: 10px; font-weight: 700; text-align: center; transition: background .15s, transform .15s; }
 .attendance-button:hover { background: #001d5e; }
@@ -277,7 +277,7 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .shift-summary { padding: 13px; }
 .shift-summary-row, .shift-summary-row strong { font-size: 12px; }
 .shift-summary-row > span .msym { font-size: 16px; }
-.safety-note, .alert-card { padding: 12px 14px; font-size: 12px; }
+.alert-card { padding: 12px 14px; font-size: 12px; }
 .attendance-button { min-height: 48px; font-size: 13px; }
 .attendance-button--disabled, .attendance-button--done { min-height: 42px; font-size: 11px; }
 .month-section { grid-column: span 5; padding: 4px 0; }
@@ -402,7 +402,6 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-dashboard .session-badge { font-size: 10px; }
   .student-dashboard .shift-summary-row,
   .student-dashboard .shift-summary-row strong { font-size: 10px; }
-  .student-dashboard .safety-note { font-size: 10px; }
   .student-dashboard .section-heading p { font-size: 10px; }
   .student-dashboard .discipline-pill { font-size: 9px; }
   .student-dashboard .metric-label { font-size: 10px; }
