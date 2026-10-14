@@ -661,9 +661,9 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .history-event-card { padding-inline: 7px; }
 }
 
-/* Desktop dashboard refinements: use the available width and keep the hero compact. */
+/* Keep desktop dashboard aligned with the student profile content width. */
 @media (min-width: 1024px) {
-  .student-dashboard { max-width: 1120px; gap: 24px; }
+  .student-dashboard { max-width: 900px; gap: 20px; }
   .student-welcome {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
