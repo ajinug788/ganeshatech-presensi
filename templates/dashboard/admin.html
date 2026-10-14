@@ -41,14 +41,13 @@
 
       <nav class="side-nav">
         <a class="nav-link is-current" href="{% url 'tenants:dashboard_admin' %}" aria-current="page"><span aria-hidden="true">▦</span>Ringkasan</a>
-        {% if membership.role == 'admin' %}
-        <a class="nav-link" href="{% url 'reports:rekap' %}"><span aria-hidden="true">✓</span>Rekap absensi</a>
         <a class="nav-link" href="{% url 'attendance:student_list' %}"><span aria-hidden="true">♧</span>Master siswa</a>
+        <a class="nav-link" href="{% url 'attendance:shift_list' %}"><span aria-hidden="true">⚙</span>Pengaturan shift</a>
+        <a class="nav-link" href="{% url 'reports:rekap' %}"><span aria-hidden="true">✓</span>Rekap absensi</a>
         <a class="nav-link" href="{% url 'attendance:location_list' %}"><span aria-hidden="true">⌖</span>Titik geofence</a>
         <a class="nav-link" href="{% url 'reports:riwayat_koreksi' %}"><span aria-hidden="true">↶</span>Riwayat koreksi &amp; audit</a>
         <a class="nav-link" href="{% url 'attendance:leave_review_list' %}"><span aria-hidden="true">✎</span>Tinjau izin{% if pending_leave_count %} <span class="nav-badge">{{ pending_leave_count }}</span>{% endif %}</a>
         <a class="nav-link" href="{% url 'reports:rekap_csv' %}"><span aria-hidden="true">⇩</span>Laporan &amp; ekspor CSV</a>
-        <a class="nav-link" href="{% url 'attendance:shift_list' %}"><span aria-hidden="true">⚙</span>Pengaturan shift</a>
         <a class="nav-link" href="{% url 'attendance:policy' %}"><span aria-hidden="true">◷</span>Kebijakan organisasi</a>
         {% endif %}
       </nav>
