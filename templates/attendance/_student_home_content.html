@@ -1,12 +1,34 @@
 {% load reports_extras %}
 <div class="student-dashboard">
   <section class="student-welcome" aria-labelledby="student-greeting">
-    <h1 id="student-greeting">{{ greeting }}, {{ student_name }}</h1>
-    <p class="student-classline"><span class="msym" aria-hidden="true">precision_manufacturing</span>
-      <span>{% if student_group %}{{ student_group }}{% else %}Siswa TeFa{% endif %}{% if shift_label %} · {{ shift_label }}{% endif %}</span>
-    </p>
-    <p class="student-dateline"><span class="msym" aria-hidden="true">calendar_today</span>{{ today|date:"l, d F Y" }}</p>
-    <p class="student-dateline"><span class="msym" aria-hidden="true">schedule</span>{{ now_time }} WIB</p>
+    <div class="student-welcome-main">
+      <h1 id="student-greeting">{{ greeting }}, {{ student_name }}</h1>
+      <p class="student-classline"><span class="msym" aria-hidden="true">school</span>
+        <span>{% if student_group %}{{ student_group }}{% else %}Siswa TeFa{% endif %}{% if shift_label %} · {{ shift_label }}{% endif %}</span>
+      </p>
+      <div class="student-dateline-wrap">
+        <p class="student-dateline"><span class="msym" aria-hidden="true">calendar_today</span>{{ today|date:"l, d F Y" }}</p>
+        <p class="student-dateline"><span class="msym" aria-hidden="true">schedule</span>{{ now_time }} WIB</p>
+      </div>
+    </div>
+    <div class="student-header-profile" id="student-info">
+      <div class="student-header-avatar">
+        {% if student_profile.profile_photo %}
+          <img class="profile-avatar-photo" src="{% url 'photos:photo' student_profile.profile_photo_id %}" alt="Foto profil {{ student_name }}">
+        {% else %}
+          <span class="profile-avatar msym" aria-hidden="true">person</span>
+        {% endif %}
+      </div>
+      <div class="student-header-profile-body">
+        <span class="student-eyebrow">Profil Siswa</span>
+        <strong class="student-header-name" title="{{ student_name }}">{{ student_name }}</strong>
+        <p class="student-header-email" title="{{ membership.user.email }}">{{ membership.user.email }}</p>
+      </div>
+      <a href="{% url 'attendance:student_profile' %}" class="student-header-manage-btn" title="Kelola profil">
+        <span class="msym" aria-hidden="true">manage_accounts</span>
+        <span>Kelola</span>
+      </a>
+    </div>
   </section>
 
   <section class="attendance-card" aria-labelledby="attendance-card-title">
@@ -90,12 +112,6 @@
       {% empty %}<div class="recent-empty"><span class="msym" aria-hidden="true">event_busy</span><strong>Belum ada catatan kehadiran bulan ini.</strong></div>{% endfor %}
     </div>
     <a class="secondary-action history-action" href="{% url 'attendance:history_page' %}">Lihat semua riwayat absensi<span class="msym action-arrow" aria-hidden="true">arrow_forward</span></a>
-  </section>
-
-  <section class="student-profile-card" id="student-info" aria-labelledby="profile-heading">
-    {% if student_profile.profile_photo %}<img class="profile-avatar profile-avatar-photo" src="{% url 'photos:photo' student_profile.profile_photo_id %}" alt="Foto profil {{ student_name }}">{% else %}<span class="profile-avatar msym" aria-hidden="true">badge</span>{% endif %}
-    <div><span class="student-eyebrow">Profil siswa</span><h2 id="profile-heading">{{ student_name }}</h2><p>{{ membership.user.email }}{% if student_group %} · {{ student_group }}{% endif %}</p></div>
-    <a href="{% url 'attendance:student_profile' %}" class="student-profile-manage"><span class="msym" aria-hidden="true">manage_accounts</span>Kelola profil</a>
   </section>
 
   <p class="student-security"><span class="msym" aria-hidden="true">lock</span>Data kehadiran terhubung ke akun siswa aktif</p>
