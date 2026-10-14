@@ -38,7 +38,8 @@
       <button class="btn btn--secondary" type="submit">Terapkan</button>
       {% if q or group or status %}<a class="btn btn--ghost" href="{% url 'attendance:student_list' %}">Reset</a>{% endif %}
       </div>
-      </form>
+  </div>
+  </form>
       <p class="students-count" aria-live="polite">Menampilkan {{ page_obj.paginator.count }} siswa{% if q or group or status %} (terfilter){% endif %}</p>
   <div class="table-wrap"><table class="table students-table">
     <thead>
