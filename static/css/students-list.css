@@ -1,37 +1,74 @@
-/* students-list.css — polish UI Master siswa (mengikuti design system Ringkasan) */
+/* students-list.css — Master siswa: toolbar pencarian + tombol Filter + panel filter */
 .students-card { display: flex; flex-direction: column; }
-.students-card .table-wrap { flex: 0 0 auto; }
+.students-card > *, .students-card form > * { min-width: 0; max-width: 100%; }
+.students-card .table-wrap { flex: 0 0 auto; min-width: 0; max-width: 100%; overflow-x: auto; }
 
-/* --- Filter bar --- */
-.students-filters {
-  display: grid;
-  grid-template-columns: minmax(180px, 1.6fr) minmax(140px, 1fr) minmax(140px, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-  padding: 4px 0 14px;
-  border-bottom: 1px solid #eef1f6;
-  margin-bottom: 10px;
+/* --- Toolbar (search + filter | tambah) --- */
+.students-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 2px 0 14px;
+  border-bottom: 1px solid #eef1f6; margin-bottom: 10px;
 }
+.toolbar-left { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+
+/* search box: ikon kaca pembesar di dalam field */
+.search-box { position: relative; flex: 1 1 320px; max-width: 380px; min-width: 160px; }
+.search-box .search-ico {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; pointer-events: none;
+}
+.search-box input {
+  width: 100%; height: 40px; border: 1px solid #d8dee9; border-radius: 8px;
+  background: #f4f6f9; padding: 0 12px 0 34px; font-size: 13px; color: #1c2333;
+}
+.search-box input::placeholder { color: #8a94a6; }
+.search-box input:focus {
+  outline: none; background: #fff; border-color: #244b9b;
+  box-shadow: 0 0 0 3px rgb(36 75 155 / 12%);
+}
+
+/* tombol Filter: outline biru + ikon corong (gaya secondary, membuka panel) */
+.filter-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 40px; padding: 0 15px; border-radius: 8px; cursor: pointer;
+  background: #fff; border: 1.5px solid #9cc3e8; color: #1e5fa8;
+  font-size: 13px; font-weight: 700; position: relative; white-space: nowrap;
+}
+.filter-toggle svg { width: 16px; height: 16px; }
+.filter-toggle:hover { background: #f2f8fd; border-color: #6fa9dd; }
+.filter-toggle[aria-expanded="true"] { background: #eaf3fc; border-color: #244b9b; }
+/* titik indikator filter aktif */
+.filter-dot {
+  position: absolute; top: -4px; right: -4px; width: 9px; height: 9px;
+  border-radius: 50%; background: #e8890c; border: 2px solid #fff;
+}
+
+/* --- Panel filter (tersembunyi sampai tombol Filter diklik) --- */
+.filter-panel {
+  display: flex; align-items: end; gap: 12px; flex-wrap: wrap;
+  padding: 14px; margin: 0 0 10px;
+  background: #f7f9fc; border: 1px solid #e3e9f2; border-radius: 10px;
+}
+.filter-panel[hidden] { display: none; }
 .filter-field { display: flex; flex-direction: column; gap: 5px; }
 .filter-field label {
   font-size: 11px; font-weight: 700; letter-spacing: .04em;
   text-transform: uppercase; color: #67718a;
 }
-.filter-field input, .filter-field select {
+.filter-field select { max-width: 100%;
   height: 38px; border: 1px solid #d8dee9; border-radius: 8px;
   padding: 0 11px; font-size: 13px; color: #1c2333; background: #fff;
-  min-width: 0; width: 100%;
+  min-width: 200px; width: 100%;
 }
-.filter-field input:focus, .filter-field select:focus {
+.filter-field select:focus {
   outline: none; border-color: #244b9b; box-shadow: 0 0 0 3px rgb(36 75 155 / 12%);
 }
 .filter-actions { display: flex; gap: 8px; }
 .filter-actions .btn { height: 38px; padding: 0 16px; white-space: nowrap; }
 
 /* counter hasil */
-.students-count {
-  font-size: 12px; color: #67718a; margin: 0 0 8px;
-}
+.students-count { font-size: 12px; color: #67718a; margin: 0 0 8px; }
 
 /* --- Tabel --- */
 .students-table th.col-foto, .students-table td.col-foto { width: 56px; }
@@ -60,9 +97,14 @@
 .students-table tbody tr:hover { background: #f7f9fc; }
 
 @media (max-width: 720px) {
-  .students-filters { grid-template-columns: 1fr 1fr; }
-  .filter-field:first-child { grid-column: 1 / -1; }
-  .filter-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .students-toolbar { flex-wrap: wrap; }
+  .toolbar-left { flex-wrap: wrap; width: 100%; }
+  .search-box { flex: 1 1 100%; max-width: none; }
+  .filter-toggle { flex: 0 0 auto; }
+  .toolbar-right { width: 100%; justify-content: flex-end; }
+  .filter-panel { flex-direction: column; align-items: stretch; }
+  .filter-field select { max-width: 100%; min-width: 0; }
+  .filter-actions { justify-content: flex-end; }
   .students-table .col-akun { display: none; }
   .students-table thead .col-akun { display: none; }
 }

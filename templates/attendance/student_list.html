@@ -2,13 +2,23 @@
 {% load static static_v %}
 {% block title %}Daftar Siswa{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>Daftar Siswa</h1></div><a class="btn" href="{% url 'attendance:student_create' %}">+ Tambah Siswa</a></div>
+<div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>Daftar Siswa</h1></div></div>
 <section class="card students-card">
-  <form method="get" class="filters students-filters" role="search" aria-label="Filter siswa">
-    <div class="filter-field">
-      <label for="f-q">Cari</label>
-      <input id="f-q" type="text" name="q" value="{{ q }}" placeholder="Nama / nomor induk" autocomplete="off">
+  <form method="get" class="students-toolbar" role="search" aria-label="Cari dan filter siswa" id="students-form">
+    <div class="toolbar-left">
+      <div class="search-box">
+        <svg class="search-ico" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="#8a94a6" stroke-width="1.8"/><path d="M13.5 13.5 17.5 17.5" stroke="#8a94a6" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input id="f-q" type="text" name="q" value="{{ q }}" placeholder="Cari nama / nomor induk..." autocomplete="off" aria-label="Cari nama atau nomor induk">
+      </div>
+      <button type="button" class="filter-toggle" id="filter-toggle" aria-expanded="{% if q or group or status %}true{% else %}false{% endif %}" aria-controls="filter-panel">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2.5 4h15l-5.8 6.8v4.4l-3.4 1.8v-6.2L2.5 4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        Filter<span class="filter-dot" {% if not group and not status %}hidden{% endif %} aria-hidden="true"></span>
+      </button>
     </div>
+    <div class="toolbar-right">
+      <a class="btn" href="{% url 'attendance:student_create' %}">+ Tambah Siswa</a>
+    </div>
+  <div class="filter-panel" id="filter-panel" {% if not group and not status %}hidden{% endif %}>
     <div class="filter-field">
       <label for="f-group">Kelompok</label>
       <select id="f-group" name="group">
@@ -27,9 +37,9 @@
     <div class="filter-actions">
       <button class="btn btn--secondary" type="submit">Terapkan</button>
       {% if q or group or status %}<a class="btn btn--ghost" href="{% url 'attendance:student_list' %}">Reset</a>{% endif %}
-    </div>
-  </form>
-  <p class="students-count" aria-live="polite">Menampilkan {{ page_obj.paginator.count }} siswa{% if q or group or status %} (terfilter){% endif %}</p>
+      </div>
+      </form>
+      <p class="students-count" aria-live="polite">Menampilkan {{ page_obj.paginator.count }} siswa{% if q or group or status %} (terfilter){% endif %}</p>
   <div class="table-wrap"><table class="table students-table">
     <thead>
       <tr><th class="col-foto">Foto</th><th><a class="sort-link" href="?{% if order == 'nis' %}order=-nis{% else %}order=nis{% endif %}&q={{ q }}&group={{ group }}&status={{ status }}">NIS<span class="sort-ind">{% if order == 'nis' %}▲{% elif order == '-nis' %}▼{% endif %}</span></a></th><th><a class="sort-link" href="?{% if order == 'nama' %}order=-nama{% else %}order=nama{% endif %}&q={{ q }}&group={{ group }}&status={{ status }}">Nama<span class="sort-ind">{% if order == 'nama' %}▲{% elif order == '-nama' %}▼{% endif %}</span></a></th><th><a class="sort-link" href="?{% if order == 'kelompok' %}order=-kelompok{% else %}order=kelompok{% endif %}&q={{ q }}&group={{ group }}&status={{ status }}">Kelompok<span class="sort-ind">{% if order == 'kelompok' %}▲{% elif order == '-kelompok' %}▼{% endif %}</span></a></th><th>Akun</th><th>Status</th><th class="col-aksi">Aksi</th></tr>
@@ -58,5 +68,6 @@
   </table></div>
   {% include "attendance/_pagination.html" %}
 </section>
-<link rel="stylesheet" href="{% static 'css/students-list.css' %}?v={% static_v 'css/students-list.css' %}">
+<link rel="stylesheet" href="{% static_v 'css/students-list.css' %}">
+<script src="{% static_v 'js/students-filter.js' %}" defer></script>
 {% endblock %}
