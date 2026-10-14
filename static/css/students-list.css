@@ -6,9 +6,12 @@
 /* --- Toolbar (search + filter | tambah) --- */
 .students-toolbar {
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px; padding: 2px 0 14px;
   border-bottom: 1px solid #eef1f6; margin-bottom: 10px;
 }
+/* panel filter selalu menempati barisnya sendiri, di bawah tombol Filter */
+.filter-panel { flex: 1 1 100%; border-bottom: none; }
 .toolbar-left { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
 .toolbar-left > * { flex: 0 0 auto; }
 .toolbar-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
