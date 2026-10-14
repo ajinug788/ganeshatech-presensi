@@ -15,7 +15,6 @@ from apps.attendance.models import (
     StudentProfile,
 )
 from apps.attendance.services import (
-    OUTSIDE_CHECKIN_WINDOW,
     AttendanceError,
     create_check_in,
 )
@@ -354,7 +353,7 @@ class TestEngineShift:
 
     @mock.patch("apps.attendance.services._store_photo")
     @mock.patch("apps.attendance.services._now_wib")
-    def test_shift_pagi_di_window_sukses_luar_window_ditolak(
+    def test_checkin_shift_sampai_akhir_window_checkout_dihitung_terlambat(
         self, m_now, m_photo, org_a, admin_a
     ):
         self._patch_photo(m_photo, org_a)
@@ -364,19 +363,21 @@ class TestEngineShift:
         student = make_student(org_a, "eng1@a.com")
         student.shift = shift
         student.save()
-        # 06:30 WIB → di window shift pagi, DI LUAR window policy → sukses.
+        # 06:30 WIB → di window shift pagi, di luar window policy → sukses.
         m_now.return_value = datetime.datetime(
             2026, 10, 12, 6, 30, tzinfo=datetime.timezone(datetime.timedelta(hours=7))
         )
         day, created, _ = create_check_in(**checkin_now(student))
         assert created
-        # 08:00 WIB → di luar window shift pagi (07:00+15) walau policy masih buka.
+        # 08:00 WIB → masih sebelum check_out_end (14:00), jadi diterima;
+        # terlambat 60 menit dihitung dari check_in_end (07:00), tanpa grace gate.
         m_now.return_value = datetime.datetime(
             2026, 10, 13, 8, 0, tzinfo=datetime.timezone(datetime.timedelta(hours=7))
         )
-        with pytest.raises(AttendanceError) as exc:
-            create_check_in(**checkin_now(student, key="idem-2"))
-        assert exc.value.code == OUTSIDE_CHECKIN_WINDOW
+        day, created, _ = create_check_in(**checkin_now(student, key="idem-2"))
+        assert created
+        assert day.status == AttendanceDay.Status.LATE
+        assert day.late_minutes == 60
 
     @mock.patch("apps.attendance.services._store_photo")
     @mock.patch("apps.attendance.services._now_wib")

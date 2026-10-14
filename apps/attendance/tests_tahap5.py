@@ -87,7 +87,7 @@ def within_window():
 
 
 def late_time():
-    """10:00 WIB — lewat check_in_end (09:00) tapi dalam toleransi (90m)."""
+    """10:00 WIB — terlambat 60 menit dari check_in_end pukul 09:00."""
     return timezone.now().astimezone(_WIB_TZ).replace(
         hour=10, minute=0, second=0, microsecond=0
     )
@@ -222,12 +222,60 @@ def test_checkout_tanpa_checkin():
     assert resp.json()["code"] == "NOT_CHECKED_IN"
 
 
-def test_di_luar_window_checkin():
+def test_checkin_terlambat_diterima_dihitung_late():
+    """Jam 12:00 (3 jam setelah check_in_end 09:00) sekarang DITERIMA.
+
+    Perubahan PRD: siswa bisa absen masuk kapan saja dalam hari aktif
+    (selama dalam window check_in_start s.d. check_out_end).
+    Keterlambatan dihitung dalam menit dari check_in_end.
+    """
     org, user, student, loc = setup_org("j", "j@x.id")
+    # policy org j: check_in_end=09:00, check_out_end=17:00, tolerance=15
     client = Client()
     client.force_login(user)
-    # 12:00 — di luar check-in (07-09) dan check-out (15-17).
-    with freeze_time(out_window()):
+    # 12:00 — setelah check_in_end (09:00) tapi sebelum check_out_end (17:00).
+    with freeze_time(out_window()):  # 12:00
+        resp = check_in(client, payload(org, student, make_jpeg()))
+    assert resp.status_code == 201, resp.content
+    body = resp.json()
+    assert body["status_attendance"] == "late"
+    # terlambat = 12:00 - 09:00 = 180 menit
+    assert body["late_minutes"] == 180
+
+
+def test_checkin_sampai_akhir_window_checkout_diterima():
+    """Check-in tepat pada check_out_end masih diterima sebagai terlambat."""
+    org, user, student, loc = setup_org("j3", "j3@x.id")
+    client = Client()
+    client.force_login(user)
+    waktu_akhir = out_window().replace(hour=17, minute=0)
+    with freeze_time(waktu_akhir):
+        resp = check_in(client, payload(org, student, make_jpeg()))
+    assert resp.status_code == 201, resp.content
+    assert resp.json()["status_attendance"] == "late"
+    assert resp.json()["late_minutes"] == 480
+
+
+def test_checkin_setelah_akhir_window_checkout_ditolak():
+    """Check-in setelah check_out_end ditolak."""
+    org, user, student, loc = setup_org("j4", "j4@x.id")
+    client = Client()
+    client.force_login(user)
+    lewat_akhir = out_window().replace(hour=17, minute=1)
+    with freeze_time(lewat_akhir):
+        resp = check_in(client, payload(org, student, make_jpeg()))
+    assert resp.status_code == 422
+    assert resp.json()["code"] == "OUTSIDE_CHECKIN_WINDOW"
+
+
+def test_checkin_sebelum_shift_ditolak():
+    """Absen sebelum jam buka shift (check_in_start=07:00) harus ditolak."""
+    org, user, student, loc = setup_org("j2", "j2@x.id")
+    client = Client()
+    client.force_login(user)
+    # 05:00 — sebelum check_in_start (07:00).
+    sebelum_buka = out_window().replace(hour=5, minute=0)
+    with freeze_time(sebelum_buka):
         resp = check_in(client, payload(org, student, make_jpeg()))
     assert resp.status_code == 422
     assert resp.json()["code"] == "OUTSIDE_CHECKIN_WINDOW"

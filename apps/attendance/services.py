@@ -403,15 +403,18 @@ def _get_policy_and_location(*, student, lat, lng):
 def _check_window(kind, policy, now):
     """Validasi window jam untuk kind; return (start, end) waktu window.
 
+    CHECK-IN : window mulai dari check_in_start s.d. check_out_end.
+               Siswa bisa absen masuk kapan saja dalam hari aktif,
+               tapi keterlambatan dihitung dari check_in_end.
+    CHECK-OUT: window check_out_start s.d. check_out_end (tidak berubah).
+
     Dukung window melewati tengah malam (mis. 22:00-01:00): bila end <= start,
     window dianggap wrap; valid: t >= start ATAU t <= end.
     """
     if kind == AttendanceAttempt.Kind.CHECK_IN:
-        end = (
-            datetime.combine(now.date(), policy.check_in_end, tzinfo=now.tzinfo)
-            + timedelta(minutes=policy.late_tolerance_min or 0)
-        ).time()
-        window = (policy.check_in_start, end)
+        # Batas atas: sampai akhir window checkout, agar siswa yang sangat
+        # terlambat masih bisa mencatat kehadiran (PRD: hitung menit terlambat).
+        window = (policy.check_in_start, policy.check_out_end)
         code = OUTSIDE_CHECKIN_WINDOW
     else:
         window = (policy.check_out_start, policy.check_out_end)
@@ -496,16 +499,6 @@ def create_check_in(
                 raise AttendanceError(ACCURACY_TOO_LOW)
             _check_window(kind, policy, now)
 
-            # Toleransi terlambat: window check-in diperpanjang sampai
-            # check_in_end + late_tolerance_min; di luar itu → window error.
-            if kind == AttendanceAttempt.Kind.CHECK_IN:
-                grace_end = (
-                    datetime.combine(now.date(), policy.check_in_end,
-                                     tzinfo=now.tzinfo)
-                    + timedelta(minutes=policy.late_tolerance_min or 0)
-                )
-                if now > grace_end:
-                    raise AttendanceError(OUTSIDE_CHECKIN_WINDOW)
             work_date = now.date()
             day, created = AttendanceDay.objects.get_or_create(
                 student=student,
@@ -525,7 +518,9 @@ def create_check_in(
             day.check_in_location = loc
             day.check_in_media = asset
 
-            # Status late bila melewati check_in_end + toleransi.
+            # Hitung keterlambatan dari check_in_end (bukan dari toleransi).
+            # Siswa yang absen setelah check_in_end → status LATE, menit terlambat
+            # dihitung tepat dari batas check_in_end shift/policy.
             check_in_end_dt = datetime.combine(
                 now.date(), policy.check_in_end, tzinfo=now.tzinfo
             )
