@@ -1,14 +1,12 @@
 {% load reports_extras %}
 <div class="student-dashboard">
   <section class="student-welcome" aria-labelledby="student-greeting">
-    <div class="welcome-status-row">
-      <span class="server-time"><span class="msym" aria-hidden="true">schedule</span>{{ now_time }} WIB</span>
-    </div>
     <h1 id="student-greeting">{{ greeting }}, {{ student_name }}</h1>
     <p class="student-classline"><span class="msym" aria-hidden="true">precision_manufacturing</span>
       <span>{% if student_group %}{{ student_group }}{% else %}Siswa TeFa{% endif %}{% if shift_label %} · {{ shift_label }}{% endif %}</span>
     </p>
     <p class="student-dateline"><span class="msym" aria-hidden="true">calendar_today</span>{{ today|date:"l, d F Y" }}</p>
+    <p class="student-dateline"><span class="msym" aria-hidden="true">schedule</span>{{ now_time }} WIB</p>
   </section>
 
   <section class="attendance-card" aria-labelledby="attendance-card-title">

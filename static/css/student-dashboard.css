@@ -100,9 +100,6 @@ body.student-page {
 .student-message--info { color: #1e40af; border-color: #bfdbfe; background: #eff6ff; }
 .student-dashboard { display: flex; flex-direction: column; gap: 13px; }
 .student-welcome { scroll-margin-top: 72px; }
-.welcome-status-row { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
-.server-time { display: inline-flex; align-items: center; gap: 4px; color: #3c557d; font-size: 9px; font-weight: 600; white-space: nowrap; }
-.server-time .msym { color: var(--student-blue); font-size: 14px; }
 .student-welcome h1 { margin: 8px 0 2px; color: #121d34; font: 700 clamp(19px, 5vw, 22px)/1.25 "Plus Jakarta Sans", Inter, sans-serif; letter-spacing: -.035em; }
 .student-classline, .student-dateline { display: flex; align-items: flex-start; gap: 6px; margin: 3px 0 0; color: #465166; font-size: 11px; line-height: 1.35; }
 .student-classline .msym { flex: 0 0 auto; color: var(--student-primary); font-size: 16px; }
@@ -268,7 +265,6 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .student-welcome { grid-column: 1 / -1; padding-bottom: 2px; }
 .student-welcome h1 { margin-top: 12px; font-size: clamp(24px, 2.1vw, 30px); }
 .student-classline, .student-dateline { font-size: 13px; }
-.server-time { font-size: 11px; }
 .attendance-card { grid-column: span 7; gap: 15px; padding: 22px; border-radius: 16px; }
 .student-dashboard > .student-panel:not(.leave-panel) { grid-column: span 5; }
 .student-dashboard > .alert-card { grid-column: 1 / -1; font-size: 13px; }
@@ -398,7 +394,6 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-dashboard { display: flex; flex-direction: column; align-items: stretch; gap: 13px; }
   .student-dashboard > * { min-width: 0; }
   .student-dashboard .student-eyebrow { font-size: 10px; }
-  .student-dashboard .server-time { font-size: 10px; }
   .student-dashboard .student-classline { font-size: 12px; }
   .student-dashboard .student-dateline { font-size: 11px; }
   .student-dashboard .session-badge { font-size: 10px; }
@@ -665,31 +660,12 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 @media (min-width: 1024px) {
   .student-dashboard { max-width: 900px; gap: 20px; }
   .student-welcome {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 24px;
+    display: block;
     padding-bottom: 6px;
   }
-  .student-welcome h1 { grid-column: 1; grid-row: 1; margin: 0; font-size: clamp(28px, 2vw, 34px); }
-  .student-welcome .student-classline { grid-column: 1; grid-row: 2; margin-top: 8px; }
-  .student-welcome .student-dateline { grid-column: 1; grid-row: 3; margin-top: 5px; }
-  .student-welcome .welcome-status-row {
-    grid-column: 2;
-    grid-row: 1 / span 3;
-    align-self: center;
-    justify-content: flex-end;
-  }
-  .student-welcome .server-time {
-    min-height: 40px;
-    padding: 0 14px;
-    border: 1px solid #e3e8f2;
-    border-radius: 999px;
-    color: #34466a;
-    background: #fff;
-    box-shadow: 0 3px 10px rgb(25 35 60 / 5%);
-    font-size: 12px;
-  }
+  .student-welcome h1 { margin: 0 0 2px; font-size: clamp(28px, 2vw, 34px); }
+  .student-welcome .student-classline { margin-top: 4px; }
+  .student-welcome .student-dateline { margin-top: 5px; }
   .student-dashboard .month-section .section-heading { margin-bottom: 12px; }
   .student-dashboard .month-metric { padding: 15px; border-radius: 13px; }
   .student-dashboard .attendance-card,
