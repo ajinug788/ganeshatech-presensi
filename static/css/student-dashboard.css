@@ -673,9 +673,21 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-welcome .student-classline { margin-top: 4px; }
   .student-welcome .student-dateline-wrap { margin-top: 6px; }
   .student-dashboard .month-section .section-heading { margin-bottom: 12px; }
+  .student-dashboard > .attendance-card,
+  .student-dashboard > .month-section,
+  .student-dashboard > .leave-panel,
+  .student-dashboard > .recent-section {
+    grid-column: span 6;
+    align-self: stretch;
+    padding: 22px;
+    border-radius: 16px;
+    background: var(--student-surface);
+  }
   .student-dashboard .month-metric { padding: 15px; border-radius: 13px; }
   .student-dashboard .attendance-card,
   .student-dashboard .student-panel,
+  .student-dashboard .month-section,
+  .student-dashboard .recent-section,
   .student-dashboard .month-metric,
   .student-dashboard .recent-card {
     box-shadow: 0 8px 24px rgb(25 35 60 / 5%), 0 1px 2px rgb(25 35 60 / 3%);
