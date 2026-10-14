@@ -11,24 +11,6 @@
         <p class="student-dateline"><span class="msym" aria-hidden="true">schedule</span>{{ now_time }} WIB</p>
       </div>
     </div>
-    <div class="student-header-profile" id="student-info">
-      <div class="student-header-avatar">
-        {% if student_profile.profile_photo %}
-          <img class="profile-avatar-photo" src="{% url 'photos:photo' student_profile.profile_photo_id %}" alt="Foto profil {{ student_name }}">
-        {% else %}
-          <span class="profile-avatar msym" aria-hidden="true">person</span>
-        {% endif %}
-      </div>
-      <div class="student-header-profile-body">
-        <span class="student-eyebrow">Profil Siswa</span>
-        <strong class="student-header-name" title="{{ student_name }}">{{ student_name }}</strong>
-        <p class="student-header-email" title="{{ membership.user.email }}">{{ membership.user.email }}</p>
-      </div>
-      <a href="{% url 'attendance:student_profile' %}" class="student-header-manage-btn" title="Kelola profil">
-        <span class="msym" aria-hidden="true">manage_accounts</span>
-        <span>Kelola</span>
-      </a>
-    </div>
   </section>
 
   <section class="attendance-card" aria-labelledby="attendance-card-title">
