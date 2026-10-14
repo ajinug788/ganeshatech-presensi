@@ -35,8 +35,8 @@
       </select>
     </div>
     <div class="filter-actions">
-      <button class="btn btn--secondary" type="submit">Terapkan</button>
-      {% if q or group or status %}<a class="btn btn--ghost" href="{% url 'attendance:student_list' %}">Reset</a>{% endif %}
+      <button class="btn" type="submit">Terapkan</button>
+      {% if q or group or status %}<a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">Reset</a>{% endif %}
       </div>
   </div>
   </form>

@@ -61,7 +61,7 @@
   font-size: 11px; font-weight: 700; letter-spacing: .04em;
   text-transform: uppercase; color: #67718a;
 }
-.filter-field select { max-width: 100%;
+.admin-page .admin-workspace .filter-field select { max-width: 100%; margin-bottom: 0;
   height: 38px; border: 1px solid #d8dee9; border-radius: 8px;
   padding: 0 11px; font-size: 13px; color: #1c2333; background: #fff;
   min-width: 200px; width: 100%;
@@ -69,7 +69,7 @@
 .filter-field select:focus {
   outline: none; border-color: #244b9b; box-shadow: 0 0 0 3px rgb(36 75 155 / 12%);
 }
-.filter-actions { display: flex; gap: 8px; }
+.filter-actions { display: flex; gap: 8px; align-self: flex-end; padding-bottom: 1px; }
 .filter-actions .btn { height: 38px; padding: 0 16px; white-space: nowrap; }
 
 /* counter hasil */
@@ -108,7 +108,7 @@
   .filter-toggle { flex: 0 0 auto; }
   .toolbar-right { width: 100%; justify-content: flex-end; }
   .filter-panel { flex-direction: column; align-items: stretch; }
-  .filter-field select { max-width: 100%; min-width: 0; }
+  .admin-page .admin-workspace .filter-field select { max-width: 100%; margin-bottom: 0; min-width: 0; }
   .filter-actions { justify-content: flex-end; }
   .students-table .col-akun { display: none; }
   .students-table thead .col-akun { display: none; }
