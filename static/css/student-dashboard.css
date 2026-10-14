@@ -107,7 +107,7 @@ body.student-page {
 .student-dateline-wrap { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
 .student-dateline { margin: 0; color: #687082; font-size: 10px; }
 .student-dateline .msym { color: #73788a; font-size: 14px; }
-.attendance-card, .student-panel { display: flex; flex-direction: column; gap: 11px; padding: 13px; border: 1px solid #eceef4; border-radius: 14px; background: var(--student-surface); box-shadow: 0 4px 12px rgb(25 35 60 / 8%); }
+.attendance-card, .student-panel, .month-section, .recent-section { display: flex; flex-direction: column; gap: 11px; padding: 13px; border: 1px solid #eceef4; border-radius: 14px; background: var(--student-surface); box-shadow: 0 4px 12px rgb(25 35 60 / 8%); }
 .attendance-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .student-eyebrow { display: block; color: #5e687b; font-size: 8px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .session-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; padding: 4px 9px; border-radius: 999px; font-size: 9px; font-weight: 700; }
@@ -280,13 +280,13 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
 .alert-card { padding: 12px 14px; font-size: 12px; }
 .attendance-button { min-height: 48px; font-size: 13px; }
 .attendance-button--disabled, .attendance-button--done { min-height: 42px; font-size: 11px; }
-.month-section { grid-column: span 5; padding: 4px 0; }
+.month-section { grid-column: span 5; }
 .student-dashboard > .leave-panel { grid-column: span 7; }
 .recent-section { grid-column: span 5; }
 .student-security { grid-column: 1 / -1; font-size: 10px; }
 .section-heading h2 { font-size: 16px; }
 .section-heading p { font-size: 11px; }
-.student-panel { padding: 18px; }
+.student-panel, .month-section, .recent-section { padding: 18px; }
 .metric-grid { gap: 10px; }
 .month-metric { padding: 13px; }
 .metric-label { font-size: 11px; }
@@ -419,7 +419,7 @@ body.student-page { min-height: 100vh; background: #f3f5fa; color: var(--student
   .student-dashboard .student-profile-card p { font-size: 9px; }
   .student-dashboard .student-security { font-size: 9px; }
   .student-welcome h1 { font-size: clamp(19px, 5vw, 23px); }
-  .attendance-card, .student-panel { width: 100%; padding: 13px; border-radius: 14px; }
+  .attendance-card, .student-panel, .month-section, .recent-section { width: 100%; padding: 13px; border-radius: 14px; }
   .attendance-button { min-height: 46px; font-size: 12px; }
   .student-feature-page { gap: 14px; }
   .student-feature-heading { align-items: flex-start; gap: 8px; }
