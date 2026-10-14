@@ -1,13 +1,69 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}{{ action_label|default:"Form Siswa" }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/student-form.css' %}?v=1">
+{% endblock %}
 {% block content %}
-<div class="page-heading"><div><p class="eyebrow">Manajemen</p><h1>{% if form.instance.pk %}Ubah Siswa{% else %}Tambah Siswa{% endif %}</h1></div><a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">← Kembali</a></div>
-<section class="card" style="max-width:640px">
-  <form method="post">
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Manajemen</p>
+    <h1>{% if form.instance.pk %}Ubah Siswa{% else %}Tambah Siswa{% endif %}</h1>
+    <p class="muted">{% if form.instance.pk %}Perubahan tercatat di jejak audit.{% else %}Isi data siswa. Email opsional untuk membuat akun login otomatis.{% endif %}</p>
+  </div>
+  <a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">← Kembali</a>
+</div>
+
+{% if form.non_field_errors %}<div class="sf-alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+
+<section class="card sf-card">
+  <form method="post" novalidate>
     {% csrf_token %}
-    {{ form.as_p }}
-    <div class="form-actions">
-      <button class="btn" type="submit">Simpan</button>
+    <div class="sf-section">
+      <h2 class="sf-section-title">Data siswa</h2>
+      <div class="form-grid">
+        <div class="sf-field {% if form.student_number.errors %}has-error{% endif %}">
+          <label for="{{ form.student_number.id_for_label }}">Nomor induk <span class="req" aria-hidden="true">*</span></label>
+          {{ form.student_number }}
+          {% if form.student_number.errors %}<p class="sf-error">{{ form.student_number.errors.0 }}</p>
+          {% else %}<p class="sf-hint">Nomor unik siswa dalam organisasi ini.</p>{% endif %}
+        </div>
+        <div class="sf-field {% if form.full_name.errors %}has-error{% endif %}">
+          <label for="{{ form.full_name.id_for_label }}">Nama lengkap <span class="req" aria-hidden="true">*</span></label>
+          {{ form.full_name }}
+          {% if form.full_name.errors %}<p class="sf-error">{{ form.full_name.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="sf-field {% if form.group.errors %}has-error{% endif %}">
+          <label for="{{ form.group.id_for_label }}">Kelas / kelompok</label>
+          {{ form.group }}
+          {% if form.group.errors %}<p class="sf-error">{{ form.group.errors.0 }}</p>
+          {% else %}<p class="sf-hint">Boleh dikosongkan, mis. X RPL 1.</p>{% endif %}
+        </div>
+        <div class="sf-field sf-field--check">
+          <span class="sf-check-wrap">
+            <input type="checkbox" name="{{ form.is_active.html_name }}" id="{{ form.is_active.id_for_label }}" {% if form.is_active.value %}checked{% endif %}>
+            <label for="{{ form.is_active.id_for_label }}" class="sf-check-label">Siswa aktif</label>
+          </span>
+          <p class="sf-hint">Siswa nonaktif tidak muncul pada rekap absensi harian.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sf-section sf-section--account">
+      <h2 class="sf-section-title">Akun login <small>(opsional)</small></h2>
+      <div class="form-grid">
+        <div class="sf-field {% if form.email.errors %}has-error{% endif %} full">
+          <label for="{{ form.email.id_for_label }}">Email</label>
+          {{ form.email }}
+          {% if form.email.errors %}<p class="sf-error">{{ form.email.errors.0 }}</p>
+          {% elif form.instance.pk and form.instance.user_id %}<p class="sf-hint">Akun sudah aktif dengan email di atas (tidak dapat diubah lewat form ini).</p>
+          {% else %}<p class="sf-hint">Bila diisi, akun siswa dibuat otomatis dan password sementara ditampilkan sekali setelah disimpan.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions sf-actions">
+      <button class="btn" type="submit">{% if form.instance.pk %}Simpan perubahan{% else %}Simpan siswa{% endif %}</button>
       <a class="btn btn--secondary" href="{% url 'attendance:student_list' %}">Batal</a>
     </div>
   </form>

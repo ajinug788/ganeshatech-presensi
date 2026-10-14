@@ -1,0 +1,39 @@
+/* Form siswa (tambah/ubah) — override untuk halaman admin */
+.sf-card { max-width: 640px; padding: 22px 24px !important; }
+.sf-section + .sf-section { margin-top: 20px; padding-top: 18px; border-top: 1px solid #eef1f7; }
+.sf-section-title { margin: 0 0 12px; color: #27354c; font: 700 13px 'Plus Jakarta Sans', sans-serif; }
+.sf-section-title small { color: #8791a2; font-weight: 500; font-size: 11px; }
+
+/* Field: label di atas input, rapat kiri */
+.sf-field { display: grid; gap: 5px; align-content: start; min-width: 0; }
+.sf-field label { margin: 0; color: #4e5b72; font-size: 11px; font-weight: 700; }
+.sf-field label + input { margin: 0; }
+.sf-field input, .sf-field select { width: 100%; box-sizing: border-box; }
+.sf-field .req { color: #d9645f; }
+.sf-hint { margin: 0; color: #8791a2; font-size: 10px; line-height: 1.5; }
+.sf-error { margin: 0; color: #b0453f; font-size: 10.5px; font-weight: 600; }
+.sf-field.has-error input { border-color: #d9645f; }
+
+/* Checkbox: ukuran normal, sejajar label — melawan rule input global */
+.sf-field--check { align-content: center; }
+.sf-check-wrap { display: flex; align-items: center; gap: 9px; min-height: 38px; }
+.sf-check-wrap input[type="checkbox"] {
+  width: 17px; height: 17px; min-height: 0; margin: 0; flex: 0 0 auto;
+  accent-color: #102f78; cursor: pointer;
+}
+.sf-check-label { margin: 0 !important; font-size: 12px !important; color: #27354c !important; cursor: pointer; }
+
+/* Alert error non-field */
+.sf-alert {
+  max-width: 640px; margin-bottom: 14px; padding: 11px 14px;
+  border: 1px solid #eccfcd; border-left: 3px solid #d9645f; border-radius: 8px;
+  color: #b0453f; background: #fff8f7; font-size: 12px;
+}
+.sf-alert ul { margin: 0; padding-left: 16px; }
+
+.sf-actions { margin-top: 20px; padding-top: 14px; border-top: 1px solid #eef1f7; }
+
+@media (max-width: 640px) {
+  .sf-card { padding: 16px !important; }
+  .sf-check-wrap { min-height: 42px; }
+}

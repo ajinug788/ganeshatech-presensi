@@ -117,6 +117,11 @@ class StudentCreateView(AdminRequiredMixin, CreateView):
     form_class = StudentForm
     template_name = "attendance/student_form.html"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["organization"] = self.organization
+        return kwargs
+
     def get_success_url(self):
         return reverse_lazy("attendance:student_list")
 
@@ -161,6 +166,11 @@ class StudentUpdateView(AdminRequiredMixin, UpdateView):
     form_class = StudentForm
     template_name = "attendance/student_form.html"
     success_url = reverse_lazy("attendance:student_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["organization"] = self.organization
+        return kwargs
 
     def get_object(self, queryset=None):
         return get_object_or_404(

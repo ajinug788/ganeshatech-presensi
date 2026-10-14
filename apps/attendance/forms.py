@@ -36,14 +36,29 @@ class StudentForm(forms.ModelForm):
         # 'email' TIDAK di Meta.fields: field non-model akan dibuang
         # ModelForm._post_clean dari cleaned_data bila ikut di sana.
 
+    def clean_student_number(self):
+        number = (self.cleaned_data.get("student_number") or "").strip()
+        if number and self.organization:
+            qs = StudentProfile.objects.filter(
+                organization=self.organization, student_number=number
+            )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(
+                    "Nomor induk ini sudah dipakai siswa lain di organisasi ini."
+                )
+        return number
+
     def clean_email(self):
         # ModelForm._post_clean membuang field non-model dari cleaned_data;
         # simpan di atribut form agar view tetap bisa membacanya.
         self.email_for_account = self.cleaned_data.get("email") or None
         return self.email_for_account
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, organization=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.organization = organization
         if self.instance and self.instance.pk and self.instance.user_id:
             # Akun sudah ada: tampilkan email, tidak boleh diubah via form.
             self.fields["email"].disabled = True
